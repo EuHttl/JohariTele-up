@@ -1,0 +1,49 @@
+const express = require('express');
+const cors = require('cors');
+const bodyParser = require('body-parser');
+const path = require('path');
+require('dotenv').config();
+
+// Importar inicialização do SQLite
+const { initializeDatabase } = require('./database/init');
+
+const app = express();
+const PORT = process.env.PORT || 5000;
+
+// Middleware
+app.use(cors({
+  origin: process.env.CORS_ORIGIN || '*',
+  credentials: true
+}));
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+
+// Importar rotas
+const participantsRoutes = require('./routes/participants');
+const assessmentsRoutes = require('./routes/assessments');
+const reportsRoutes = require('./routes/reports');
+const authRoutes = require('./routes/auth');
+
+// Usar rotas
+app.use('/api/participants', participantsRoutes);
+app.use('/api/assessments', assessmentsRoutes);
+app.use('/api/reports', reportsRoutes);
+app.use('/api/auth', authRoutes);
+
+// Servir arquivos estáticos do React em produção
+if (process.env.NODE_ENV === 'production') {
+  app.use(express.static(path.join(__dirname, '../client/build')));
+  
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '../client/build', 'index.html'));
+  });
+}
+
+// Inicializar banco de dados SQLite
+initializeDatabase();
+
+app.listen(PORT, () => {
+  console.log(`🚀 Servidor rodando na porta ${PORT}`);
+  console.log(`📊 Janela de Johari - Sistema de Avaliação`);
+  console.log(`👥 Configurado para 15 participantes`);
+});
