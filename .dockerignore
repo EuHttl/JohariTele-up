@@ -1,0 +1,16 @@
+node_modules
+client/node_modules
+server/node_modules
+client/build
+.git
+.gitignore
+README.md
+deploy-instructions.md
+README-DEPLOY.md
+deploy.bat
+deploy.sh
+build.bat
+build.sh
+*.log
+.DS_Store
+Thumbs.db

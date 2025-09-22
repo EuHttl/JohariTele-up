@@ -67,9 +67,12 @@ echo.
 echo [SUCCESS] 🎉 Deploy preparado com sucesso!
 echo.
 echo 📋 Próximos passos:
-echo 1. Acesse https://railway.app e faça deploy do backend
-echo 2. Acesse https://vercel.com e faça deploy do frontend
-echo 3. Configure as variáveis de ambiente conforme deploy-instructions.md
+echo 1. Acesse https://railway.app e faça deploy (agora com Dockerfile)
+echo 2. Configure as variáveis de ambiente no Railway:
+echo    - NODE_ENV = production
+echo    - JWT_SECRET = johari_window_secret_key_2024_secure
+echo    - PORT = 5000
+echo 3. A aplicação estará disponível na URL do Railway
 echo.
 echo 📖 Instruções completas em: deploy-instructions.md
 pause
