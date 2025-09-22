@@ -20,14 +20,9 @@ const corsOptions = {
       process.env.CORS_ORIGIN.split(',').map(o => o.trim()) : 
       ['https://johari-tele-up.vercel.app'];
     
-    console.log('🌐 CORS: Origin recebida:', origin);
-    console.log('🌐 CORS: Origins permitidas:', allowedOrigins);
-    
     if (allowedOrigins.includes(origin)) {
-      console.log('🌐 CORS: Origin permitida:', origin);
       callback(null, true);
     } else {
-      console.log('🌐 CORS: Origin bloqueada:', origin);
       callback(new Error('Não permitido pelo CORS'));
     }
   },
@@ -61,7 +56,6 @@ app.use((req, res, next) => {
   
   // Responder imediatamente para requisições OPTIONS
   if (req.method === 'OPTIONS') {
-    console.log('🌐 CORS: Respondendo a requisição OPTIONS');
     return res.status(200).end();
   }
   

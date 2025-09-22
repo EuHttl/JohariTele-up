@@ -13,32 +13,18 @@ import {
 
 // Configuração da URL base da API
 const getApiBaseUrl = () => {
-  // Verificar se estamos em produção
-  const isProduction = process.env.NODE_ENV === 'production';
-  
-  // Verificar se a variável de ambiente está definida
+  // Verificar se a variável de ambiente está definida (prioridade para produção)
   const envApiUrl = process.env.REACT_APP_API_URL;
-  
-  console.log('🌐 Environment check:', {
-    NODE_ENV: process.env.NODE_ENV,
-    REACT_APP_API_URL: envApiUrl,
-    isProduction
-  });
   
   if (envApiUrl) {
     console.log('🌐 Using REACT_APP_API_URL:', envApiUrl);
     return envApiUrl;
   }
   
-  if (isProduction) {
-    const prodUrl = 'https://joharitele-up-production.up.railway.app/api';
-    console.log('🌐 Using production URL:', prodUrl);
-    return prodUrl;
-  }
-  
-  const devUrl = 'http://localhost:5000/api';
-  console.log('🌐 Using development URL:', devUrl);
-  return devUrl;
+  // Fallback para produção (URL do Railway)
+  const prodUrl = 'https://joharitele-up-production.up.railway.app/api';
+  console.log('🌐 Using production URL:', prodUrl);
+  return prodUrl;
 };
 
 const API_BASE_URL = getApiBaseUrl();
@@ -55,13 +41,6 @@ const api = axios.create({
 
 // Interceptor para adicionar token de autenticação
 api.interceptors.request.use((config) => {
-  console.log('🌐 Axios Request Config:', {
-    baseURL: config.baseURL || 'undefined',
-    url: config.url || 'undefined',
-    fullURL: (config.baseURL || '') + (config.url || ''),
-    method: config.method || 'undefined'
-  });
-  
   const token = localStorage.getItem('authToken');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
@@ -85,27 +64,19 @@ api.interceptors.response.use(
 // Auth API
 export const authAPI = {
   login: async (email: string, password: string): Promise<AuthResponse> => {
-    console.log('🌐 API: Enviando requisição de login do admin');
-    console.log('🌐 API: URL:', API_BASE_URL + '/auth/login');
-    console.log('🌐 API: Dados:', { email, password: '***' });
     try {
       const response = await api.post(`${API_BASE_URL}/auth/login`, { email, password });
-      console.log('🌐 API: Resposta recebida:', response.data);
       return response.data;
     } catch (error) {
-      console.error('🌐 API: Erro na requisição:', error);
       throw error;
     }
   },
   
   participantLogin: async (email: string, password: string): Promise<AuthResponse> => {
-    console.log('🌐 API: Login participante - enviando requisição');
     try {
       const response = await api.post(`${API_BASE_URL}/auth/participant/login`, { email, password });
-      console.log('🌐 API: Login participante - sucesso');
       return response.data;
     } catch (error) {
-      console.error('🌐 API: Login participante - erro:', error);
       throw error;
     }
   },
