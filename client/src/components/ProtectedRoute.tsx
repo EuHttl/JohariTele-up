@@ -28,9 +28,8 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requiredRole 
 
   if (!user) {
     console.log('🛡️ ProtectedRoute: Usuário não autenticado, redirecionando...');
-    // Redirecionar para o login apropriado baseado no role requerido
-    const loginPath = requiredRole === 'participant' ? '/participant/login' : '/login';
-    return <Navigate to={loginPath} replace />;
+    // Sempre redirecionar para /login (rota unificada)
+    return <Navigate to="/login" replace />;
   }
 
   // Verificar se o usuário tem o role correto

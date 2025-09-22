@@ -49,6 +49,13 @@ function App() {
               <Route path="report" element={<Report />} />
             </Route>
             
+            {/* Rota para avaliação individual (acessível por admin) */}
+            <Route path="/assessment/:code" element={
+              <ProtectedRoute requiredRole="admin">
+                <AssessmentPage />
+              </ProtectedRoute>
+            } />
+            
             <Route path="*" element={<Navigate to="/login" replace />} />
           </Routes>
         </div>
