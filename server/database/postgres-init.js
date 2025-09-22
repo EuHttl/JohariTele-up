@@ -90,12 +90,25 @@ async function initializeDatabase() {
         CREATE TABLE IF NOT EXISTS admins (
           id SERIAL PRIMARY KEY,
           username VARCHAR(255) UNIQUE NOT NULL,
-          email VARCHAR(255) UNIQUE NOT NULL,
           password VARCHAR(255) NOT NULL,
           name VARCHAR(255) NOT NULL,
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
       `);
+
+      // Adicionar coluna email se não existir (para compatibilidade com bancos existentes)
+      try {
+        await client.query(`
+          ALTER TABLE admins ADD COLUMN email VARCHAR(255) UNIQUE
+        `);
+        console.log('✅ Coluna email adicionada à tabela admins');
+      } catch (error) {
+        if (error.code === '42701') { // Column already exists
+          console.log('ℹ️ Coluna email já existe na tabela admins');
+        } else {
+          console.error('❌ Erro ao adicionar coluna email:', error.message);
+        }
+      }
 
       // Criar tabela de participantes
       await client.query(`
