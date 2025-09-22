@@ -19,7 +19,10 @@ build/
 dist/
 */build/
 */dist/
-
+build.bat
+deploy.bat
+README-DEPLOY.md
+deploy-instructions.md
 # Logs
 logs
 *.log
