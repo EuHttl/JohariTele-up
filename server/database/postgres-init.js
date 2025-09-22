@@ -96,25 +96,8 @@ async function initializeDatabase() {
         )
       `);
 
-      // Verificar se coluna email existe antes de tentar adicionar
-      try {
-        const columnCheck = await client.query(`
-          SELECT column_name 
-          FROM information_schema.columns 
-          WHERE table_name = 'admins' AND column_name = 'email'
-        `);
-        
-        if (columnCheck.rows.length === 0) {
-          await client.query(`
-            ALTER TABLE admins ADD COLUMN email VARCHAR(255) UNIQUE
-          `);
-          console.log('✅ Coluna email adicionada à tabela admins');
-        } else {
-          console.log('ℹ️ Coluna email já existe na tabela admins');
-        }
-      } catch (error) {
-        console.error('❌ Erro ao verificar/adicionar coluna email:', error.message);
-      }
+      // Coluna email já existe em produção - não tentar alterar
+      console.log('ℹ️ Usando estrutura existente da tabela admins (coluna email já presente)');
 
       // Criar tabela de participantes
       await client.query(`
