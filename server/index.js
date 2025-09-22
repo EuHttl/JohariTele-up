@@ -76,4 +76,5 @@ app.listen(PORT, () => {
   console.log(`👥 Configurado para 12 participantes`);
   console.log(`🌐 CORS CONFIGURADO PARA TODAS AS ORIGENS`);
   console.log(`🔧 DEPLOY FORÇADO - ${new Date().toISOString()}`);
+  console.log(`🌐 CORS CONFIGURADO PARA TODAS AS ORIGENS - URGENTE!`);
 });
