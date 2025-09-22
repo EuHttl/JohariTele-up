@@ -74,4 +74,6 @@ app.listen(PORT, () => {
   console.log(`🚀 Servidor rodando na porta ${PORT}`);
   console.log(`📊 Janela de Johari - Sistema de Avaliação`);
   console.log(`👥 Configurado para 15 participantes`);
+  console.log(`🌐 CORS CONFIGURADO PARA TODAS AS ORIGENS`);
+  console.log(`🔧 DEPLOY FORÇADO - ${new Date().toISOString()}`);
 });
