@@ -8,7 +8,7 @@ const ParticipantLogin: React.FC = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { participantLogin, user } = useAuth();
+  const { login, user } = useAuth();
   const navigate = useNavigate();
   
   // Debug simplificado
@@ -36,8 +36,8 @@ const ParticipantLogin: React.FC = () => {
     console.log('🔄 ParticipantLogin: Tentando fazer login:', { email, password });
 
     try {
-      await participantLogin(email, password);
-      console.log('✅ ParticipantLogin: Login bem-sucedido!');
+      const response = await login(email, password);
+      console.log('✅ ParticipantLogin: Login bem-sucedido!', response.user);
       navigate('/participant/assessment');
     } catch (err: any) {
       console.error('❌ ParticipantLogin: Erro no login:', err);

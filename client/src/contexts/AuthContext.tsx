@@ -6,7 +6,6 @@ interface AuthContextType {
   user: User | null;
   token: string | null;
   login: (email: string, password: string) => Promise<void>;
-  participantLogin: (email: string, password: string) => Promise<void>;
   logout: () => void;
   loading: boolean;
 }
@@ -59,17 +58,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const participantLogin = async (email: string, password: string) => {
-    try {
-      const response = await authAPI.participantLogin(email, password);
-      localStorage.setItem('authToken', response.token);
-      setToken(response.token);
-      setUser(response.user);
-    } catch (error) {
-      throw error;
-    }
-  };
-
   const logout = () => {
     localStorage.removeItem('authToken');
     setToken(null);
@@ -80,7 +68,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     user,
     token,
     login,
-    participantLogin,
     logout,
     loading,
   };

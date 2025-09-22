@@ -72,15 +72,6 @@ export const authAPI = {
     }
   },
   
-  participantLogin: async (email: string, password: string): Promise<AuthResponse> => {
-    try {
-      const response = await api.post(`${API_BASE_URL}/auth/participant/login`, { email, password });
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
-  },
-  
   verify: async (token: string) => {
     const response = await api.post(`${API_BASE_URL}/auth/verify`, { token });
     return response.data;

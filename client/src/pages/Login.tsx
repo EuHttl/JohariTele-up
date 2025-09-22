@@ -8,7 +8,7 @@ const Login: React.FC = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { login, participantLogin } = useAuth();
+  const { login } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -19,20 +19,15 @@ const Login: React.FC = () => {
     console.log('🔄 Tentando fazer login:', { email, password });
 
     try {
-      // Tentar login de admin primeiro
-      try {
-        await login(email, password);
-        console.log('✅ Login de admin bem-sucedido!');
+      // Login unificado - funciona para admin e participantes
+      const response = await login(email, password);
+      console.log('✅ Login bem-sucedido!', response.user);
+      
+      // Redirecionar baseado no role
+      if (response.user.role === 'admin') {
         navigate('/app/dashboard');
-        return;
-      } catch (adminError) {
-        console.log('❌ Login de admin falhou, tentando participante...');
-        
-        // Se falhar, tentar login de participante
-        await participantLogin(email, password);
-        console.log('✅ Login de participante bem-sucedido!');
+      } else {
         navigate('/participant/assessment');
-        return;
       }
     } catch (err: any) {
       console.error('❌ Erro no login:', err);

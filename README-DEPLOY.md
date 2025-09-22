@@ -27,7 +27,7 @@
 **Variáveis de Ambiente:**
 - `NODE_ENV` = `production`
 - `JWT_SECRET` = `johari_window_secret_key_2024_secure`
-- `CORS_ORIGIN` = `https://your-frontend-domain.vercel.app`
+- `CORS_ORIGIN` = `https://johari-tele-up.vercel.app`
 
 #### **Frontend (Vercel)**
 1. Acesse [vercel.com](https://vercel.com)
@@ -40,13 +40,13 @@
    - **Output Directory**: `build`
 
 **Variáveis de Ambiente:**
-- `REACT_APP_API_URL` = `https://your-railway-backend.railway.app/api`
+- `REACT_APP_API_URL` = `https://joharitele-up-production.up.railway.app/api`
 
 ## 📱 Compartilhar com Participantes
 
 ### URLs Finais:
-- **Aplicação**: `https://your-app.vercel.app`
-- **Login**: `https://your-app.vercel.app/login`
+- **Aplicação**: `https://johari-tele-up.vercel.app`
+- **Login**: `https://johari-tele-up.vercel.app/login`
 
 ### Credenciais:
 - **Admin**: `hyttalo2002@gmail.com` / `admin123`

@@ -9,7 +9,7 @@ const jwt = require('jsonwebtoken');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'johari_secret_key_2024';
 
-// POST /api/auth/login - Login do administrador
+// POST /api/auth/login - Login unificado para admin e participantes
 router.post('/login', (req, res) => {
   try {
     const { email, password } = req.body;
@@ -18,47 +18,92 @@ router.post('/login', (req, res) => {
       return res.status(400).json({ error: 'Email e senha são obrigatórios' });
     }
     
-    const sql = 'SELECT id, username, email, password, name FROM admins WHERE email = ?';
+    // Primeiro, tenta encontrar como admin
+    const adminSql = 'SELECT id, username, email, password, name FROM admins WHERE email = ?';
     
-    db.get(sql, [email], (err, admin) => {
+    db.get(adminSql, [email], (err, admin) => {
       if (err) {
-        console.error('Erro no login:', err);
+        console.error('Erro no login (admin):', err);
         return res.status(500).json({ error: 'Erro interno do servidor' });
       }
       
-      if (!admin) {
-        return res.status(401).json({ error: 'Credenciais inválidas' });
+      // Se encontrou como admin, verifica a senha
+      if (admin) {
+        const isMatch = bcrypt.compareSync(password, admin.password);
+        
+        if (!isMatch) {
+          return res.status(401).json({ error: 'Credenciais inválidas' });
+        }
+        
+        // Gerar token JWT para admin
+        const token = jwt.sign(
+          {
+            id: admin.id,
+            username: admin.username,
+            email: admin.email,
+            name: admin.name,
+            role: 'admin'
+          },
+          JWT_SECRET,
+          { expiresIn: '24h' }
+        );
+        
+        return res.json({
+          token,
+          user: {
+            id: admin.id,
+            username: admin.username,
+            email: admin.email,
+            name: admin.name,
+            role: 'admin'
+          },
+          message: 'Login realizado com sucesso'
+        });
       }
       
-      const isMatch = bcrypt.compareSync(password, admin.password);
+      // Se não é admin, tenta como participante
+      const participantSql = 'SELECT id, name, email, code, password FROM participants WHERE email = ?';
       
-      if (!isMatch) {
-        return res.status(401).json({ error: 'Credenciais inválidas' });
-      }
-      
-      // Gerar token JWT
-      const token = jwt.sign(
-        {
-          id: admin.id,
-          username: admin.username,
-          email: admin.email,
-          name: admin.name,
-          role: 'admin'
-        },
-        JWT_SECRET,
-        { expiresIn: '24h' }
-      );
-      
-      res.json({
-        token,
-        user: {
-          id: admin.id,
-          username: admin.username,
-          email: admin.email,
-          name: admin.name,
-          role: 'admin'
-        },
-        message: 'Login realizado com sucesso'
+      db.get(participantSql, [email], (err, participant) => {
+        if (err) {
+          console.error('Erro no login (participant):', err);
+          return res.status(500).json({ error: 'Erro interno do servidor' });
+        }
+        
+        if (!participant) {
+          return res.status(401).json({ error: 'Credenciais inválidas' });
+        }
+        
+        const isMatch = bcrypt.compareSync(password, participant.password);
+        
+        if (!isMatch) {
+          return res.status(401).json({ error: 'Credenciais inválidas' });
+        }
+        
+        // Gerar token JWT para participante
+        const token = jwt.sign(
+          {
+            id: participant.id,
+            email: participant.email,
+            name: participant.name,
+            code: participant.code,
+            role: 'participant'
+          },
+          JWT_SECRET,
+          { expiresIn: '24h' }
+        );
+        
+        res.json({
+          token,
+          user: {
+            id: participant.id,
+            email: participant.email,
+            name: participant.name,
+            code: participant.code,
+            role: 'participant'
+          },
+          message: 'Login realizado com sucesso'
+        });
       });
     });
   } catch (error) {
@@ -94,64 +139,6 @@ router.post('/verify', (req, res) => {
       user: decoded
     });
   });
-});
-
-// POST /api/auth/participant/login - Login do participante
-router.post('/participant/login', (req, res) => {
-  try {
-    const { email, password } = req.body;
-    
-    if (!email || !password) {
-      return res.status(400).json({ error: 'Email e senha são obrigatórios' });
-    }
-    
-    const sql = 'SELECT id, name, email, code, password FROM participants WHERE email = ?';
-    
-    db.get(sql, [email], (err, participant) => {
-      if (err) {
-        console.error('Erro no login do participante:', err);
-        return res.status(500).json({ error: 'Erro interno do servidor' });
-      }
-      
-      if (!participant) {
-        return res.status(401).json({ error: 'Credenciais inválidas' });
-      }
-      
-      const isMatch = bcrypt.compareSync(password, participant.password);
-      
-      if (!isMatch) {
-        return res.status(401).json({ error: 'Credenciais inválidas' });
-      }
-      
-      // Gerar token JWT
-      const token = jwt.sign(
-        {
-          id: participant.id,
-          email: participant.email,
-          name: participant.name,
-          code: participant.code,
-          role: 'participant'
-        },
-        JWT_SECRET,
-        { expiresIn: '24h' }
-      );
-      
-      res.json({
-        token,
-        user: {
-          id: participant.id,
-          email: participant.email,
-          name: participant.name,
-          code: participant.code,
-          role: 'participant'
-        },
-        message: 'Login realizado com sucesso'
-      });
-    });
-  } catch (error) {
-    console.error('Erro no login do participante:', error);
-    res.status(500).json({ error: 'Erro interno do servidor' });
-  }
 });
 
 // Middleware para verificar autenticação
