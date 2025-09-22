@@ -10,19 +10,16 @@ const { initializeDatabase } = require('./database/init');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Middleware CORS customizado - mais robusto
+// Middleware CORS - permitir TODAS as origens temporariamente
 app.use((req, res, next) => {
-  const allowedOrigin = 'https://johari-tele-up.vercel.app';
-  
-  // Sempre definir os cabeçalhos CORS
-  res.header('Access-Control-Allow-Origin', allowedOrigin);
+  // Permitir todas as origens temporariamente
+  res.header('Access-Control-Allow-Origin', '*');
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  res.header('Access-Control-Allow-Credentials', 'true');
+  res.header('Access-Control-Allow-Credentials', 'false'); // Deve ser false quando origin é *
   
   // Log para debug
   console.log('🌐 CORS: Origin recebida:', req.headers.origin);
-  console.log('🌐 CORS: Origin permitida:', allowedOrigin);
   console.log('🌐 CORS: Method:', req.method);
   console.log('🌐 CORS: Path:', req.path);
   
