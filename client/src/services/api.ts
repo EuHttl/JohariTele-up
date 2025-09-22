@@ -11,8 +11,10 @@ import {
   AuthResponse
 } from '../types';
 
-// Forçar URL correta temporariamente
-const API_BASE_URL = 'https://joharitele-up-production.up.railway.app/api';
+// Configuração da URL base da API
+const API_BASE_URL = process.env.NODE_ENV === 'production' 
+  ? 'https://joharitele-up-production.up.railway.app/api'
+  : 'http://localhost:5000/api';
 console.log('🌐 API Base URL:', API_BASE_URL);
 
 const api = axios.create({
