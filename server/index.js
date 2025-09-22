@@ -10,15 +10,10 @@ const { initializeDatabase } = require('./database/init');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Middleware
+// Middleware - CORS aberto temporariamente para resolver o problema
 app.use(cors({
-  origin: [
-    'https://johari-tele-up.vercel.app',
-    'https://johari-tele-up-git-main-euhttls-projects.vercel.app',
-    'http://localhost:3000',
-    'http://localhost:5000'
-  ],
-  credentials: true,
+  origin: '*',
+  credentials: false,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Access-Control-Allow-Origin']
 }));
