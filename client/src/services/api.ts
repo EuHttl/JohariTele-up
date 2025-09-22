@@ -50,6 +50,7 @@ const api = axios.create({
     'Content-Type': 'application/json',
   },
   timeout: 10000, // 10 segundos de timeout
+  withCredentials: false, // Desabilitar credentials para evitar problemas de CORS
 });
 
 // Interceptor para adicionar token de autenticação
@@ -88,7 +89,7 @@ export const authAPI = {
     console.log('🌐 API: URL:', API_BASE_URL + '/auth/login');
     console.log('🌐 API: Dados:', { email, password: '***' });
     try {
-      const response = await api.post('/auth/login', { email, password });
+      const response = await api.post(`${API_BASE_URL}/auth/login`, { email, password });
       console.log('🌐 API: Resposta recebida:', response.data);
       return response.data;
     } catch (error) {
@@ -100,7 +101,7 @@ export const authAPI = {
   participantLogin: async (email: string, password: string): Promise<AuthResponse> => {
     console.log('🌐 API: Login participante - enviando requisição');
     try {
-      const response = await api.post('/auth/participant/login', { email, password });
+      const response = await api.post(`${API_BASE_URL}/auth/participant/login`, { email, password });
       console.log('🌐 API: Login participante - sucesso');
       return response.data;
     } catch (error) {
@@ -110,7 +111,7 @@ export const authAPI = {
   },
   
   verify: async (token: string) => {
-    const response = await api.post('/auth/verify', { token });
+    const response = await api.post(`${API_BASE_URL}/auth/verify`, { token });
     return response.data;
   },
 };
@@ -118,32 +119,32 @@ export const authAPI = {
 // Participants API
 export const participantsAPI = {
   getAll: async (): Promise<Participant[]> => {
-    const response = await api.get('/participants');
+    const response = await api.get(`${API_BASE_URL}/participants`);
     return response.data;
   },
   
   getByCode: async (code: string): Promise<Participant> => {
-    const response = await api.get(`/participants/${code}`);
+    const response = await api.get(`${API_BASE_URL}/participants/${code}`);
     return response.data;
   },
   
   create: async (name: string, email: string): Promise<Participant> => {
-    const response = await api.post('/participants', { name, email });
+    const response = await api.post(`${API_BASE_URL}/participants`, { name, email });
     return response.data;
   },
   
   update: async (id: number, name: string, email: string) => {
-    const response = await api.put(`/participants/${id}`, { name, email });
+    const response = await api.put(`${API_BASE_URL}/participants/${id}`, { name, email });
     return response.data;
   },
   
   delete: async (id: number) => {
-    const response = await api.delete(`/participants/${id}`);
+    const response = await api.delete(`${API_BASE_URL}/participants/${id}`);
     return response.data;
   },
   
   getStats: async () => {
-    const response = await api.get('/participants/stats/overview');
+    const response = await api.get(`${API_BASE_URL}/participants/stats/overview`);
     return response.data;
   },
 };
@@ -151,32 +152,32 @@ export const participantsAPI = {
 // Assessments API
 export const assessmentsAPI = {
   getCharacteristics: async (): Promise<Characteristic[]> => {
-    const response = await api.get('/assessments/characteristics');
+    const response = await api.get(`${API_BASE_URL}/assessments/characteristics`);
     return response.data;
   },
   
   getSelfAssessment: async (code: string): Promise<SelfAssessment[]> => {
-    const response = await api.get(`/assessments/self/${code}`);
+    const response = await api.get(`${API_BASE_URL}/assessments/self/${code}`);
     return response.data;
   },
   
   saveSelfAssessment: async (code: string, assessments: Assessment[]) => {
-    const response = await api.post(`/assessments/self/${code}`, { assessments });
+    const response = await api.post(`${API_BASE_URL}/assessments/self/${code}`, { assessments });
     return response.data;
   },
   
   getPeers: async (code: string): Promise<Participant[]> => {
-    const response = await api.get(`/assessments/peers/${code}`);
+    const response = await api.get(`${API_BASE_URL}/assessments/peers/${code}`);
     return response.data;
   },
   
   getPeerAssessment: async (assessorCode: string, assessedCode: string): Promise<PeerAssessment[]> => {
-    const response = await api.get(`/assessments/peer/${assessorCode}/${assessedCode}`);
+    const response = await api.get(`${API_BASE_URL}/assessments/peer/${assessorCode}/${assessedCode}`);
     return response.data;
   },
   
   savePeerAssessment: async (assessorCode: string, assessedCode: string, assessments: Assessment[]) => {
-    const response = await api.post(`/assessments/peer/${assessorCode}/${assessedCode}`, { assessments });
+    const response = await api.post(`${API_BASE_URL}/assessments/peer/${assessorCode}/${assessedCode}`, { assessments });
     return response.data;
   },
 };
@@ -184,17 +185,17 @@ export const assessmentsAPI = {
 // Reports API
 export const reportsAPI = {
   getJohariReport: async (code: string): Promise<JohariReport> => {
-    const response = await api.get(`/reports/johari/${code}`);
+    const response = await api.get(`${API_BASE_URL}/reports/johari/${code}`);
     return response.data;
   },
   
   getComparativeReport: async (): Promise<ComparativeReport> => {
-    const response = await api.get('/reports/comparative');
+    const response = await api.get(`${API_BASE_URL}/reports/comparative`);
     return response.data;
   },
   
   getCharacteristicAnalysis: async (): Promise<CharacteristicAnalysis> => {
-    const response = await api.get('/reports/characteristics');
+    const response = await api.get(`${API_BASE_URL}/reports/characteristics`);
     return response.data;
   },
 };
@@ -202,17 +203,17 @@ export const reportsAPI = {
 // Admin API
 export const adminAPI = {
   getAssessmentTracking: async () => {
-    const response = await api.get('/admin/assessment-tracking');
+    const response = await api.get(`${API_BASE_URL}/admin/assessment-tracking`);
     return response.data;
   },
   
   getAssessmentMatrix: async () => {
-    const response = await api.get('/admin/assessment-matrix');
+    const response = await api.get(`${API_BASE_URL}/admin/assessment-matrix`);
     return response.data;
   },
   
   getParticipantProgress: async () => {
-    const response = await api.get('/admin/participant-progress');
+    const response = await api.get(`${API_BASE_URL}/admin/participant-progress`);
     return response.data;
   }
 };
