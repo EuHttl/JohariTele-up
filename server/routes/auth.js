@@ -67,6 +67,15 @@ router.post('/login', (req, res) => {
   }
 });
 
+// GET /api/auth/status - Status da API (para health check)
+router.get('/status', (req, res) => {
+  res.status(200).json({ 
+    status: 'OK', 
+    message: 'Auth API is running',
+    timestamp: new Date().toISOString()
+  });
+});
+
 // POST /api/auth/verify - Verificar token
 router.post('/verify', (req, res) => {
   const { token } = req.body;
