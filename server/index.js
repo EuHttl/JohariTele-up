@@ -65,6 +65,7 @@ app.use('/api/assessments', assessmentsRoutes);
 app.use('/api/reports', reportsRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/auth', authRoutes); // Rota adicional para compatibilidade
 
 // Servir arquivos estáticos do React em produção
 if (process.env.NODE_ENV === 'production') {
