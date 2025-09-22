@@ -12,11 +12,17 @@ const PORT = process.env.PORT || 5000;
 
 // Middleware - CORS configurado para produção
 const corsOptions = {
-  origin: process.env.CORS_ORIGIN || '*',
+  origin: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : '*',
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Access-Control-Allow-Origin']
+  allowedHeaders: ['Content-Type', 'Authorization', 'Access-Control-Allow-Origin'],
+  optionsSuccessStatus: 200
 };
+
+// Log da configuração CORS
+console.log('🌐 CORS Origin configurado:', corsOptions.origin);
+console.log('🌐 CORS Methods:', corsOptions.methods);
+console.log('🌐 CORS Headers:', corsOptions.allowedHeaders);
 
 app.use(cors(corsOptions));
 app.use(bodyParser.json());

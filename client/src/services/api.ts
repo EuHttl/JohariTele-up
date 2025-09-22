@@ -12,9 +12,10 @@ import {
 } from '../types';
 
 // Configuração da URL base da API
-const API_BASE_URL = process.env.NODE_ENV === 'production' 
-  ? 'https://joharitele-up-production.up.railway.app/api'
-  : 'http://localhost:5000/api';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 
+  (process.env.NODE_ENV === 'production' 
+    ? 'https://joharitele-up-production.up.railway.app/api'
+    : 'http://localhost:5000/api');
 console.log('🌐 API Base URL:', API_BASE_URL);
 
 const api = axios.create({
