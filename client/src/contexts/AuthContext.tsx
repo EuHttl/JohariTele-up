@@ -5,7 +5,7 @@ import { User } from '../types';
 interface AuthContextType {
   user: User | null;
   token: string | null;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<{ token: string; user: User; message: string }>;
   logout: () => void;
   loading: boolean;
 }
@@ -53,6 +53,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       localStorage.setItem('authToken', response.token);
       setToken(response.token);
       setUser(response.user);
+      return response; // Retornar a resposta para usar nos componentes
     } catch (error) {
       throw error;
     }
