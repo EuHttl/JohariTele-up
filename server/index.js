@@ -18,6 +18,26 @@ const corsOptions = {
   allowedHeaders: ['Content-Type', 'Authorization', 'Access-Control-Allow-Origin']
 };
 
+// Middleware para garantir o cabeçalho Access-Control-Allow-Origin
+app.use((req, res, next) => {
+  const allowedOrigin = process.env.CORS_ORIGIN || 'https://johari-tele-up.vercel.app';
+  res.header('Access-Control-Allow-Origin', allowedOrigin);
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Access-Control-Allow-Origin');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  
+  // Log para debug
+  console.log('🌐 CORS Middleware: Origin recebida:', req.headers.origin);
+  console.log('🌐 CORS Middleware: Origin permitida:', allowedOrigin);
+  
+  // Responder imediatamente para requisições OPTIONS (preflight)
+  if (req.method === 'OPTIONS') {
+    console.log('🌐 CORS Middleware: Respondendo a requisição OPTIONS');
+    return res.status(200).end();
+  }
+  next();
+});
+
 app.use(cors(corsOptions));
 
 app.use(bodyParser.json());
