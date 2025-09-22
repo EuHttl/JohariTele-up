@@ -90,6 +90,7 @@ async function initializeDatabase() {
         CREATE TABLE IF NOT EXISTS admins (
           id SERIAL PRIMARY KEY,
           username VARCHAR(255) UNIQUE NOT NULL,
+          email VARCHAR(255) UNIQUE NOT NULL,
           password VARCHAR(255) NOT NULL,
           name VARCHAR(255) NOT NULL,
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -172,8 +173,8 @@ async function initializeDatabase() {
         const defaultPassword = bcrypt.hashSync('admin123', 10);
         
         await client.query(
-          'INSERT INTO admins (username, password, name) VALUES ($1, $2, $3)',
-          ['admin', defaultPassword, 'Administrador']
+          'INSERT INTO admins (username, password, name, email) VALUES ($1, $2, $3, $4)',
+          ['admin', defaultPassword, 'Hyttalo Costa', 'hyttalo2002@gmail.com']
         );
         
         console.log('✅ Administrador padrão criado!');

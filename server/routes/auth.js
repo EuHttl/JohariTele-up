@@ -1,11 +1,17 @@
 const express = require('express');
 const router = express.Router();
-const sqlite3 = require('sqlite3').verbose();
-const path = require('path');
-const dbPath = path.join(__dirname, '../../johari.db');
-const db = new sqlite3.Database(dbPath);
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+
+// Usar banco dinâmico (PostgreSQL ou SQLite)
+let db;
+if (process.env.DATABASE_URL) {
+  const postgresInit = require('../database/postgres-init');
+  db = postgresInit.db;
+} else {
+  const sqliteInit = require('../database/init');
+  db = sqliteInit.db;
+}
 
 const JWT_SECRET = process.env.JWT_SECRET || 'johari_secret_key_2024';
 
