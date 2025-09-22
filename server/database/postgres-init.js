@@ -191,33 +191,73 @@ async function initializeDatabase() {
   }
 }
 
+// Função para converter sintaxe SQLite (?) para PostgreSQL ($1, $2, etc.)
+function convertSQLiteToPostgres(sql, params = []) {
+  let paramIndex = 1;
+  const convertedSQL = sql.replace(/\?/g, () => `$${paramIndex++}`);
+  return { sql: convertedSQL, params };
+}
+
 // Wrapper para compatibilidade com SQLite
 const db = {
-  query: (text, params) => pool.query(text, params),
-  get: async (text, params) => {
-    const result = await pool.query(text, params);
-    return result.rows[0] || null;
+  query: (text, params) => {
+    const { sql, params: convertedParams } = convertSQLiteToPostgres(text, params);
+    return pool.query(sql, convertedParams);
   },
-  all: async (text, params) => {
-    const result = await pool.query(text, params);
-    return result.rows;
+  get: async (text, params = []) => {
+    try {
+      const { sql, params: convertedParams } = convertSQLiteToPostgres(text, params);
+      const result = await pool.query(sql, convertedParams);
+      return result.rows[0] || null;
+    } catch (error) {
+      console.error('Erro na query get:', error);
+      throw error;
+    }
   },
-  run: async (text, params) => {
-    const result = await pool.query(text, params);
-    return {
-      lastID: result.rows[0]?.id,
-      changes: result.rowCount
-    };
+  all: async (text, params = []) => {
+    try {
+      const { sql, params: convertedParams } = convertSQLiteToPostgres(text, params);
+      const result = await pool.query(sql, convertedParams);
+      return result.rows;
+    } catch (error) {
+      console.error('Erro na query all:', error);
+      throw error;
+    }
+  },
+  run: async (text, params = []) => {
+    try {
+      const { sql, params: convertedParams } = convertSQLiteToPostgres(text, params);
+      
+      // Para INSERTs, adicionar RETURNING id para obter o ID inserido
+      let finalSQL = sql;
+      if (sql.trim().toUpperCase().startsWith('INSERT')) {
+        finalSQL = sql + ' RETURNING id';
+      }
+      
+      const result = await pool.query(finalSQL, convertedParams);
+      return {
+        lastID: result.rows[0]?.id,
+        changes: result.rowCount
+      };
+    } catch (error) {
+      console.error('Erro na query run:', error);
+      throw error;
+    }
   },
   exec: async (text) => {
-    // Para PostgreSQL, precisamos executar cada comando separadamente
-    const commands = text.split(';').filter(cmd => cmd.trim());
-    for (const command of commands) {
-      if (command.trim()) {
-        await pool.query(command.trim());
+    try {
+      // Para PostgreSQL, precisamos executar cada comando separadamente
+      const commands = text.split(';').filter(cmd => cmd.trim());
+      for (const command of commands) {
+        if (command.trim()) {
+          await pool.query(command.trim());
+        }
       }
+      return { changes: 1 }; // Simular sucesso
+    } catch (error) {
+      console.error('Erro na query exec:', error);
+      throw error;
     }
-    return { changes: 1 }; // Simular sucesso
   }
 };
 
