@@ -10,13 +10,15 @@ const { initializeDatabase } = require('./database/init');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Middleware - CORS aberto temporariamente para resolver o problema
-app.use(cors({
-  origin: '*',
-  credentials: false,
+// Middleware - CORS configurado para produção
+const corsOptions = {
+  origin: process.env.CORS_ORIGIN || '*',
+  credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Access-Control-Allow-Origin']
-}));
+};
+
+app.use(cors(corsOptions));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
