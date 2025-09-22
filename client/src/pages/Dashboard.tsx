@@ -39,10 +39,15 @@ const Dashboard: React.FC = () => {
           participantsAPI.getAll()
         ]);
         
+        console.log('Dashboard - Stats recebidos:', statsData);
+        console.log('Dashboard - Participants recebidos:', participantsData);
+        console.log('Dashboard - Participants é array?', Array.isArray(participantsData));
+        
         setStats(statsData);
-        setParticipants(participantsData);
+        setParticipants(Array.isArray(participantsData) ? participantsData : []);
       } catch (error) {
         console.error('Erro ao carregar dados:', error);
+        setParticipants([]); // Garantir que sempre seja array
       } finally {
         setLoading(false);
       }

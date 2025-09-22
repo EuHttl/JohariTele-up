@@ -5,6 +5,7 @@ const { v4: uuidv4 } = require('uuid');
 
 // GET /api/participants - Listar todos os participantes
 router.get('/', (req, res) => {
+  console.log('📊 GET /api/participants - Buscando todos os participantes');
   const query = `
     SELECT 
       id, name, email, code, 
@@ -20,7 +21,9 @@ router.get('/', (req, res) => {
       console.error('Erro ao buscar participantes:', err);
       return res.status(500).json({ error: 'Erro interno do servidor' });
     }
-    res.json(rows);
+    console.log('📊 Participantes encontrados:', rows?.length || 0);
+    console.log('📊 Primeiro participante:', rows?.[0] || 'Nenhum');
+    res.json(rows || []);
   });
 });
 
