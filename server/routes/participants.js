@@ -1,7 +1,16 @@
 const express = require('express');
 const router = express.Router();
-const { db } = require('../database/init');
 const { v4: uuidv4 } = require('uuid');
+
+// Usar banco dinâmico (PostgreSQL ou SQLite)
+let db;
+if (process.env.DATABASE_URL) {
+  const postgresInit = require('../database/postgres-init');
+  db = postgresInit.db;
+} else {
+  const sqliteInit = require('../database/init');
+  db = sqliteInit.db;
+}
 
 // GET /api/participants - Listar todos os participantes
 router.get('/', (req, res) => {

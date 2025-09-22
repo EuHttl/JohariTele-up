@@ -4,8 +4,19 @@ const bodyParser = require('body-parser');
 const path = require('path');
 require('dotenv').config();
 
-// Importar inicialização do SQLite
-const { initializeDatabase } = require('./database/init');
+// Usar PostgreSQL se DATABASE_URL estiver disponível, senão SQLite
+let db, initializeDatabase;
+if (process.env.DATABASE_URL) {
+  console.log('🗄️ Usando PostgreSQL (Railway)');
+  const postgresInit = require('./database/postgres-init');
+  db = postgresInit.db;
+  initializeDatabase = postgresInit.initializeDatabase;
+} else {
+  console.log('🗄️ Usando SQLite (local)');
+  const sqliteInit = require('./database/init');
+  db = sqliteInit.db;
+  initializeDatabase = sqliteInit.initializeDatabase;
+}
 
 const app = express();
 const PORT = process.env.PORT || 8080;
