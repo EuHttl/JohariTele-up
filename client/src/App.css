@@ -39,8 +39,8 @@ body::before {
 }
 
 @keyframes backgroundShift {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.8; transform: scale(1.05); }
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
 }
 
 /* Variáveis CSS para design moderno */
@@ -214,13 +214,6 @@ body::before {
   border-color: rgba(124, 58, 237, 0.5);
 }
 
-.card:hover::before {
-  opacity: 1;
-}
-
-.card:hover::after {
-  opacity: 0.3;
-}
 
 .card-header {
   padding: 1rem;
