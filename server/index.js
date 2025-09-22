@@ -115,12 +115,82 @@ app.get('/api/debug/database', (req, res) => {
   const dbInfo = {
     hasDatabaseUrl: !!process.env.DATABASE_URL,
     databaseUrl: process.env.DATABASE_URL ? 'Configurado' : 'Não configurado',
+    databaseUrlPreview: process.env.DATABASE_URL ? 
+      process.env.DATABASE_URL.replace(/:[^:@]+@/, ':***@') : 'Não configurado',
     nodeEnv: process.env.NODE_ENV,
+    port: process.env.PORT,
+    jwtSecret: process.env.JWT_SECRET ? 'Configurado' : 'Não configurado',
+    corsOrigin: process.env.CORS_ORIGIN,
     timestamp: new Date().toISOString()
   };
   
   console.log('🔍 Debug Database Info:', dbInfo);
   res.json(dbInfo);
+});
+
+// Endpoint para testar conexão com banco
+app.get('/api/debug/test-db', async (req, res) => {
+  try {
+    if (!process.env.DATABASE_URL) {
+      return res.json({
+        success: false,
+        error: 'DATABASE_URL não configurada',
+        message: 'Configure a variável DATABASE_URL no Railway'
+      });
+    }
+
+    const { Pool } = require('pg');
+    const pool = new Pool({
+      connectionString: process.env.DATABASE_URL,
+      ssl: { rejectUnauthorized: false }
+    });
+
+    const client = await pool.connect();
+    
+    // Testar query simples
+    const result = await client.query('SELECT NOW() as current_time');
+    
+    // Verificar tabela admins
+    const tableCheck = await client.query(`
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables 
+        WHERE table_name = 'admins'
+      );
+    `);
+    
+    let adminInfo = null;
+    if (tableCheck.rows[0].exists) {
+      const adminCount = await client.query('SELECT COUNT(*) FROM admins');
+      adminInfo = {
+        tableExists: true,
+        adminCount: parseInt(adminCount.rows[0].count)
+      };
+    } else {
+      adminInfo = {
+        tableExists: false,
+        adminCount: 0
+      };
+    }
+    
+    client.release();
+    await pool.end();
+    
+    res.json({
+      success: true,
+      message: 'Conexão com banco funcionando',
+      currentTime: result.rows[0].current_time,
+      adminInfo: adminInfo,
+      timestamp: new Date().toISOString()
+    });
+    
+  } catch (error) {
+    console.error('❌ Erro no teste de banco:', error);
+    res.json({
+      success: false,
+      error: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
 });
 
 // Usar rotas
