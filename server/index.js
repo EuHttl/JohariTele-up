@@ -92,6 +92,19 @@ app.get('/test', (req, res) => {
   });
 });
 
+// Debug endpoint para verificar configuração do banco
+app.get('/api/debug/database', (req, res) => {
+  const dbInfo = {
+    hasDatabaseUrl: !!process.env.DATABASE_URL,
+    databaseUrl: process.env.DATABASE_URL ? 'Configurado' : 'Não configurado',
+    nodeEnv: process.env.NODE_ENV,
+    timestamp: new Date().toISOString()
+  };
+  
+  console.log('🔍 Debug Database Info:', dbInfo);
+  res.json(dbInfo);
+});
+
 // Usar rotas
 app.use('/api/participants', participantsRoutes);
 app.use('/api/assessments', assessmentsRoutes);
