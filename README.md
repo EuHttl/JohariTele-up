@@ -46,55 +46,6 @@ O sistema estará disponível em:
 
 ## 📊 Como Usar
 
-### Administrador
-- **Login**: admin / admin123
-- Criar e gerenciar participantes
-- Visualizar relatórios e estatísticas
-
-### Participantes
-- **Login**: email / 123456 (senha padrão)
-- Realizar autoavaliação
-- Avaliar outros participantes
-
-## 🚀 Deploy
-
-### Opções de Deploy Recomendadas
-
-#### 1. Railway (Recomendado)
-```bash
-# Instalar Railway CLI
-npm install -g @railway/cli
-
-# Fazer login
-railway login
-
-# Deploy
-railway up
-```
-
-#### 2. Heroku
-```bash
-# Instalar Heroku CLI e fazer login
-heroku login
-
-# Criar app
-heroku create seu-app-johari
-
-# Deploy
-git push heroku main
-```
-
-#### 3. Vercel (Frontend) + Railway (Backend)
-- Frontend: Deploy automático via Vercel
-- Backend: Deploy via Railway
-
-### Variáveis de Ambiente para Produção
-```env
-NODE_ENV=production
-PORT=5000
-JWT_SECRET=sua_chave_secreta_muito_forte_aqui
-```
-
 ## 📁 Estrutura do Projeto
 
 ```
@@ -121,21 +72,6 @@ npm run client       # Executa apenas o frontend
 npm run build        # Build do frontend para produção
 npm run install-all  # Instala dependências do projeto e do client
 ```
-
-## 🗄️ Banco de Dados
-
-O sistema usa **SQLite**, que é:
-- ✅ **Zero configuração**: Não precisa instalar servidor de banco
-- ✅ **Portátil**: Funciona em qualquer sistema operacional
-- ✅ **Perfeito para deploy**: Funciona em qualquer plataforma de hosting
-- ✅ **Backup simples**: É apenas um arquivo
-
-O banco é criado automaticamente na primeira execução com:
-- Tabela de administradores
-- Tabela de participantes  
-- Tabela de características da Janela de Johari (56 características)
-- Tabelas de autoavaliações e avaliações entre pares
-
 ## 👥 Janela de Johari
 
 A Janela de Johari é uma ferramenta que divide as características pessoais em 4 quadrantes:
@@ -147,11 +83,9 @@ A Janela de Johari é uma ferramenta que divide as características pessoais em 
 
 ## 🎯 Funcionalidades
 
-- ✅ Cadastro de até 15 participantes
 - ✅ Autoavaliação individual
 - ✅ Avaliação entre pares
 - ✅ Relatórios detalhados
-- ✅ Interface responsiva
 - ✅ Autenticação segura
 - ✅ Backup automático do banco
 
