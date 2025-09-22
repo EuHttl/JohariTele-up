@@ -35,7 +35,7 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 60000, // 60 segundos de timeout (aumentado para debug)
+  timeout: 30000, // 30 segundos de timeout
   withCredentials: false, // Desabilitar credentials para evitar problemas de CORS
 });
 
@@ -46,13 +46,15 @@ api.interceptors.request.use((config) => {
     config.headers.Authorization = `Bearer ${token}`;
   }
   
-  // Debug para produção
-  console.log('🚀 API Request:', {
-    method: config.method?.toUpperCase(),
-    url: config.url,
-    baseURL: config.baseURL,
-    hasToken: !!token
-  });
+  // Debug apenas em desenvolvimento
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('🚀 API Request:', {
+      method: config.method?.toUpperCase(),
+      url: config.url,
+      baseURL: config.baseURL,
+      hasToken: !!token
+    });
+  }
   
   return config;
 });
@@ -60,23 +62,27 @@ api.interceptors.request.use((config) => {
 // Interceptor para lidar com erros de autenticação
 api.interceptors.response.use(
   (response) => {
-    // Debug para produção
-    console.log('✅ API Response:', {
-      status: response.status,
-      url: response.config.url,
-      method: response.config.method?.toUpperCase()
-    });
+    // Debug apenas em desenvolvimento
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('✅ API Response:', {
+        status: response.status,
+        url: response.config.url,
+        method: response.config.method?.toUpperCase()
+      });
+    }
     return response;
   },
   (error) => {
-    // Debug para produção
-    console.error('❌ API Error:', {
-      status: error.response?.status,
-      url: error.config?.url,
-      method: error.config?.method?.toUpperCase(),
-      message: error.message,
-      data: error.response?.data
-    });
+    // Debug apenas em desenvolvimento
+    if (process.env.NODE_ENV !== 'production') {
+      console.error('❌ API Error:', {
+        status: error.response?.status,
+        url: error.config?.url,
+        method: error.config?.method?.toUpperCase(),
+        message: error.message,
+        data: error.response?.data
+      });
+    }
     
     // Só redirecionar se for um erro 401 em uma requisição que não seja de login
     if (error.response?.status === 401 && !error.config?.url?.includes('/auth/')) {

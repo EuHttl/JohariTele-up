@@ -48,13 +48,15 @@ app.use(cors({
   optionsSuccessStatus: 200 // Para suporte a navegadores legados
 }));
 
-// Middleware adicional para debug CORS
-app.use((req, res, next) => {
-  console.log('🌐 CORS: Origin recebida:', req.headers.origin);
-  console.log('🌐 CORS: Method:', req.method);
-  console.log('🌐 CORS: Path:', req.path);
-  next();
-});
+// Middleware adicional para debug CORS (apenas em desenvolvimento)
+if (process.env.NODE_ENV !== 'production') {
+  app.use((req, res, next) => {
+    console.log('🌐 CORS: Origin recebida:', req.headers.origin);
+    console.log('🌐 CORS: Method:', req.method);
+    console.log('🌐 CORS: Path:', req.path);
+    next();
+  });
+}
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -138,11 +140,13 @@ console.log('  - /api/admin');
 console.log('  - /api/auth');
 console.log('  - /auth');
 
-// Middleware para debug de todas as requisições
-app.use((req, res, next) => {
-  console.log(`🌐 ${req.method} ${req.path} - ${req.headers.origin || 'no-origin'}`);
-  next();
-});
+// Middleware para debug de todas as requisições (apenas em desenvolvimento)
+if (process.env.NODE_ENV !== 'production') {
+  app.use((req, res, next) => {
+    console.log(`🌐 ${req.method} ${req.path} - ${req.headers.origin || 'no-origin'}`);
+    next();
+  });
+}
 
 // Servir arquivos estáticos do React em produção (APENAS para rotas não-API)
 if (process.env.NODE_ENV === 'production') {
