@@ -12,20 +12,7 @@ const PORT = process.env.PORT || 5000;
 
 // Middleware - CORS configurado para produção
 const corsOptions = {
-  origin: function (origin, callback) {
-    // Permitir requisições sem origin (mobile apps, Postman, etc.)
-    if (!origin) return callback(null, true);
-    
-    const allowedOrigins = process.env.CORS_ORIGIN ? 
-      process.env.CORS_ORIGIN.split(',').map(o => o.trim()) : 
-      ['https://johari-tele-up.vercel.app'];
-    
-    if (allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('Não permitido pelo CORS'));
-    }
-  },
+  origin: ['https://johari-tele-up.vercel.app'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Access-Control-Allow-Origin'],
@@ -42,16 +29,13 @@ app.use(cors(corsOptions));
 // Middleware adicional para garantir cabeçalhos CORS
 app.use((req, res, next) => {
   const origin = req.headers.origin;
-  const allowedOrigins = process.env.CORS_ORIGIN ? 
-    process.env.CORS_ORIGIN.split(',').map(o => o.trim()) : 
-    ['https://johari-tele-up.vercel.app'];
   
-  if (allowedOrigins.includes(origin)) {
+  if (origin === 'https://johari-tele-up.vercel.app') {
     res.header('Access-Control-Allow-Origin', origin);
   }
   
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Access-Control-Allow-Origin');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   res.header('Access-Control-Allow-Credentials', 'true');
   
   // Responder imediatamente para requisições OPTIONS
