@@ -205,7 +205,6 @@ body::before {
 }
 
 .card:hover {
-  transform: translateY(-8px) scale(1.02) rotateX(2deg);
   box-shadow: 
     0 20px 40px rgba(0, 0, 0, 0.4),
     0 8px 16px rgba(124, 58, 237, 0.3),
