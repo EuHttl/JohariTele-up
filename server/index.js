@@ -93,12 +93,18 @@ app.use((req, res, next) => {
   next();
 });
 
-// Servir arquivos estáticos do React em produção
+// Servir arquivos estáticos do React em produção (APENAS para rotas não-API)
 if (process.env.NODE_ENV === 'production') {
   app.use(express.static(path.join(__dirname, '../client/build')));
   
+  // Catch-all handler: send back React's index.html file for non-API routes
   app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, '../client/build', 'index.html'));
+    // Só servir HTML para rotas que NÃO começam com /api
+    if (!req.path.startsWith('/api')) {
+      res.sendFile(path.join(__dirname, '../client/build', 'index.html'));
+    } else {
+      res.status(404).json({ error: 'API endpoint not found' });
+    }
   });
 }
 
