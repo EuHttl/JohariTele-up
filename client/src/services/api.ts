@@ -91,7 +91,7 @@ api.interceptors.response.use(
 export const authAPI = {
   login: async (email: string, password: string): Promise<AuthResponse> => {
     try {
-      const response = await api.post(`${API_BASE_URL}/auth/login`, { email, password });
+      const response = await api.post('/auth/login', { email, password });
       return response.data;
     } catch (error) {
       throw error;
@@ -99,7 +99,7 @@ export const authAPI = {
   },
   
   verify: async (token: string) => {
-    const response = await api.post(`${API_BASE_URL}/auth/verify`, { token });
+    const response = await api.post('/auth/verify', { token });
     return response.data;
   },
 };
@@ -107,32 +107,32 @@ export const authAPI = {
 // Participants API
 export const participantsAPI = {
   getAll: async (): Promise<Participant[]> => {
-    const response = await api.get(`${API_BASE_URL}/participants`);
+    const response = await api.get('/participants');
     return response.data;
   },
   
   getByCode: async (code: string): Promise<Participant> => {
-    const response = await api.get(`${API_BASE_URL}/participants/${code}`);
+    const response = await api.get(`/participants/${code}`);
     return response.data;
   },
   
   create: async (name: string, email: string): Promise<Participant> => {
-    const response = await api.post(`${API_BASE_URL}/participants`, { name, email });
+    const response = await api.post('/participants', { name, email });
     return response.data;
   },
   
   update: async (id: number, name: string, email: string) => {
-    const response = await api.put(`${API_BASE_URL}/participants/${id}`, { name, email });
+    const response = await api.put(`/participants/${id}`, { name, email });
     return response.data;
   },
   
   delete: async (id: number) => {
-    const response = await api.delete(`${API_BASE_URL}/participants/${id}`);
+    const response = await api.delete(`/participants/${id}`);
     return response.data;
   },
   
   getStats: async () => {
-    const response = await api.get(`${API_BASE_URL}/participants/stats/overview`);
+    const response = await api.get('/participants/stats/overview');
     return response.data;
   },
 };
@@ -140,32 +140,32 @@ export const participantsAPI = {
 // Assessments API
 export const assessmentsAPI = {
   getCharacteristics: async (): Promise<Characteristic[]> => {
-    const response = await api.get(`${API_BASE_URL}/assessments/characteristics`);
+    const response = await api.get('/assessments/characteristics');
     return response.data;
   },
   
   getSelfAssessment: async (code: string): Promise<SelfAssessment[]> => {
-    const response = await api.get(`${API_BASE_URL}/assessments/self/${code}`);
+    const response = await api.get(`/assessments/self/${code}`);
     return response.data;
   },
   
   saveSelfAssessment: async (code: string, assessments: Assessment[]) => {
-    const response = await api.post(`${API_BASE_URL}/assessments/self/${code}`, { assessments });
+    const response = await api.post(`/assessments/self/${code}`, { assessments });
     return response.data;
   },
   
   getPeers: async (code: string): Promise<Participant[]> => {
-    const response = await api.get(`${API_BASE_URL}/assessments/peers/${code}`);
+    const response = await api.get(`/assessments/peers/${code}`);
     return response.data;
   },
   
   getPeerAssessment: async (assessorCode: string, assessedCode: string): Promise<PeerAssessment[]> => {
-    const response = await api.get(`${API_BASE_URL}/assessments/peer/${assessorCode}/${assessedCode}`);
+    const response = await api.get(`/assessments/peer/${assessorCode}/${assessedCode}`);
     return response.data;
   },
   
   savePeerAssessment: async (assessorCode: string, assessedCode: string, assessments: Assessment[]) => {
-    const response = await api.post(`${API_BASE_URL}/assessments/peer/${assessorCode}/${assessedCode}`, { assessments });
+    const response = await api.post(`/assessments/peer/${assessorCode}/${assessedCode}`, { assessments });
     return response.data;
   },
 };
@@ -173,17 +173,17 @@ export const assessmentsAPI = {
 // Reports API
 export const reportsAPI = {
   getJohariReport: async (code: string): Promise<JohariReport> => {
-    const response = await api.get(`${API_BASE_URL}/reports/johari/${code}`);
+    const response = await api.get(`/reports/johari/${code}`);
     return response.data;
   },
   
   getComparativeReport: async (): Promise<ComparativeReport> => {
-    const response = await api.get(`${API_BASE_URL}/reports/comparative`);
+    const response = await api.get('/reports/comparative');
     return response.data;
   },
   
   getCharacteristicAnalysis: async (): Promise<CharacteristicAnalysis> => {
-    const response = await api.get(`${API_BASE_URL}/reports/characteristics`);
+    const response = await api.get('/reports/characteristics');
     return response.data;
   },
 };
@@ -191,17 +191,17 @@ export const reportsAPI = {
 // Admin API
 export const adminAPI = {
   getAssessmentTracking: async () => {
-    const response = await api.get(`${API_BASE_URL}/admin/assessment-tracking`);
+    const response = await api.get('/admin/assessment-tracking');
     return response.data;
   },
   
   getAssessmentMatrix: async () => {
-    const response = await api.get(`${API_BASE_URL}/admin/assessment-matrix`);
+    const response = await api.get('/admin/assessment-matrix');
     return response.data;
   },
   
   getParticipantProgress: async () => {
-    const response = await api.get(`${API_BASE_URL}/admin/participant-progress`);
+    const response = await api.get('/admin/participant-progress');
     return response.data;
   }
 };
