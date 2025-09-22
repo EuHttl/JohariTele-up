@@ -12,26 +12,31 @@ const JWT_SECRET = process.env.JWT_SECRET || 'johari_secret_key_2024';
 // POST /api/auth/login - Login unificado para admin e participantes
 router.post('/login', (req, res) => {
   try {
+    console.log('🔐 Login attempt started:', { email: req.body.email, timestamp: new Date().toISOString() });
     const { email, password } = req.body;
     
     if (!email || !password) {
+      console.log('❌ Login failed: missing credentials');
       return res.status(400).json({ error: 'Email e senha são obrigatórios' });
     }
     
     // Primeiro, tenta encontrar como admin
     const adminSql = 'SELECT id, username, email, password, name FROM admins WHERE email = ?';
     
+    console.log('🔍 Checking admin credentials for:', email);
     db.get(adminSql, [email], (err, admin) => {
       if (err) {
-        console.error('Erro no login (admin):', err);
+        console.error('❌ Erro no login (admin):', err);
         return res.status(500).json({ error: 'Erro interno do servidor' });
       }
       
       // Se encontrou como admin, verifica a senha
       if (admin) {
+        console.log('✅ Admin found, checking password...');
         const isMatch = bcrypt.compareSync(password, admin.password);
         
         if (!isMatch) {
+          console.log('❌ Admin password mismatch');
           return res.status(401).json({ error: 'Credenciais inválidas' });
         }
         
@@ -48,6 +53,7 @@ router.post('/login', (req, res) => {
           { expiresIn: '24h' }
         );
         
+        console.log('🎉 Admin login successful!');
         return res.json({
           token,
           user: {
@@ -62,6 +68,7 @@ router.post('/login', (req, res) => {
       }
       
       // Se não é admin, tenta como participante
+      console.log('🔍 Admin not found, checking participant credentials for:', email);
       const participantSql = 'SELECT id, name, email, code, password FROM participants WHERE email = ?';
       
       db.get(participantSql, [email], (err, participant) => {
