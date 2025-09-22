@@ -82,126 +82,57 @@ async function initializeDatabase() {
   console.log('🗄️  Inicializando banco PostgreSQL...');
   
   try {
-    // Adicionar timeout na conexão
-    const client = await Promise.race([
-      pool.connect(),
-      new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Timeout na conexão com banco')), 10000)
-      )
-    ]);
+    console.log('🔌 Conectando ao banco...');
+    const client = await pool.connect();
+    console.log('✅ Conectado ao banco com sucesso');
     
     try {
-      // Criar tabela de administradores
-      await client.query(`
-        CREATE TABLE IF NOT EXISTS admins (
-          id SERIAL PRIMARY KEY,
-          username VARCHAR(255) UNIQUE NOT NULL,
-          password VARCHAR(255) NOT NULL,
-          name VARCHAR(255) NOT NULL,
-          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
+      console.log('📋 Verificando tabelas...');
+      
+      // Verificar se tabela admins existe
+      const adminsCheck = await client.query(`
+        SELECT EXISTS (
+          SELECT FROM information_schema.tables 
+          WHERE table_name = 'admins'
+        );
       `);
-
-      // Coluna email já existe em produção - não tentar alterar
-      console.log('ℹ️ Usando estrutura existente da tabela admins (coluna email já presente)');
-
-      // Criar tabela de participantes
-      await client.query(`
-        CREATE TABLE IF NOT EXISTS participants (
-          id SERIAL PRIMARY KEY,
-          name VARCHAR(255) NOT NULL,
-          email VARCHAR(255) UNIQUE NOT NULL,
-          code VARCHAR(255) UNIQUE NOT NULL,
-          password VARCHAR(255) NOT NULL,
-          has_completed_self_assessment BOOLEAN DEFAULT FALSE,
-          has_completed_peer_assessments BOOLEAN DEFAULT FALSE,
-          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-      `);
-
-      // Criar tabela de características
-      await client.query(`
-        CREATE TABLE IF NOT EXISTS characteristics (
-          id SERIAL PRIMARY KEY,
-          name VARCHAR(255) UNIQUE NOT NULL,
-          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-      `);
-
-      // Criar tabela de autoavaliações
-      await client.query(`
-        CREATE TABLE IF NOT EXISTS self_assessments (
-          id SERIAL PRIMARY KEY,
-          participant_id INTEGER NOT NULL,
-          characteristic_id INTEGER NOT NULL,
-          selected BOOLEAN NOT NULL,
-          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-          FOREIGN KEY (participant_id) REFERENCES participants (id),
-          FOREIGN KEY (characteristic_id) REFERENCES characteristics (id),
-          UNIQUE(participant_id, characteristic_id)
-        )
-      `);
-
-      // Criar tabela de avaliações entre pares
-      await client.query(`
-        CREATE TABLE IF NOT EXISTS peer_assessments (
-          id SERIAL PRIMARY KEY,
-          assessor_id INTEGER NOT NULL,
-          assessed_id INTEGER NOT NULL,
-          characteristic_id INTEGER NOT NULL,
-          selected BOOLEAN NOT NULL,
-          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-          FOREIGN KEY (assessor_id) REFERENCES participants (id),
-          FOREIGN KEY (assessed_id) REFERENCES participants (id),
-          FOREIGN KEY (characteristic_id) REFERENCES characteristics (id),
-          UNIQUE(assessor_id, assessed_id, characteristic_id)
-        )
-      `);
-
-      // Inserir características se não existirem
-      const characteristicsCount = await client.query('SELECT COUNT(*) FROM characteristics');
-      if (parseInt(characteristicsCount.rows[0].count) === 0) {
-        console.log('📝 Inserindo características da Janela de Johari...');
-        
-        for (const characteristic of johariCharacteristics) {
-          await client.query(
-            'INSERT INTO characteristics (name) VALUES ($1)',
-            [characteristic]
-          );
-        }
-        console.log('✅ Características inseridas com sucesso!');
+      
+      if (adminsCheck.rows[0].exists) {
+        console.log('✅ Tabela admins já existe');
+      } else {
+        console.log('➕ Criando tabela admins...');
+        await client.query(`
+          CREATE TABLE admins (
+            id SERIAL PRIMARY KEY,
+            username VARCHAR(255) UNIQUE NOT NULL,
+            email VARCHAR(255) UNIQUE NOT NULL,
+            password VARCHAR(255) NOT NULL,
+            name VARCHAR(255) NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+          )
+        `);
+        console.log('✅ Tabela admins criada');
       }
 
       // Verificar se existe administrador
+      console.log('👤 Verificando administrador...');
       const adminCount = await client.query('SELECT COUNT(*) FROM admins');
+      console.log(`📊 Total de administradores: ${adminCount.rows[0].count}`);
+      
       if (parseInt(adminCount.rows[0].count) === 0) {
-        console.log('👤 Criando administrador padrão...');
+        console.log('➕ Criando administrador padrão...');
         
         const bcrypt = require('bcryptjs');
         const defaultPassword = bcrypt.hashSync('admin123', 10);
         
-        try {
-          await client.query(
-            'INSERT INTO admins (username, password, name, email) VALUES ($1, $2, $3, $4)',
-            ['admin', defaultPassword, 'Hyttalo Costa', 'hyttalo2002@gmail.com']
-          );
-          
-          console.log('✅ Administrador padrão criado!');
-          console.log('👤 Usuário: admin');
-          console.log('🔑 Senha: admin123');
-        } catch (insertError) {
-          console.error('❌ Erro ao criar administrador:', insertError.message);
-          
-          // Tentar criar sem email se a coluna não existir
-          if (insertError.code === '42703') { // Column does not exist
-            console.log('🔄 Tentando criar administrador sem email...');
-            await client.query(
-              'INSERT INTO admins (username, password, name) VALUES ($1, $2, $3)',
-              ['admin', defaultPassword, 'Hyttalo Costa']
-            );
-            console.log('✅ Administrador criado sem email!');
-          }
-        }
+        await client.query(
+          'INSERT INTO admins (username, password, name, email) VALUES ($1, $2, $3, $4)',
+          ['admin', defaultPassword, 'Hyttalo Costa', 'hyttalo2002@gmail.com']
+        );
+        
+        console.log('✅ Administrador padrão criado!');
+        console.log('👤 Email: hyttalo2002@gmail.com');
+        console.log('🔑 Senha: admin123');
       } else {
         console.log('ℹ️ Administrador já existe no banco');
       }
