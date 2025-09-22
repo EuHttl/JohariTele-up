@@ -50,8 +50,7 @@
 
 ### Credenciais:
 - **Admin**: `hyttalo2002@gmail.com` / `admin123`
-- **Participante**: `hyttalo2002@gmail.com` / `123456`
-- **Outros Participantes**: `email` / `123456`
+- **Participantes**: `email` / `123456` (12 participantes + 1 admin = 13 membros)
 
 ## 🔧 Teste Local
 

@@ -286,7 +286,7 @@ const Dashboard: React.FC = () => {
                 <div style={{
                   fontSize: '0.875rem',
                   color: '#6b7280'
-                }}>de 15</div>
+                }}>de 12</div>
               </div>
             </div>
             <h3 style={{
@@ -311,7 +311,7 @@ const Dashboard: React.FC = () => {
                 height: '8px',
                 borderRadius: '9999px',
                 transition: 'all 0.5s ease',
-                width: `${((stats?.total_participants || 0) / 15) * 100}%`
+                width: `${((stats?.total_participants || 0) / 12) * 100}%`
               }}></div>
           </div>
         </div>
