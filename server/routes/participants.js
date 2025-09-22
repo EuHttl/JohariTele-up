@@ -65,9 +65,13 @@ router.get('/:code', (req, res) => {
 
 // POST /api/participants - Criar novo participante
 router.post('/', (req, res) => {
+  console.log('📝 POST /api/participants - Criando participante');
+  console.log('📝 Dados recebidos:', req.body);
+  
   const { name, email } = req.body;
   
   if (!name || !email) {
+    console.log('📝 Erro: Nome e email são obrigatórios');
     return res.status(400).json({ error: 'Nome e email são obrigatórios' });
   }
 

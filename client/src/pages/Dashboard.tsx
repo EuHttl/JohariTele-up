@@ -116,18 +116,11 @@ const Dashboard: React.FC = () => {
     }
   };
 
-  // Debug mais detalhado
-  console.log('Dashboard - Estado atual:', {
-    participants,
-    participantsType: typeof participants,
-    isArray: Array.isArray(participants),
-    length: participants?.length,
-    firstItem: participants?.[0]
-  });
-
-  const completedParticipants = Array.isArray(participants) 
-    ? participants.filter(p => p.has_completed_self_assessment && p.has_completed_peer_assessments).length 
-    : 0;
+  // Verificação segura para participantes
+  const participantsArray = Array.isArray(participants) ? participants : [];
+  const completedParticipants = participantsArray.filter(p => 
+    p.has_completed_self_assessment && p.has_completed_peer_assessments
+  ).length;
 
   if (loading) {
     return (
@@ -563,7 +556,7 @@ const Dashboard: React.FC = () => {
       </div>
 
           <div className="dashboard-participants-content">
-            {!participants || participants.length === 0 ? (
+            {participantsArray.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '3rem 0' }}>
                 <div style={{
                   width: '64px',
@@ -654,7 +647,7 @@ const Dashboard: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody>
-                    {participants?.map((participant, index) => (
+                    {participantsArray.map((participant, index) => (
                       <tr key={participant.id} style={{
                         borderBottom: '1px solid #f3f4f6',
                         transition: 'background-color 0.2s ease'
