@@ -163,10 +163,11 @@ if (process.env.NODE_ENV === 'production') {
   });
 }
 
-// Inicializar banco de dados (não bloquear o servidor)
-initializeDatabase().catch(error => {
-  console.error('❌ Erro na inicialização do banco (não crítico):', error.message);
-  console.log('🔄 Servidor continuará funcionando, banco será inicializado quando necessário');
+// Inicializar banco de dados
+initializeDatabase().then(() => {
+  console.log('✅ Banco inicializado com sucesso');
+}).catch(error => {
+  console.error('❌ Erro na inicialização do banco:', error.message);
 });
 
 app.listen(PORT, () => {

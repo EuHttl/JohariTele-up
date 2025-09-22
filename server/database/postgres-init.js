@@ -82,22 +82,12 @@ async function initializeDatabase() {
   console.log('🗄️  Inicializando banco PostgreSQL...');
   
   try {
-    console.log('🔌 Conectando ao banco...');
-    
-    // Adicionar timeout na conexão
-    const connectionPromise = pool.connect();
-    const timeoutPromise = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error('Timeout na conexão com banco')), 15000)
-    );
-    
-    const client = await Promise.race([connectionPromise, timeoutPromise]);
+    const client = await pool.connect();
     console.log('✅ Conectado ao banco com sucesso');
     
     try {
-      console.log('📋 Verificando tabela admins...');
-      
-      // Criar tabela admins se não existir (com timeout)
-      const createTablePromise = client.query(`
+      // Criar tabela admins se não existir
+      await client.query(`
         CREATE TABLE IF NOT EXISTS admins (
           id SERIAL PRIMARY KEY,
           username VARCHAR(255) UNIQUE NOT NULL,
@@ -107,22 +97,10 @@ async function initializeDatabase() {
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
       `);
-
-      const tableTimeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Timeout na criação da tabela')), 10000)
-      );
-      
-      await Promise.race([createTablePromise, tableTimeoutPromise]);
       console.log('✅ Tabela admins verificada/criada');
 
-      // Verificar se existe administrador (com timeout)
-      console.log('👤 Verificando administrador...');
-      const countPromise = client.query('SELECT COUNT(*) FROM admins');
-      const countTimeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Timeout na verificação de admin')), 10000)
-      );
-      
-      const adminCount = await Promise.race([countPromise, countTimeoutPromise]);
+      // Verificar se existe administrador
+      const adminCount = await client.query('SELECT COUNT(*) FROM admins');
       console.log(`📊 Total de administradores: ${adminCount.rows[0].count}`);
       
       if (parseInt(adminCount.rows[0].count) === 0) {
@@ -131,16 +109,10 @@ async function initializeDatabase() {
         const bcrypt = require('bcryptjs');
         const defaultPassword = bcrypt.hashSync('admin123', 10);
         
-        const insertPromise = client.query(
+        await client.query(
           'INSERT INTO admins (username, password, name, email) VALUES ($1, $2, $3, $4)',
           ['admin', defaultPassword, 'Hyttalo Costa', 'hyttalo2002@gmail.com']
         );
-        
-        const insertTimeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Timeout na criação do admin')), 10000)
-        );
-        
-        await Promise.race([insertPromise, insertTimeoutPromise]);
         
         console.log('✅ Administrador padrão criado!');
         console.log('👤 Email: hyttalo2002@gmail.com');
