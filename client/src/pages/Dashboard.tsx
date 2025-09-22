@@ -152,40 +152,14 @@ const Dashboard: React.FC = () => {
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#f9fafb' }}>
       {/* Hero Section */}
-      <div style={{
-        position: 'relative',
-        overflow: 'hidden',
-        background: 'linear-gradient(135deg, #7c3aed 0%, #8b5cf6 50%, #6366f1 100%)',
-        borderRadius: '24px',
-        margin: '1.5rem',
-        marginTop: '1.5rem',
-        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)'
-      }}>
-        <div style={{
-          position: 'absolute',
-          inset: 0,
-          background: 'rgba(0, 0, 0, 0.2)'
-        }}></div>
+      <div className="dashboard-hero">
+        <div className="dashboard-hero-overlay"></div>
         
-        <div style={{ position: 'relative', padding: '3rem 2rem' }}>
-          <div style={{
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '2rem'
-          }}>
-            <div style={{ flex: 1 }}>
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.75rem',
-                marginBottom: '1rem'
-              }}>
-                <div style={{
-                  padding: '0.5rem',
-                  background: 'rgba(255, 255, 255, 0.2)',
-                  backdropFilter: 'blur(8px)',
-                  borderRadius: '12px'
-                }}>
+        <div className="dashboard-hero-content">
+          <div className="dashboard-hero-grid">
+            <div className="dashboard-hero-text">
+              <div className="dashboard-hero-badge">
+                <div className="dashboard-hero-icon">
                   <Brain style={{ width: '24px', height: '24px', color: 'white' }} />
                 </div>
                 <span style={{
@@ -195,13 +169,7 @@ const Dashboard: React.FC = () => {
                 }}>Sistema de Avaliação</span>
               </div>
               
-              <h1 style={{
-                fontSize: '3rem',
-                fontWeight: '700',
-                color: 'white',
-                marginBottom: '1rem',
-                lineHeight: 1.2
-              }}>
+              <h1 className="dashboard-hero-title">
                 Janela de <span style={{
                   background: 'linear-gradient(135deg, #fde047 0%, #f472b6 100%)',
                   WebkitBackgroundClip: 'text',
@@ -210,45 +178,14 @@ const Dashboard: React.FC = () => {
                 }}>Johari</span>
               </h1>
               
-              <p style={{
-                fontSize: '1.25rem',
-                color: '#c4b5fd',
-                marginBottom: '1.5rem',
-                maxWidth: '32rem'
-              }}>
+              <p className="dashboard-hero-subtitle">
                 Descubra o potencial oculto da sua equipe através da análise comportamental mais completa
               </p>
               
-              <div style={{
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '1rem'
-              }}>
+              <div className="dashboard-hero-actions">
                 <Link 
                   to="/app/participants" 
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    padding: '0.75rem 1.5rem',
-                    backgroundColor: 'white',
-                    color: '#7c3aed',
-                    borderRadius: '12px',
-                    fontWeight: '600',
-                    textDecoration: 'none',
-                    transition: 'all 0.3s ease',
-                    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
-                    width: 'fit-content'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = '#faf5ff';
-                    e.currentTarget.style.transform = 'translateY(-2px)';
-                    e.currentTarget.style.boxShadow = '0 20px 25px -5px rgba(0, 0, 0, 0.1)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = 'white';
-                    e.currentTarget.style.transform = 'translateY(0)';
-                    e.currentTarget.style.boxShadow = '0 10px 15px -3px rgba(0, 0, 0, 0.1)';
-                  }}
+                  className="dashboard-hero-btn"
                 >
                   <Plus style={{ width: '20px', height: '20px', marginRight: '8px' }} />
                   Gerenciar Participantes
@@ -257,26 +194,7 @@ const Dashboard: React.FC = () => {
                 
                 <Link 
                   to="/app/reports" 
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    padding: '0.75rem 1.5rem',
-                    background: 'rgba(255, 255, 255, 0.2)',
-                    backdropFilter: 'blur(8px)',
-                    color: 'white',
-                    border: '1px solid rgba(255, 255, 255, 0.3)',
-                    borderRadius: '12px',
-                    fontWeight: '600',
-                    textDecoration: 'none',
-                    transition: 'all 0.3s ease',
-                    width: 'fit-content'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.3)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)';
-                  }}
+                  className="dashboard-hero-btn-secondary"
                 >
                   <BarChart3 style={{ width: '20px', height: '20px', marginRight: '8px' }} />
                   Ver Relatórios
@@ -285,21 +203,9 @@ const Dashboard: React.FC = () => {
               </div>
             </div>
             
-            <div style={{
-              display: 'flex',
-              justifyContent: 'center',
-              marginTop: '2rem'
-            }}>
+            <div className="dashboard-hero-visual">
               <div style={{ position: 'relative' }}>
-                <div style={{
-                  width: '256px',
-                  height: '256px',
-                  background: 'rgba(255, 255, 255, 0.1)',
-                  backdropFilter: 'blur(8px)',
-                  borderRadius: '24px',
-                  padding: '1.5rem',
-                  border: '1px solid rgba(255, 255, 255, 0.2)'
-                }}>
+                <div className="dashboard-progress-card">
                   <div style={{ textAlign: 'center' }}>
                     <div style={{
                       width: '64px',
@@ -354,31 +260,9 @@ const Dashboard: React.FC = () => {
         </div>
 
       {/* Stats Grid */}
-      <div style={{ padding: '0 1.5rem', marginTop: '2rem' }}>
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-          gap: '1.5rem'
-        }}>
+      <div className="dashboard-stats-grid">
           {/* Total Participants */}
-          <div style={{
-            position: 'relative',
-            overflow: 'hidden',
-            backgroundColor: 'white',
-            borderRadius: '16px',
-            padding: '1.5rem',
-            boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
-            border: '1px solid #f3f4f6',
-            transition: 'all 0.3s ease'
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.boxShadow = '0 20px 25px -5px rgba(0, 0, 0, 0.1)';
-            e.currentTarget.style.borderColor = '#c084fc';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.boxShadow = '0 10px 15px -3px rgba(0, 0, 0, 0.1)';
-            e.currentTarget.style.borderColor = '#f3f4f6';
-          }}>
+          <div className="dashboard-stats-card">
             <div style={{
               display: 'flex',
               alignItems: 'center',
@@ -433,24 +317,7 @@ const Dashboard: React.FC = () => {
         </div>
 
           {/* Autoavaliações */}
-          <div style={{
-            position: 'relative',
-            overflow: 'hidden',
-            backgroundColor: 'white',
-            borderRadius: '16px',
-            padding: '1.5rem',
-            boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
-            border: '1px solid #f3f4f6',
-            transition: 'all 0.3s ease'
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.boxShadow = '0 20px 25px -5px rgba(0, 0, 0, 0.1)';
-            e.currentTarget.style.borderColor = '#6ee7b7';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.boxShadow = '0 10px 15px -3px rgba(0, 0, 0, 0.1)';
-            e.currentTarget.style.borderColor = '#f3f4f6';
-          }}>
+          <div className="dashboard-stats-card">
             <div style={{
               display: 'flex',
               alignItems: 'center',
@@ -505,24 +372,7 @@ const Dashboard: React.FC = () => {
           </div>
 
           {/* Avaliações Entre Pares */}
-          <div style={{
-            position: 'relative',
-            overflow: 'hidden',
-            backgroundColor: 'white',
-            borderRadius: '16px',
-            padding: '1.5rem',
-            boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
-            border: '1px solid #f3f4f6',
-            transition: 'all 0.3s ease'
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.boxShadow = '0 20px 25px -5px rgba(0, 0, 0, 0.1)';
-            e.currentTarget.style.borderColor = '#f0abfc';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.boxShadow = '0 10px 15px -3px rgba(0, 0, 0, 0.1)';
-            e.currentTarget.style.borderColor = '#f3f4f6';
-          }}>
+          <div className="dashboard-stats-card">
             <div style={{
               display: 'flex',
               alignItems: 'center',
@@ -577,24 +427,7 @@ const Dashboard: React.FC = () => {
               </div>
               
           {/* Completos */}
-          <div style={{
-            position: 'relative',
-            overflow: 'hidden',
-            backgroundColor: 'white',
-            borderRadius: '16px',
-            padding: '1.5rem',
-            boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
-            border: '1px solid #f3f4f6',
-            transition: 'all 0.3s ease'
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.boxShadow = '0 20px 25px -5px rgba(0, 0, 0, 0.1)';
-            e.currentTarget.style.borderColor = '#fcd34d';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.boxShadow = '0 10px 15px -3px rgba(0, 0, 0, 0.1)';
-            e.currentTarget.style.borderColor = '#f3f4f6';
-          }}>
+          <div className="dashboard-stats-card">
             <div style={{
               display: 'flex',
               alignItems: 'center',
@@ -651,18 +484,9 @@ const Dashboard: React.FC = () => {
         </div>
 
       {/* Participants Table */}
-      <div style={{ padding: '0 1.5rem', marginTop: '2rem', marginBottom: '2rem' }}>
-        <div style={{
-          backgroundColor: 'white',
-          borderRadius: '16px',
-          boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
-          border: '1px solid #f3f4f6',
-          overflow: 'hidden'
-        }}>
-          <div style={{
-            padding: '1.5rem',
-            borderBottom: '1px solid #f3f4f6'
-          }}>
+      <div className="dashboard-participants-section">
+        <div className="dashboard-participants-card">
+          <div className="dashboard-participants-header">
             <div style={{
               display: 'flex',
               alignItems: 'center',
@@ -723,7 +547,7 @@ const Dashboard: React.FC = () => {
         </div>
       </div>
 
-          <div style={{ padding: '1.5rem' }}>
+          <div className="dashboard-participants-content">
             {participants.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '3rem 0' }}>
                 <div style={{
@@ -777,9 +601,9 @@ const Dashboard: React.FC = () => {
                   Adicionar Primeiro Participante
               </Link>
             </div>
-          ) : (
-              <div style={{ overflowX: 'auto' }}>
-                <table style={{ width: '100%' }}>
+            ) : (
+              <div className="dashboard-table-responsive">
+                <table className="dashboard-table">
                 <thead>
                     <tr style={{ borderBottom: '1px solid #e5e7eb' }}>
                       <th style={{

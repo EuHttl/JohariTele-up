@@ -30,30 +30,12 @@ const Layout: React.FC = () => {
   };
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#f9fafb' }}>
+    <div className="App">
       {/* Header fixo */}
-      <header style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        zIndex: 1000,
-        background: 'linear-gradient(135deg, #1f2937 0%, #111827 50%, #0f172a 100%)',
-        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
-        borderBottom: '1px solid rgba(124, 58, 237, 0.2)',
-        height: '70px'
-      }}>
-        <div style={{
-          maxWidth: '1200px',
-          margin: '0 auto',
-          padding: '0 1.5rem',
-          height: '100%',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between'
-        }}>
+      <header className="header-fixed">
+        <div className="header-container">
           {/* Logo e título */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <div className="header-logo">
             <div style={{ position: 'relative' }}>
               <div style={{
                 height: '40px',
@@ -152,20 +134,9 @@ const Layout: React.FC = () => {
           </nav>
 
           {/* Usuário e logout */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-              <div style={{
-                height: '32px',
-                width: '32px',
-                background: 'linear-gradient(135deg, rgba(124, 58, 237, 0.3) 0%, rgba(147, 51, 234, 0.3) 100%)',
-                backdropFilter: 'blur(10px)',
-                borderRadius: '8px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                border: '1px solid rgba(124, 58, 237, 0.3)',
-                boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)'
-              }}>
+          <div className="header-actions">
+            <div className="header-user-info">
+              <div className="header-user-avatar">
                 <User style={{ height: '16px', width: '16px', color: 'white' }} />
               </div>
               <div style={{ textAlign: 'right' }}>
@@ -186,30 +157,7 @@ const Layout: React.FC = () => {
             
             <button
               onClick={handleLogout}
-              style={{
-                background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.2) 0%, rgba(220, 38, 38, 0.2) 100%)',
-                backdropFilter: 'blur(10px)',
-                padding: '0.5rem',
-                color: 'white',
-                borderRadius: '8px',
-                border: '1px solid rgba(239, 68, 68, 0.2)',
-                cursor: 'pointer',
-                transition: 'all 0.3s ease',
-                boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'linear-gradient(135deg, rgba(239, 68, 68, 0.3) 0%, rgba(220, 38, 38, 0.3) 100%)';
-                e.currentTarget.style.borderColor = 'rgba(248, 113, 113, 0.4)';
-                e.currentTarget.style.transform = 'scale(1.05)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'linear-gradient(135deg, rgba(239, 68, 68, 0.2) 0%, rgba(220, 38, 38, 0.2) 100%)';
-                e.currentTarget.style.borderColor = 'rgba(239, 68, 68, 0.2)';
-                e.currentTarget.style.transform = 'scale(1)';
-              }}
+              className="header-logout-btn"
               title="Sair"
             >
               <LogOut style={{ height: '16px', width: '16px' }} />
@@ -219,16 +167,9 @@ const Layout: React.FC = () => {
       </header>
 
       {/* Conteúdo principal */}
-      <main style={{ 
-        paddingTop: '70px', // Espaço para o header fixo
-        minHeight: '100vh'
-      }}>
-        <div style={{ padding: '2rem' }}>
-          <div style={{ 
-            maxWidth: '1200px', 
-            margin: '0 auto',
-            padding: '0 1.5rem'
-          }}>
+      <main className="main-content">
+        <div className="main-container">
+          <div className="main-wrapper">
             <Outlet />
           </div>
         </div>
