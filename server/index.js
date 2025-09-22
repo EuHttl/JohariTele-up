@@ -21,25 +21,19 @@ if (process.env.DATABASE_URL) {
 const app = express();
 const PORT = process.env.PORT || 8080;
 
-// Middleware CORS - permitir TODAS as origens temporariamente
+// Middleware CORS - DEVE SER O PRIMEIRO MIDDLEWARE
+app.use(cors({
+  origin: '*', // Permitir todas as origens
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: false
+}));
+
+// Middleware adicional para debug CORS
 app.use((req, res, next) => {
-  // Permitir todas as origens temporariamente
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  res.header('Access-Control-Allow-Credentials', 'false'); // Deve ser false quando origin é *
-  
-  // Log para debug
   console.log('🌐 CORS: Origin recebida:', req.headers.origin);
   console.log('🌐 CORS: Method:', req.method);
   console.log('🌐 CORS: Path:', req.path);
-  
-  // Responder imediatamente para requisições OPTIONS (preflight)
-  if (req.method === 'OPTIONS') {
-    console.log('🌐 CORS: Respondendo a requisição OPTIONS');
-    return res.status(200).end();
-  }
-  
   next();
 });
 
