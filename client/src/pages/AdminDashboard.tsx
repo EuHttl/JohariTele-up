@@ -275,7 +275,7 @@ const AdminDashboard: React.FC = () => {
               }`}
             >
               <TrendingUp className="h-4 w-4 inline mr-2" />
-              Rastreamento Detalhado / Detailed Tracking
+              Rastreamento Detalhado
             </button>
             <button
               onClick={() => setActiveTab('matrix')}
@@ -286,7 +286,7 @@ const AdminDashboard: React.FC = () => {
               }`}
             >
               <Grid3X3 className="h-4 w-4 inline mr-2" />
-              Matriz de Avaliações / Assessment Matrix
+              Matriz de Avaliações
             </button>
             <button
               onClick={() => setActiveTab('progress')}
@@ -297,7 +297,7 @@ const AdminDashboard: React.FC = () => {
               }`}
             >
               <BarChart3 className="h-4 w-4 inline mr-2" />
-              Progresso Individual / Individual Progress
+              Progresso Individual
             </button>
           </div>
         </div>
@@ -307,7 +307,7 @@ const AdminDashboard: React.FC = () => {
           {activeTab === 'tracking' && trackingData && (
             <div className="space-y-4">
               <h3 className="text-lg font-semibold text-gray-900">
-                Rastreamento por Avaliador / Tracking by Assessor
+                Rastreamento por Avaliador
               </h3>
               {trackingData.evaluations.map((assessor) => (
                 <div key={assessor.assessor.id} className="border rounded-lg p-4">
@@ -349,14 +349,14 @@ const AdminDashboard: React.FC = () => {
           {activeTab === 'matrix' && matrixData && (
             <div className="space-y-4">
               <h3 className="text-lg font-semibold text-gray-900">
-                Matriz de Avaliações / Assessment Matrix
+                Matriz de Avaliações
               </h3>
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Avaliador / Assessor
+                        Avaliador
                       </th>
                       {matrixData.participants.map((participant) => (
                         <th key={participant} className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -394,21 +394,21 @@ const AdminDashboard: React.FC = () => {
                 <div className="flex items-center">
                   <span className="text-green-600 text-xl mr-2">✅</span>
                   <div>
-                    <div className="font-medium">Completa / Complete (56/56)</div>
+                    <div className="font-medium">Completa (56/56)</div>
                     <div className="text-xs text-gray-500">Todas características avaliadas</div>
                   </div>
                 </div>
                 <div className="flex items-center">
                   <span className="text-yellow-600 text-xl mr-2">🟡</span>
                   <div>
-                    <div className="font-medium">Parcial / Partial (1-55)</div>
+                    <div className="font-medium">Parcial (1-55)</div>
                     <div className="text-xs text-gray-500">Avaliação incompleta</div>
                   </div>
                 </div>
                 <div className="flex items-center">
                   <span className="text-red-600 text-xl mr-2">❌</span>
                   <div>
-                    <div className="font-medium">Não iniciada / Not Started (0)</div>
+                    <div className="font-medium">Não iniciada (0)</div>
                     <div className="text-xs text-gray-500">Nenhuma característica avaliada</div>
                   </div>
                 </div>
@@ -420,7 +420,7 @@ const AdminDashboard: React.FC = () => {
           {activeTab === 'progress' && (
             <div className="space-y-4">
               <h3 className="text-lg font-semibold text-gray-900">
-                Progresso Individual dos Participantes / Individual Participant Progress
+                Progresso Individual dos Participantes
               </h3>
               <div className="space-y-3">
                 {progressData.map((participant) => (
@@ -446,13 +446,13 @@ const AdminDashboard: React.FC = () => {
                       {/* Autoavaliação */}
                       <div className="bg-gray-50 rounded-lg p-3">
                         <div className="flex items-center justify-between mb-2">
-                          <span className="text-sm font-medium text-gray-700">Autoavaliação / Self-Assessment</span>
+                          <span className="text-sm font-medium text-gray-700">Autoavaliação</span>
                           <span className={`text-xs px-2 py-1 rounded-full ${
                             participant.self_assessment.completed 
                               ? 'bg-green-100 text-green-800' 
                               : 'bg-red-100 text-red-800'
                           }`}>
-                            {participant.self_assessment.completed ? 'Completa / Complete' : 'Pendente / Pending'}
+                            {participant.self_assessment.completed ? 'Completa' : 'Pendente'}
                           </span>
                         </div>
                         <div className="w-full bg-gray-200 rounded-full h-2">
@@ -469,7 +469,7 @@ const AdminDashboard: React.FC = () => {
                       {/* Avaliações Dadas */}
                       <div className="bg-gray-50 rounded-lg p-3">
                         <div className="flex items-center justify-between mb-2">
-                          <span className="text-sm font-medium text-gray-700">Avaliações Dadas / Assessments Given</span>
+                          <span className="text-sm font-medium text-gray-700">Avaliações Dadas</span>
                           <span className="text-xs text-gray-600">
                             {participant.peer_assessments_given.peers_evaluated}/{participant.peer_assessments_given.total_peers}
                           </span>
@@ -488,7 +488,7 @@ const AdminDashboard: React.FC = () => {
                       {/* Avaliações Recebidas */}
                       <div className="bg-gray-50 rounded-lg p-3">
                         <div className="flex items-center justify-between mb-2">
-                          <span className="text-sm font-medium text-gray-700">Avaliações Recebidas / Assessments Received</span>
+                          <span className="text-sm font-medium text-gray-700">Avaliações Recebidas</span>
                           <span className="text-xs text-gray-600">
                             {participant.peer_assessments_received.peers_who_evaluated_me}/{participant.peer_assessments_received.total_peers}
                           </span>

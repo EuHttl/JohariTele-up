@@ -12,8 +12,6 @@ import {
   Lightbulb
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import BilingualTooltip from '../components/BilingualTooltip';
-import BilingualLegend from '../components/BilingualLegend';
 
 const Reports: React.FC = () => {
   const [comparativeReport, setComparativeReport] = useState<ComparativeReport | null>(null);
@@ -67,13 +65,11 @@ const Reports: React.FC = () => {
   const pieData = comparativeReport ? [
     { 
       name: 'Completos', 
-      nameEn: 'Completed',
       value: comparativeReport.summary.completed_assessments, 
       color: '#10b981' 
     },
     { 
       name: 'Pendentes', 
-      nameEn: 'Pending',
       value: comparativeReport.summary.total_participants - comparativeReport.summary.completed_assessments, 
       color: '#ef4444' 
     }
@@ -213,8 +209,8 @@ const Reports: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="card card-hover fade-in">
           <div className="card-header">
-            <h3 className="card-title">Status das Avaliações / Assessment Status</h3>
-            <p className="card-subtitle">Progresso da equipe / Team Progress</p>
+            <h3 className="card-title">Status das Avaliações</h3>
+            <p className="card-subtitle">Progresso da equipe</p>
           </div>
           <div className="card-body">
             <ResponsiveContainer width="100%" height={300}>
@@ -233,14 +229,7 @@ const Reports: React.FC = () => {
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
                 </Pie>
-                <Tooltip 
-                  content={<BilingualTooltip 
-                    ptLabel="Status das Avaliações"
-                    enLabel="Assessment Status"
-                    ptValueLabel="Participantes"
-                    enValueLabel="Participants"
-                  />}
-                />
+                <Tooltip />
               </PieChart>
             </ResponsiveContainer>
           </div>
@@ -248,8 +237,8 @@ const Reports: React.FC = () => {
 
         <div className="card">
           <div className="card-header">
-            <h3 className="card-title">Autoconsciência Individual / Individual Self-Awareness</h3>
-            <p className="card-subtitle">Nível de autoconsciência por participante / Self-awareness level per participant</p>
+            <h3 className="card-title">Autoconsciência Individual</h3>
+            <p className="card-subtitle">Nível de autoconsciência por participante</p>
           </div>
           <div className="card-body">
             <ResponsiveContainer width="100%" height={300}>
@@ -264,25 +253,17 @@ const Reports: React.FC = () => {
                 />
                 <YAxis 
                   label={{ 
-                    value: 'Autoconsciência (%) / Self-Awareness (%)', 
+                    value: 'Autoconsciência (%)', 
                     angle: -90, 
                     position: 'insideLeft',
                     style: { textAnchor: 'middle', fontSize: '12px' }
                   }}
                 />
-                <Tooltip 
-                  content={<BilingualTooltip 
-                    ptLabel="Autoconsciência Individual"
-                    enLabel="Individual Self-Awareness"
-                    ptValueLabel="Pontuação"
-                    enValueLabel="Score"
-                    formatValue={(value) => `${value}%`}
-                  />}
-                />
+                <Tooltip formatter={(value) => [`${value}%`, 'Autoconsciência']} />
                 <Bar 
                   dataKey="awareness" 
                   fill="#3b82f6"
-                  name="Autoconsciência / Self-Awareness"
+                  name="Autoconsciência"
                 />
               </BarChart>
             </ResponsiveContainer>
@@ -365,8 +346,8 @@ const Reports: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="card">
             <div className="card-header">
-              <h3 className="card-title">Características Mais Selecionadas / Most Selected Characteristics</h3>
-              <p className="card-subtitle">Consenso entre autoavaliação e avaliação entre pares / Consensus between self and peer assessment</p>
+              <h3 className="card-title">Características Mais Selecionadas</h3>
+              <p className="card-subtitle">Consenso entre autoavaliação e avaliação entre pares</p>
             </div>
             <div className="card-body">
               <ResponsiveContainer width="100%" height={300}>
@@ -375,7 +356,7 @@ const Reports: React.FC = () => {
                   <XAxis 
                     type="number" 
                     label={{ 
-                      value: 'Consenso (%) / Consensus (%)', 
+                      value: 'Consenso (%)', 
                       position: 'insideBottom',
                       style: { textAnchor: 'middle', fontSize: '12px' }
                     }}
@@ -386,19 +367,11 @@ const Reports: React.FC = () => {
                     width={120}
                     tick={{ fontSize: 11 }}
                   />
-                  <Tooltip 
-                    content={<BilingualTooltip 
-                      ptLabel="Características Mais Selecionadas"
-                      enLabel="Most Selected Characteristics"
-                      ptValueLabel="Consenso"
-                      enValueLabel="Consensus"
-                      formatValue={(value) => `${value}%`}
-                    />}
-                  />
+                  <Tooltip formatter={(value) => [`${value}%`, 'Consenso']} />
                   <Bar 
                     dataKey="consensus" 
                     fill="#10b981"
-                    name="Consenso / Consensus"
+                    name="Consenso"
                   />
                 </BarChart>
               </ResponsiveContainer>
@@ -407,8 +380,8 @@ const Reports: React.FC = () => {
 
           <div className="card">
             <div className="card-header">
-              <h3 className="card-title">Características Menos Selecionadas / Least Selected Characteristics</h3>
-              <p className="card-subtitle">Áreas com menor consenso / Areas with lower consensus</p>
+              <h3 className="card-title">Características Menos Selecionadas</h3>
+              <p className="card-subtitle">Áreas com menor consenso</p>
             </div>
             <div className="card-body">
               <div className="space-y-2">
