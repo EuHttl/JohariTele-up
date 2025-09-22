@@ -12,7 +12,25 @@ const PORT = process.env.PORT || 5000;
 
 // Middleware - CORS configurado para produção
 const corsOptions = {
-  origin: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : '*',
+  origin: function (origin, callback) {
+    // Permitir requisições sem origin (mobile apps, Postman, etc.)
+    if (!origin) return callback(null, true);
+    
+    const allowedOrigins = process.env.CORS_ORIGIN ? 
+      process.env.CORS_ORIGIN.split(',').map(o => o.trim()) : 
+      ['https://johari-tele-up.vercel.app'];
+    
+    console.log('🌐 CORS: Origin recebida:', origin);
+    console.log('🌐 CORS: Origins permitidas:', allowedOrigins);
+    
+    if (allowedOrigins.includes(origin)) {
+      console.log('🌐 CORS: Origin permitida:', origin);
+      callback(null, true);
+    } else {
+      console.log('🌐 CORS: Origin bloqueada:', origin);
+      callback(new Error('Não permitido pelo CORS'));
+    }
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Access-Control-Allow-Origin'],
@@ -25,6 +43,31 @@ console.log('🌐 CORS Methods:', corsOptions.methods);
 console.log('🌐 CORS Headers:', corsOptions.allowedHeaders);
 
 app.use(cors(corsOptions));
+
+// Middleware adicional para garantir cabeçalhos CORS
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  const allowedOrigins = process.env.CORS_ORIGIN ? 
+    process.env.CORS_ORIGIN.split(',').map(o => o.trim()) : 
+    ['https://johari-tele-up.vercel.app'];
+  
+  if (allowedOrigins.includes(origin)) {
+    res.header('Access-Control-Allow-Origin', origin);
+  }
+  
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Access-Control-Allow-Origin');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  
+  // Responder imediatamente para requisições OPTIONS
+  if (req.method === 'OPTIONS') {
+    console.log('🌐 CORS: Respondendo a requisição OPTIONS');
+    return res.status(200).end();
+  }
+  
+  next();
+});
+
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
