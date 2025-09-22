@@ -21,10 +21,10 @@ const getApiBaseUrl = () => {
     return envApiUrl;
   }
   
-  // Fallback para produção (URL do Railway)
-  const prodUrl = 'https://joharitele-up-production.up.railway.app/api';
-  console.log('🌐 Using production URL:', prodUrl);
-  return prodUrl;
+  // Fallback para desenvolvimento local
+  const localUrl = 'http://localhost:8080/api';
+  console.log('🌐 Using local development URL:', localUrl);
+  return localUrl;
 };
 
 const API_BASE_URL = getApiBaseUrl();

@@ -27,9 +27,15 @@ const Participants: React.FC = () => {
   const fetchParticipants = async () => {
     try {
       const data = await participantsAPI.getAll();
-      setParticipants(data);
+      // Garantir que sempre seja um array
+      const participantsArray = Array.isArray(data) ? data : [];
+      console.log('Participants recebidos:', data);
+      console.log('Participants é array?', Array.isArray(data));
+      console.log('Participants processados:', participantsArray);
+      setParticipants(participantsArray);
     } catch (error) {
       console.error('Erro ao carregar participantes:', error);
+      setParticipants([]); // Garantir que sempre seja um array vazio em caso de erro
     } finally {
       setLoading(false);
     }
@@ -148,7 +154,7 @@ const Participants: React.FC = () => {
               </div>
               <div className="ml-3">
                 <p className="text-xs font-medium text-gray-600">Total</p>
-                <p className="text-lg font-bold text-gray-900">{participants.length}</p>
+                <p className="text-lg font-bold text-gray-900">{Array.isArray(participants) ? participants.length : 0}</p>
                 <p className="text-xs text-gray-500">de 15 disponíveis</p>
               </div>
             </div>
@@ -166,7 +172,7 @@ const Participants: React.FC = () => {
               <div className="ml-3">
                 <p className="text-xs font-medium text-gray-600">Completos</p>
                 <p className="text-lg font-bold text-gray-900">
-                  {participants.filter(p => p.has_completed_self_assessment && p.has_completed_peer_assessments).length}
+                  {Array.isArray(participants) ? participants.filter(p => p.has_completed_self_assessment && p.has_completed_peer_assessments).length : 0}
                 </p>
                 <p className="text-xs text-gray-500">prontos para relatórios</p>
               </div>
@@ -185,7 +191,7 @@ const Participants: React.FC = () => {
               <div className="ml-3">
                 <p className="text-xs font-medium text-gray-600">Pendentes</p>
                 <p className="text-lg font-bold text-gray-900">
-                  {participants.filter(p => !p.has_completed_self_assessment).length}
+                  {Array.isArray(participants) ? participants.filter(p => !p.has_completed_self_assessment).length : 0}
                 </p>
                 <p className="text-xs text-gray-500">aguardando avaliação</p>
               </div>
@@ -199,11 +205,11 @@ const Participants: React.FC = () => {
         <div className="card-header p-4">
           <h3 className="card-title text-lg glow-text">Lista de Participantes</h3>
           <p className="card-subtitle text-sm">
-            {participants.length === 0 ? 'Nenhum participante cadastrado' : `${participants.length} participante(s) cadastrado(s)`}
+            {!Array.isArray(participants) || participants.length === 0 ? 'Nenhum participante cadastrado' : `${participants.length} participante(s) cadastrado(s)`}
           </p>
         </div>
         <div className="card-body">
-          {participants.length === 0 ? (
+          {!Array.isArray(participants) || participants.length === 0 ? (
             <div className="text-center py-8">
               <User className="h-12 w-12 text-gray-400 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-gray-900 mb-2">Nenhum participante cadastrado</h3>
@@ -229,7 +235,7 @@ const Participants: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {participants.map((participant) => (
+                  {Array.isArray(participants) ? participants.map((participant) => (
                     <tr key={participant.id}>
                       <td className="font-medium">{participant.name}</td>
                       <td className="text-gray-600">{participant.email}</td>
@@ -267,7 +273,7 @@ const Participants: React.FC = () => {
                         </div>
                       </td>
                     </tr>
-                  ))}
+                  )) : null}
                 </tbody>
               </table>
             </div>

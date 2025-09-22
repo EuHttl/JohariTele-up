@@ -309,19 +309,19 @@ const AdminDashboard: React.FC = () => {
               <h3 className="text-lg font-semibold text-gray-900">
                 Rastreamento por Avaliador
               </h3>
-              {trackingData.evaluations.map((assessor) => (
+              {Array.isArray(trackingData.evaluations) ? trackingData.evaluations.map((assessor) => (
                 <div key={assessor.assessor.id} className="border rounded-lg p-4">
                   <div className="flex items-center justify-between mb-3">
                     <h4 className="font-medium text-gray-900">
                       {assessor.assessor.name} ({assessor.assessor.code})
                     </h4>
                     <span className="text-sm text-gray-500">
-                      {assessor.evaluations.filter(e => e.status === 'Completa').length} de{' '}
-                      {assessor.evaluations.length} completas
+                      {Array.isArray(assessor.evaluations) ? assessor.evaluations.filter(e => e.status === 'Completa').length : 0} de{' '}
+                      {Array.isArray(assessor.evaluations) ? assessor.evaluations.length : 0} completas
                     </span>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
-                    {assessor.evaluations.map((evaluation) => (
+                    {Array.isArray(assessor.evaluations) ? assessor.evaluations.map((evaluation) => (
                       <div
                         key={`${assessor.assessor.id}-${evaluation.assessed.id}`}
                         className={`flex items-center justify-between p-2 rounded border ${
@@ -338,10 +338,10 @@ const AdminDashboard: React.FC = () => {
                           <span className="ml-1">{evaluation.characteristics_evaluated}/56</span>
                         </span>
                       </div>
-                    ))}
+                    )) : null}
                   </div>
                 </div>
-              ))}
+              )) : null}
             </div>
           )}
 
@@ -358,20 +358,20 @@ const AdminDashboard: React.FC = () => {
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Avaliador
                       </th>
-                      {matrixData.participants.map((participant) => (
+                      {Array.isArray(matrixData.participants) ? matrixData.participants.map((participant) => (
                         <th key={participant} className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                           {participant.split(' ')[0]}
                         </th>
-                      ))}
+                      )) : null}
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {matrixData.matrix.map((row) => (
+                    {Array.isArray(matrixData.matrix) ? matrixData.matrix.map((row) => (
                       <tr key={row.assessor}>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                           {row.assessor}
                         </td>
-                        {matrixData.participants.map((participant) => {
+                        {Array.isArray(matrixData.participants) ? matrixData.participants.map((participant) => {
                           const evaluation = row.evaluations.find(e => e.assessed === participant);
                           return (
                             <td key={participant} className="px-3 py-4 whitespace-nowrap text-center">
@@ -384,9 +384,9 @@ const AdminDashboard: React.FC = () => {
                               )}
                             </td>
                           );
-                        })}
+                        }) : null}
                       </tr>
-                    ))}
+                    )) : null}
                   </tbody>
                 </table>
               </div>
@@ -423,7 +423,7 @@ const AdminDashboard: React.FC = () => {
                 Progresso Individual dos Participantes
               </h3>
               <div className="space-y-3">
-                {progressData.map((participant) => (
+                {Array.isArray(progressData) ? progressData.map((participant) => (
                   <div key={participant.id} className="border rounded-lg p-4">
                     <div className="flex items-center justify-between mb-3">
                       <h4 className="font-medium text-gray-900">
@@ -505,7 +505,7 @@ const AdminDashboard: React.FC = () => {
                       </div>
                     </div>
                   </div>
-                ))}
+                )) : null}
               </div>
             </div>
           )}
