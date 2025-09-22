@@ -163,8 +163,11 @@ if (process.env.NODE_ENV === 'production') {
   });
 }
 
-// Inicializar banco de dados SQLite
-initializeDatabase();
+// Inicializar banco de dados (não bloquear o servidor)
+initializeDatabase().catch(error => {
+  console.error('❌ Erro na inicialização do banco (não crítico):', error.message);
+  console.log('🔄 Servidor continuará funcionando, banco será inicializado quando necessário');
+});
 
 app.listen(PORT, () => {
   console.log(`🚀 Servidor rodando na porta ${PORT} (Railway: ${process.env.PORT || 'default'})`);

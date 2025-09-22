@@ -16,11 +16,21 @@ if (process.env.DATABASE_URL) {
 const JWT_SECRET = process.env.JWT_SECRET || 'johari_secret_key_2024';
 
 // POST /api/auth/login - Login unificado para admin e participantes
-router.post('/login', (req, res) => {
+router.post('/login', async (req, res) => {
   const startTime = Date.now();
   try {
     console.log('🔐 Login attempt started:', { email: req.body.email, timestamp: new Date().toISOString() });
     const { email, password } = req.body;
+    
+    // Garantir que o banco está inicializado
+    if (process.env.DATABASE_URL) {
+      try {
+        const postgresInit = require('../database/postgres-init');
+        await postgresInit.initializeDatabase();
+      } catch (initError) {
+        console.log('⚠️ Inicialização do banco falhou, continuando com login...');
+      }
+    }
     
     if (!email || !password) {
       console.log('❌ Login failed: missing credentials');
