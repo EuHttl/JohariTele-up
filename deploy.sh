@@ -125,3 +125,4 @@ echo "2. Acesse https://vercel.com e faça deploy do frontend"
 echo "3. Configure as variáveis de ambiente conforme deploy-instructions.md"
 echo ""
 echo "📖 Instruções completas em: deploy-instructions.md"
+

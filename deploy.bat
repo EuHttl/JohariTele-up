@@ -10,17 +10,15 @@ if not exist "package.json" (
 
 echo [INFO] Preparando projeto para deploy...
 
-REM Build do frontend
-echo [INFO] Fazendo build do frontend...
-cd client
-call npm run build
+REM Build completo
+echo [INFO] Fazendo build completo da aplicação...
+call build.bat
 if %errorlevel% neq 0 (
-    echo [ERROR] Falha no build do frontend
+    echo [ERROR] Falha no build da aplicação
     pause
     exit /b 1
 )
-echo [SUCCESS] Build do frontend concluído!
-cd ..
+echo [SUCCESS] Build da aplicação concluído!
 
 REM Preparar arquivos
 echo [INFO] Preparando arquivos...
