@@ -116,7 +116,18 @@ const Dashboard: React.FC = () => {
     }
   };
 
-  const completedParticipants = participants?.filter(p => p.has_completed_self_assessment && p.has_completed_peer_assessments)?.length || 0;
+  // Debug mais detalhado
+  console.log('Dashboard - Estado atual:', {
+    participants,
+    participantsType: typeof participants,
+    isArray: Array.isArray(participants),
+    length: participants?.length,
+    firstItem: participants?.[0]
+  });
+
+  const completedParticipants = Array.isArray(participants) 
+    ? participants.filter(p => p.has_completed_self_assessment && p.has_completed_peer_assessments).length 
+    : 0;
 
   if (loading) {
     return (

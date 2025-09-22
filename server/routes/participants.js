@@ -175,6 +175,7 @@ router.delete('/:id', (req, res) => {
 
 // GET /api/participants/stats/overview - Estatísticas gerais
 router.get('/stats/overview', (req, res) => {
+  console.log('📊 GET /api/participants/stats/overview - Buscando estatísticas');
   const query = `
     SELECT 
       COUNT(*) as total_participants,
@@ -189,6 +190,7 @@ router.get('/stats/overview', (req, res) => {
       return res.status(500).json({ error: 'Erro interno do servidor' });
     }
     
+    console.log('📊 Estatísticas encontradas:', row);
     res.json(row);
   });
 });
