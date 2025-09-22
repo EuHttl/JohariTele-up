@@ -17,7 +17,7 @@ import {
   Sparkles,
   Star,
   Heart,
-  Brain
+  Brain,
 } from 'lucide-react';
 
 interface StatsData {
@@ -424,7 +424,6 @@ const Dashboard: React.FC = () => {
                 width: `${getCompletionPercentage(stats?.completed_peer || 0, stats?.total_participants || 1)}%`
               }}></div>
             </div>
-              </div>
               
           {/* Completos */}
           <div className="dashboard-stats-card">
