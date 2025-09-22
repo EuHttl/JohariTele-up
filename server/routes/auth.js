@@ -33,6 +33,58 @@ router.post('/login', (req, res) => {
     db.get(adminSql, [email], (err, admin) => {
       if (err) {
         console.error('❌ Erro no login (admin):', err);
+        
+        // Tratar erro específico de coluna não encontrada
+        if (err.code === '42703') {
+          console.log('🔄 Tentando login sem coluna email...');
+          const adminSqlFallback = 'SELECT id, username, password, name FROM admins WHERE username = ?';
+          db.get(adminSqlFallback, [email], (err2, admin2) => {
+            if (err2) {
+              console.error('❌ Erro no login fallback:', err2);
+              return res.status(500).json({ error: 'Erro interno do servidor' });
+            }
+            
+            if (admin2) {
+              console.log('✅ Admin encontrado via username');
+              // Continuar com o processo de login usando admin2
+              const isMatch = bcrypt.compareSync(password, admin2.password);
+              if (!isMatch) {
+                console.log('❌ Admin password mismatch');
+                return res.status(401).json({ error: 'Credenciais inválidas' });
+              }
+              
+              const token = jwt.sign(
+                {
+                  id: admin2.id,
+                  username: admin2.username,
+                  email: email, // Usar o email fornecido
+                  name: admin2.name,
+                  role: 'admin'
+                },
+                JWT_SECRET,
+                { expiresIn: '24h' }
+              );
+              
+              console.log('🎉 Admin login successful!');
+              return res.json({
+                token,
+                user: {
+                  id: admin2.id,
+                  username: admin2.username,
+                  email: email,
+                  name: admin2.name,
+                  role: 'admin'
+                },
+                message: 'Login realizado com sucesso'
+              });
+            } else {
+              // Continuar para verificar como participante
+              checkParticipant();
+            }
+          });
+          return;
+        }
+        
         return res.status(500).json({ error: 'Erro interno do servidor' });
       }
       
@@ -122,6 +174,54 @@ router.post('/login', (req, res) => {
   } catch (error) {
     console.error('Erro no login:', error);
     res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+  
+  // Função para verificar participante
+  function checkParticipant() {
+    console.log('🔍 Admin not found, checking participant credentials for:', email);
+    const participantSql = 'SELECT id, name, email, code, password FROM participants WHERE email = ?';
+    
+    db.get(participantSql, [email], (err, participant) => {
+      if (err) {
+        console.error('Erro no login (participant):', err);
+        return res.status(500).json({ error: 'Erro interno do servidor' });
+      }
+      
+      if (!participant) {
+        return res.status(401).json({ error: 'Credenciais inválidas' });
+      }
+      
+      const isMatch = bcrypt.compareSync(password, participant.password);
+      
+      if (!isMatch) {
+        return res.status(401).json({ error: 'Credenciais inválidas' });
+      }
+      
+      // Gerar token JWT para participante
+      const token = jwt.sign(
+        {
+          id: participant.id,
+          email: participant.email,
+          name: participant.name,
+          code: participant.code,
+          role: 'participant'
+        },
+        JWT_SECRET,
+        { expiresIn: '24h' }
+      );
+      
+      res.json({
+        token,
+        user: {
+          id: participant.id,
+          email: participant.email,
+          name: participant.name,
+          code: participant.code,
+          role: 'participant'
+        },
+        message: 'Login realizado com sucesso'
+      });
+    });
   }
 });
 

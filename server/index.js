@@ -21,12 +21,31 @@ if (process.env.DATABASE_URL) {
 const app = express();
 const PORT = process.env.PORT || 8080;
 
+// Configuração CORS para produção
+const allowedOrigins = [
+  'https://johari-tele-up.vercel.app',
+  'https://johari-tele-up-git-master-euhttl.vercel.app',
+  'http://localhost:3000', // Para desenvolvimento local
+  'http://localhost:3001'  // Para desenvolvimento local alternativo
+];
+
 // Middleware CORS - DEVE SER O PRIMEIRO MIDDLEWARE
 app.use(cors({
-  origin: '*', // Permitir todas as origens
+  origin: function (origin, callback) {
+    // Permitir requisições sem origin (ex: mobile apps, Postman)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      console.log('🚫 CORS: Origin não permitida:', origin);
+      callback(new Error('Não permitido pelo CORS'));
+    }
+  },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: false
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  credentials: false,
+  optionsSuccessStatus: 200 // Para suporte a navegadores legados
 }));
 
 // Middleware adicional para debug CORS
@@ -52,7 +71,10 @@ app.get('/api/health', (req, res) => {
   res.status(200).json({ 
     status: 'OK', 
     message: 'Janela de Johari API is running',
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development',
+    database: process.env.DATABASE_URL ? 'PostgreSQL' : 'SQLite',
+    cors: 'Configured for production'
   });
 });
 

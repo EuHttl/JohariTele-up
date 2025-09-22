@@ -45,13 +45,39 @@ api.interceptors.request.use((config) => {
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+  
+  // Debug para produção
+  console.log('🚀 API Request:', {
+    method: config.method?.toUpperCase(),
+    url: config.url,
+    baseURL: config.baseURL,
+    hasToken: !!token
+  });
+  
   return config;
 });
 
 // Interceptor para lidar com erros de autenticação
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    // Debug para produção
+    console.log('✅ API Response:', {
+      status: response.status,
+      url: response.config.url,
+      method: response.config.method?.toUpperCase()
+    });
+    return response;
+  },
   (error) => {
+    // Debug para produção
+    console.error('❌ API Error:', {
+      status: error.response?.status,
+      url: error.config?.url,
+      method: error.config?.method?.toUpperCase(),
+      message: error.message,
+      data: error.response?.data
+    });
+    
     // Só redirecionar se for um erro 401 em uma requisição que não seja de login
     if (error.response?.status === 401 && !error.config?.url?.includes('/auth/')) {
       localStorage.removeItem('authToken');

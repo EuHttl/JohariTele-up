@@ -185,14 +185,30 @@ async function initializeDatabase() {
         const bcrypt = require('bcryptjs');
         const defaultPassword = bcrypt.hashSync('admin123', 10);
         
-        await client.query(
-          'INSERT INTO admins (username, password, name, email) VALUES ($1, $2, $3, $4)',
-          ['admin', defaultPassword, 'Hyttalo Costa', 'hyttalo2002@gmail.com']
-        );
-        
-        console.log('✅ Administrador padrão criado!');
-        console.log('👤 Usuário: admin');
-        console.log('🔑 Senha: admin123');
+        try {
+          await client.query(
+            'INSERT INTO admins (username, password, name, email) VALUES ($1, $2, $3, $4)',
+            ['admin', defaultPassword, 'Hyttalo Costa', 'hyttalo2002@gmail.com']
+          );
+          
+          console.log('✅ Administrador padrão criado!');
+          console.log('👤 Usuário: admin');
+          console.log('🔑 Senha: admin123');
+        } catch (insertError) {
+          console.error('❌ Erro ao criar administrador:', insertError.message);
+          
+          // Tentar criar sem email se a coluna não existir
+          if (insertError.code === '42703') { // Column does not exist
+            console.log('🔄 Tentando criar administrador sem email...');
+            await client.query(
+              'INSERT INTO admins (username, password, name) VALUES ($1, $2, $3)',
+              ['admin', defaultPassword, 'Hyttalo Costa']
+            );
+            console.log('✅ Administrador criado sem email!');
+          }
+        }
+      } else {
+        console.log('ℹ️ Administrador já existe no banco');
       }
 
       console.log('✅ Banco PostgreSQL inicializado com sucesso!');
