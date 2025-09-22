@@ -14,11 +14,11 @@ yarn-error.log*
 *.env
 !env.example
 
-# Arquivos de produção
-build/
-dist/
-*/build/
-*/dist/
+# Arquivos de produção (manter apenas os essenciais)
+# build/ - comentado para permitir build do frontend
+# dist/ - comentado para permitir build do frontend
+# */build/ - comentado para permitir build do frontend
+# */dist/ - comentado para permitir build do frontend
 build.bat
 deploy.bat
 README-DEPLOY.md
@@ -166,3 +166,26 @@ config.local.json
 # Arquivos temporários
 *.tmp
 *.temp
+
+# Arquivos de desenvolvimento e configuração local
+server/.env
+server/config-database.js
+server/setup-env.js
+server/check-admin.js
+server/db-explorer.js
+server/test-mysql.js
+server/test-postgres.js
+setup-railway-database.md
+VARIABLES-RAILWAY.md
+
+# Arquivos de backup e duplicados
+client/package.json.backup
+client/env.production
+
+# Arquivos de banco de dados local
+server/database/johari_assessment.db
+
+# Arquivos de configuração específicos do ambiente
+*.local
+*.development
+*.test

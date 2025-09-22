@@ -1,0 +1,28 @@
+# Arquivos de ambiente
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+
+# Arquivos de configuração local
+config-database.js
+setup-env.js
+check-admin.js
+db-explorer.js
+test-mysql.js
+test-postgres.js
+
+# Banco de dados local
+database/johari_assessment.db
+*.db
+*.sqlite
+*.sqlite3
+
+# Logs
+*.log
+logs/
+
+# Arquivos temporários
+*.tmp
+*.temp
