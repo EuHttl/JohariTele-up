@@ -11,7 +11,8 @@ import {
   AuthResponse
 } from '../types';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://joharitele-up-production.up.railway.app/api';
+// Forçar URL correta temporariamente
+const API_BASE_URL = 'https://joharitele-up-production.up.railway.app/api';
 console.log('🌐 API Base URL:', API_BASE_URL);
 
 const api = axios.create({
