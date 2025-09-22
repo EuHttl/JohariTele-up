@@ -78,6 +78,21 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/auth', authRoutes); // Rota adicional para compatibilidade
 
+// Log de todas as rotas registradas
+console.log('🔗 Rotas registradas:');
+console.log('  - /api/participants');
+console.log('  - /api/assessments');
+console.log('  - /api/reports');
+console.log('  - /api/admin');
+console.log('  - /api/auth');
+console.log('  - /auth');
+
+// Middleware para debug de todas as requisições
+app.use((req, res, next) => {
+  console.log(`🌐 ${req.method} ${req.path} - ${req.headers.origin || 'no-origin'}`);
+  next();
+});
+
 // Servir arquivos estáticos do React em produção
 if (process.env.NODE_ENV === 'production') {
   app.use(express.static(path.join(__dirname, '../client/build')));
