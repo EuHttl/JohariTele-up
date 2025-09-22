@@ -82,7 +82,13 @@ async function initializeDatabase() {
   console.log('🗄️  Inicializando banco PostgreSQL...');
   
   try {
-    const client = await pool.connect();
+    // Adicionar timeout na conexão
+    const client = await Promise.race([
+      pool.connect(),
+      new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Timeout na conexão com banco')), 10000)
+      )
+    ]);
     
     try {
       // Criar tabela de administradores
