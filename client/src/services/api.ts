@@ -12,21 +12,55 @@ import {
 } from '../types';
 
 // Configuração da URL base da API
-const API_BASE_URL = process.env.REACT_APP_API_URL || 
-  (process.env.NODE_ENV === 'production' 
-    ? 'https://joharitele-up-production.up.railway.app/api'
-    : 'http://localhost:5000/api');
-console.log('🌐 API Base URL:', API_BASE_URL);
+const getApiBaseUrl = () => {
+  // Verificar se estamos em produção
+  const isProduction = process.env.NODE_ENV === 'production';
+  
+  // Verificar se a variável de ambiente está definida
+  const envApiUrl = process.env.REACT_APP_API_URL;
+  
+  console.log('🌐 Environment check:', {
+    NODE_ENV: process.env.NODE_ENV,
+    REACT_APP_API_URL: envApiUrl,
+    isProduction
+  });
+  
+  if (envApiUrl) {
+    console.log('🌐 Using REACT_APP_API_URL:', envApiUrl);
+    return envApiUrl;
+  }
+  
+  if (isProduction) {
+    const prodUrl = 'https://joharitele-up-production.up.railway.app/api';
+    console.log('🌐 Using production URL:', prodUrl);
+    return prodUrl;
+  }
+  
+  const devUrl = 'http://localhost:5000/api';
+  console.log('🌐 Using development URL:', devUrl);
+  return devUrl;
+};
+
+const API_BASE_URL = getApiBaseUrl();
+console.log('🌐 Final API Base URL:', API_BASE_URL);
 
 const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },
+  timeout: 10000, // 10 segundos de timeout
 });
 
 // Interceptor para adicionar token de autenticação
 api.interceptors.request.use((config) => {
+  console.log('🌐 Axios Request Config:', {
+    baseURL: config.baseURL || 'undefined',
+    url: config.url || 'undefined',
+    fullURL: (config.baseURL || '') + (config.url || ''),
+    method: config.method || 'undefined'
+  });
+  
   const token = localStorage.getItem('authToken');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
