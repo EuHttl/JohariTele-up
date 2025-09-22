@@ -51,6 +51,14 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// Test endpoint
+app.get('/test', (req, res) => {
+  res.status(200).json({ 
+    message: 'Test endpoint working!',
+    timestamp: new Date().toISOString()
+  });
+});
+
 // Usar rotas
 app.use('/api/participants', participantsRoutes);
 app.use('/api/assessments', assessmentsRoutes);
