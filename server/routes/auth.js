@@ -15,6 +15,12 @@ if (process.env.DATABASE_URL) {
 
 const JWT_SECRET = process.env.JWT_SECRET || 'johari_secret_key_2024';
 
+// Rota de teste simples
+router.get('/test', (req, res) => {
+  console.log('🧪 Rota de teste chamada');
+  res.json({ message: 'Teste OK', timestamp: new Date().toISOString() });
+});
+
 // POST /api/auth/login - Login unificado para admin e participantes
 router.post('/login', (req, res) => {
   const startTime = Date.now();
