@@ -96,18 +96,24 @@ async function initializeDatabase() {
         )
       `);
 
-      // Adicionar coluna email se não existir (para compatibilidade com bancos existentes)
+      // Verificar se coluna email existe antes de tentar adicionar
       try {
-        await client.query(`
-          ALTER TABLE admins ADD COLUMN email VARCHAR(255) UNIQUE
+        const columnCheck = await client.query(`
+          SELECT column_name 
+          FROM information_schema.columns 
+          WHERE table_name = 'admins' AND column_name = 'email'
         `);
-        console.log('✅ Coluna email adicionada à tabela admins');
-      } catch (error) {
-        if (error.code === '42701') { // Column already exists
-          console.log('ℹ️ Coluna email já existe na tabela admins');
+        
+        if (columnCheck.rows.length === 0) {
+          await client.query(`
+            ALTER TABLE admins ADD COLUMN email VARCHAR(255) UNIQUE
+          `);
+          console.log('✅ Coluna email adicionada à tabela admins');
         } else {
-          console.error('❌ Erro ao adicionar coluna email:', error.message);
+          console.log('ℹ️ Coluna email já existe na tabela admins');
         }
+      } catch (error) {
+        console.error('❌ Erro ao verificar/adicionar coluna email:', error.message);
       }
 
       // Criar tabela de participantes
