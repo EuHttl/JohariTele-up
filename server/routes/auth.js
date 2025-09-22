@@ -26,12 +26,17 @@ router.post('/login', (req, res) => {
       console.log('❌ Login failed: missing credentials');
       return res.status(400).json({ error: 'Email e senha são obrigatórios' });
     }
+
+    console.log('🔍 Verificando credenciais...');
     
     // Primeiro, tenta encontrar como admin
     const adminSql = 'SELECT id, username, email, password, name FROM admins WHERE email = ?';
     
     console.log('🔍 Checking admin credentials for:', email);
+    console.log('📊 Executando query admin...');
     db.get(adminSql, [email], (err, admin) => {
+      console.log('📊 Query admin executada, resultado:', { err: !!err, admin: !!admin });
+      
       if (err) {
         console.error('❌ Erro no login (admin):', err);
         
