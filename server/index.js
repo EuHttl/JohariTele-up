@@ -8,7 +8,7 @@ require('dotenv').config();
 const { initializeDatabase } = require('./database/init');
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 8080;
 
 // Middleware CORS - permitir TODAS as origens temporariamente
 app.use((req, res, next) => {
@@ -79,7 +79,7 @@ if (process.env.NODE_ENV === 'production') {
 initializeDatabase();
 
 app.listen(PORT, () => {
-  console.log(`🚀 Servidor rodando na porta ${PORT}`);
+  console.log(`🚀 Servidor rodando na porta ${PORT} (Railway: ${process.env.PORT || 'default'})`);
   console.log(`📊 Janela de Johari - Sistema de Avaliação`);
   console.log(`👥 Configurado para 12 participantes`);
   console.log(`🌐 CORS CONFIGURADO PARA TODAS AS ORIGENS`);
