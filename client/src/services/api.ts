@@ -162,4 +162,22 @@ export const reportsAPI = {
   },
 };
 
+// Admin API
+export const adminAPI = {
+  getAssessmentTracking: async () => {
+    const response = await api.get('/admin/assessment-tracking');
+    return response.data;
+  },
+  
+  getAssessmentMatrix: async () => {
+    const response = await api.get('/admin/assessment-matrix');
+    return response.data;
+  },
+  
+  getParticipantProgress: async () => {
+    const response = await api.get('/admin/participant-progress');
+    return response.data;
+  }
+};
+
 export default api;

@@ -10,6 +10,7 @@ import Participants from './pages/Participants';
 import AssessmentPage from './pages/Assessment';
 import Report from './pages/Report';
 import Reports from './pages/Reports';
+import AdminDashboard from './pages/AdminDashboard';
 import './App.css';
 import './styles/globals.css';
 
@@ -34,6 +35,7 @@ function App() {
               <Route path="dashboard" element={<Dashboard />} />
               <Route path="participants" element={<Participants />} />
               <Route path="reports" element={<Reports />} />
+              <Route path="admin" element={<AdminDashboard />} />
             </Route>
             
             {/* Rotas dos participantes */}

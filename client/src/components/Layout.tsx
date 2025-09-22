@@ -6,7 +6,8 @@ import {
   Users, 
   BarChart3, 
   LogOut, 
-  User
+  User,
+  Settings
 } from 'lucide-react';
 
 const Layout: React.FC = () => {
@@ -17,6 +18,7 @@ const Layout: React.FC = () => {
     { name: 'Dashboard', href: '/app/dashboard', icon: LayoutDashboard },
     { name: 'Participantes', href: '/app/participants', icon: Users },
     { name: 'Relatórios', href: '/app/reports', icon: BarChart3 },
+    { name: 'Admin', href: '/app/admin', icon: Settings },
   ];
 
   const isActive = (path: string) => {

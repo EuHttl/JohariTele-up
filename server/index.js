@@ -24,6 +24,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 const participantsRoutes = require('./routes/participants');
 const assessmentsRoutes = require('./routes/assessments');
 const reportsRoutes = require('./routes/reports');
+const adminRoutes = require('./routes/admin');
 const authRoutes = require('./routes/auth');
 
 // Health check endpoint
@@ -39,6 +40,7 @@ app.get('/api/health', (req, res) => {
 app.use('/api/participants', participantsRoutes);
 app.use('/api/assessments', assessmentsRoutes);
 app.use('/api/reports', reportsRoutes);
+app.use('/api/admin', adminRoutes);
 app.use('/api/auth', authRoutes);
 
 // Servir arquivos estáticos do React em produção
