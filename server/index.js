@@ -14,12 +14,13 @@ const PORT = process.env.PORT || 5000;
 app.use(cors({
   origin: [
     'https://johari-tele-up.vercel.app',
+    'https://johari-tele-up-git-main-euhttls-projects.vercel.app',
     'http://localhost:3000',
     'http://localhost:5000'
   ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization', 'Access-Control-Allow-Origin']
 }));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
