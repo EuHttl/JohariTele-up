@@ -24,6 +24,15 @@ const assessmentsRoutes = require('./routes/assessments');
 const reportsRoutes = require('./routes/reports');
 const authRoutes = require('./routes/auth');
 
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+  res.status(200).json({ 
+    status: 'OK', 
+    message: 'Janela de Johari API is running',
+    timestamp: new Date().toISOString()
+  });
+});
+
 // Usar rotas
 app.use('/api/participants', participantsRoutes);
 app.use('/api/assessments', assessmentsRoutes);
