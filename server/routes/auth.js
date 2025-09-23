@@ -28,7 +28,7 @@ router.post('/login', (req, res) => {
     }
 
     // Primeiro, tenta encontrar como admin
-    const adminSql = 'SELECT id, username, email, password, name FROM admins WHERE email = ?';
+    const adminSql = 'SELECT id, username, email, password, name FROM admins WHERE email = $1';
     
     console.log('🔍 Executando query admin...');
     db.get(adminSql, [email], (err, admin) => {
@@ -40,7 +40,7 @@ router.post('/login', (req, res) => {
         // Tratar erro específico de coluna não encontrada
         if (err.code === '42703') {
           console.log('🔄 Tentando login sem coluna email...');
-          const adminSqlFallback = 'SELECT id, username, password, name FROM admins WHERE username = ?';
+          const adminSqlFallback = 'SELECT id, username, password, name FROM admins WHERE username = $1';
           db.get(adminSqlFallback, [email], (err2, admin2) => {
             if (err2) {
               console.error('❌ Erro no login fallback:', err2);
@@ -126,7 +126,7 @@ router.post('/login', (req, res) => {
       }
       
       // Se não é admin, tenta como participante
-      const participantSql = 'SELECT id, name, email, code, password FROM participants WHERE email = ?';
+      const participantSql = 'SELECT id, name, email, code, password FROM participants WHERE email = $1';
       
       db.get(participantSql, [email], (err, participant) => {
         if (err) {
@@ -179,7 +179,7 @@ router.post('/login', (req, res) => {
   
   // Função para verificar participante
   function checkParticipant() {
-    const participantSql = 'SELECT id, name, email, code, password FROM participants WHERE email = ?';
+    const participantSql = 'SELECT id, name, email, code, password FROM participants WHERE email = $1';
     
     db.get(participantSql, [email], (err, participant) => {
       if (err) {
