@@ -96,12 +96,13 @@ router.post('/login', async (req, res) => {
       
       // Se não é admin, tenta como participante
         console.log('🔍 Admin não encontrado, verificando participante...');
-        const participant = await queryPostgres('SELECT id, name, email, code, password FROM participants WHERE email = $1', [email]);
+        const participantResult = await queryPostgres('SELECT id, name, email, code, password FROM participants WHERE email = $1', [email]);
         
-        if (!participant) {
+        if (participantResult.rows.length === 0) {
           return res.status(401).json({ error: 'Credenciais inválidas' });
         }
         
+        const participant = participantResult.rows[0];
         const isMatch = bcrypt.compareSync(password, participant.password);
         
         if (!isMatch) {
