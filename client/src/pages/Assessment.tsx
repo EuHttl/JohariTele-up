@@ -90,13 +90,23 @@ const AssessmentPage: React.FC = () => {
       setError('Erro ao carregar dados do participante');
       setLoading(false);
     }
-  }, [code, user?.code, user?.role, loadCompletedPeerAssessments]);
+  }, [code, user?.code, user?.role]);
 
   useEffect(() => {
     if (code || user?.role === 'participant') {
       fetchData();
     }
   }, [code, user, fetchData]);
+
+  // Limpar dados quando o componente for desmontado ou quando mudar de participante
+  useEffect(() => {
+    return () => {
+      setAssessments({});
+      setSelectedPeer(null);
+      setError('');
+      setSuccess('');
+    };
+  }, [code, user?.code]);
 
   const handleCharacteristicChange = (characteristicId: number, selected: boolean) => {
     setAssessments(prev => ({
@@ -153,6 +163,14 @@ const AssessmentPage: React.FC = () => {
     if (!participantCode) return;
 
     try {
+      console.log(`🔄 Carregando avaliação do par: ${peer.name} (${peer.code})`);
+      
+      // Limpar dados anteriores antes de carregar novos
+      setAssessments({});
+      setSelectedPeer(null);
+      setError('');
+      setSuccess('');
+      
       const peerAssessments = await assessmentsAPI.getPeerAssessment(participantCode, peer.code);
       const assessmentMap: Record<number, boolean> = {};
       
@@ -162,12 +180,17 @@ const AssessmentPage: React.FC = () => {
         }
       });
       
+      console.log(`✅ Avaliação carregada para ${peer.name}:`, assessmentMap);
+      
       setAssessments(assessmentMap);
       setSelectedPeer(peer);
       setCurrentAssessment('peer');
     } catch (error) {
       console.error('Erro ao carregar avaliação entre pares:', error);
       setError('Erro ao carregar avaliação entre pares');
+      // Limpar dados em caso de erro
+      setAssessments({});
+      setSelectedPeer(null);
     }
   };
 
@@ -392,14 +415,19 @@ const AssessmentPage: React.FC = () => {
             gap: '1rem'
           }}>
             <button
-              onClick={() => {
+              onClick={async () => {
+                console.log('🔄 Mudando para autoavaliação');
                 setCurrentAssessment('self');
                 setSelectedPeer(null);
                 setAssessments({});
+                setError('');
+                setSuccess('');
+                
                 // Carregar autoavaliação existente
                 if (participant.has_completed_self_assessment) {
                   const participantCode = user?.role === 'participant' ? user.code : code;
-                  assessmentsAPI.getSelfAssessment(participantCode!).then(selfAssessments => {
+                  try {
+                    const selfAssessments = await assessmentsAPI.getSelfAssessment(participantCode!);
                     const assessmentMap: Record<number, boolean> = {};
                     selfAssessments.forEach(assessment => {
                       if (assessment.selected !== null) {
@@ -407,7 +435,11 @@ const AssessmentPage: React.FC = () => {
                       }
                     });
                     setAssessments(assessmentMap);
-                  });
+                    console.log('✅ Autoavaliação carregada:', assessmentMap);
+                  } catch (error) {
+                    console.error('❌ Erro ao carregar autoavaliação:', error);
+                    setError('Erro ao carregar autoavaliação');
+                  }
                 }
               }}
               style={{
