@@ -9,6 +9,7 @@ import {
   User,
   Settings
 } from 'lucide-react';
+import '../styles/layout.css';
 
 const Layout: React.FC = () => {
   const { user, logout } = useAuth();
@@ -30,61 +31,30 @@ const Layout: React.FC = () => {
   };
 
   return (
-    <div className="App">
+    <div className="app">
       {/* Header fixo */}
       <header className="header-fixed">
         <div className="header-container">
           {/* Logo e título */}
           <div className="header-logo">
-            <div style={{ position: 'relative' }}>
-              <div style={{
-                height: '40px',
-                width: '40px',
-                background: 'linear-gradient(135deg, rgba(124, 58, 237, 0.4) 0%, rgba(147, 51, 234, 0.4) 100%)',
-                backdropFilter: 'blur(10px)',
-                borderRadius: '12px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-                border: '1px solid rgba(124, 58, 237, 0.3)'
-              }}>
+            <div className="header-logo-icon">
+              <div className="header-logo-container">
                 <img 
                   src="/images/favicon/favicon-96x96.png" 
-                  alt="TeleUp Logo" 
-                  style={{ height: '24px', width: '24px', borderRadius: '6px' }}
+                  alt="Janela de Johari Logo" 
+                  className="w-6 h-6 rounded-md"
                 />
               </div>
-              <div style={{
-                position: 'absolute',
-                top: '-2px',
-                right: '-2px',
-                height: '12px',
-                width: '12px',
-                background: 'linear-gradient(45deg, #a855f7, #ec4899)',
-                borderRadius: '50%',
-                animation: 'pulse 2s infinite'
-              }}></div>
+              <div className="header-logo-badge"></div>
             </div>
-            <div>
-              <h1 style={{
-                fontSize: '1.25rem',
-                fontWeight: '700',
-                color: 'white',
-                margin: 0,
-                letterSpacing: '-0.025em'
-              }}>Janela de Johari</h1>
-              <p style={{
-                fontSize: '0.75rem',
-                color: '#c084fc',
-                margin: 0,
-                fontWeight: '500'
-              }}>Sistema de Avaliação Comportamental</p>
+            <div className="header-logo-text">
+              <h1>Janela de Johari</h1>
+              <p>Sistema de Avaliação Comportamental</p>
             </div>
           </div>
 
           {/* Navegação */}
-          <nav style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
+          <nav className="header-nav">
             {navigation.map((item) => {
               const Icon = item.icon;
               const active = isActive(item.href);
@@ -92,41 +62,9 @@ const Layout: React.FC = () => {
                 <Link
                   key={item.name}
                   to={item.href}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    padding: '0.5rem 1rem',
-                    color: active ? 'white' : 'rgba(255, 255, 255, 0.8)',
-                    textDecoration: 'none',
-                    fontSize: '0.875rem',
-                    fontWeight: '500',
-                    borderRadius: '8px',
-                    background: active 
-                      ? 'linear-gradient(135deg, rgba(124, 58, 237, 0.3) 0%, rgba(147, 51, 234, 0.3) 100%)'
-                      : 'transparent',
-                    border: active 
-                      ? '1px solid rgba(124, 58, 237, 0.3)' 
-                      : '1px solid transparent',
-                    transition: 'all 0.3s ease',
-                    boxShadow: active 
-                      ? '0 2px 4px rgba(124, 58, 237, 0.2)' 
-                      : 'none'
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!active) {
-                      e.currentTarget.style.color = 'white';
-                      e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!active) {
-                      e.currentTarget.style.color = 'rgba(255, 255, 255, 0.8)';
-                      e.currentTarget.style.background = 'transparent';
-                    }
-                  }}
+                  className={`header-nav-link ${active ? 'active' : ''}`}
                 >
-                  <Icon style={{ height: '16px', width: '16px' }} />
+                  <Icon className="w-4 h-4" />
                   {item.name}
                 </Link>
               );
@@ -137,21 +75,11 @@ const Layout: React.FC = () => {
           <div className="header-actions">
             <div className="header-user-info">
               <div className="header-user-avatar">
-                <User style={{ height: '16px', width: '16px', color: 'white' }} />
+                <User className="w-4 h-4 text-white" />
               </div>
-              <div style={{ textAlign: 'right' }}>
-                <p style={{
-                  fontSize: '0.875rem',
-                  fontWeight: '600',
-                  color: 'white',
-                  margin: 0
-                }}>{user?.name}</p>
-                <p style={{
-                  fontSize: '0.75rem',
-                  fontWeight: '500',
-                  color: '#c084fc',
-                  margin: 0
-                }}>{user?.role}</p>
+              <div className="header-user-details">
+                <p className="header-user-name">{user?.name}</p>
+                <p className="header-user-role">{user?.role}</p>
               </div>
             </div>
             
@@ -160,7 +88,7 @@ const Layout: React.FC = () => {
               className="header-logout-btn"
               title="Sair"
             >
-              <LogOut style={{ height: '16px', width: '16px' }} />
+              <LogOut className="w-4 h-4" />
             </button>
           </div>
         </div>

@@ -32,6 +32,11 @@ const AssessmentPage: React.FC = () => {
       // Se o usuário é um participante logado, usar seu código, senão usar o código da URL
       const participantCode = user?.role === 'participant' ? user.code : code;
       
+      console.log('📋 Assessment: fetchData iniciado');
+      console.log('📋 Assessment: user:', user);
+      console.log('📋 Assessment: code (da URL):', code);
+      console.log('📋 Assessment: participantCode (final):', participantCode);
+      
       const [participantData, characteristicsData, peersData] = await Promise.all([
         participantsAPI.getByCode(participantCode!),
         assessmentsAPI.getCharacteristics(),
@@ -56,7 +61,7 @@ const AssessmentPage: React.FC = () => {
 
       setLoading(false);
     } catch (error) {
-      console.error('Erro ao carregar dados:', error);
+      console.error('❌ Assessment: Erro ao carregar dados:', error);
       setError('Erro ao carregar dados do participante');
       setLoading(false);
     }

@@ -11,7 +11,6 @@ import AssessmentPage from './pages/Assessment';
 import Report from './pages/Report';
 import Reports from './pages/Reports';
 import AdminDashboard from './pages/AdminDashboard';
-import './App.css';
 import './styles/globals.css';
 
 function App() {

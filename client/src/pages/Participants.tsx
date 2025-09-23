@@ -8,8 +8,12 @@ import {
   User, 
   Copy,
   CheckCircle,
-  AlertCircle
+  AlertCircle,
+  Search,
+  Eye,
+  FileText
 } from 'lucide-react';
+import '../styles/participants.css';
 
 const Participants: React.FC = () => {
   const [participants, setParticipants] = useState<Participant[]>([]);
@@ -19,6 +23,7 @@ const Participants: React.FC = () => {
   const [formData, setFormData] = useState({ name: '', email: '' });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     fetchParticipants();
@@ -27,15 +32,10 @@ const Participants: React.FC = () => {
   const fetchParticipants = async () => {
     try {
       const data = await participantsAPI.getAll();
-      // Garantir que sempre seja um array
-      const participantsArray = Array.isArray(data) ? data : [];
-      console.log('Participants recebidos:', data);
-      console.log('Participants é array?', Array.isArray(data));
-      console.log('Participants processados:', participantsArray);
-      setParticipants(participantsArray);
+      setParticipants(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Erro ao carregar participantes:', error);
-      setParticipants([]); // Garantir que sempre seja um array vazio em caso de erro
+      setParticipants([]);
     } finally {
       setLoading(false);
     }
@@ -48,19 +48,19 @@ const Participants: React.FC = () => {
 
     try {
       if (editingParticipant) {
-        await participantsAPI.update(editingParticipant.id, formData.name, formData.email);
+        await participantsAPI.update(editingParticipant.id, formData);
         setSuccess('Participante atualizado com sucesso!');
       } else {
-        await participantsAPI.create(formData.name, formData.email);
+        await participantsAPI.create(formData);
         setSuccess('Participante criado com sucesso!');
       }
       
+      setFormData({ name: '', email: '' });
       setShowModal(false);
       setEditingParticipant(null);
-      setFormData({ name: '', email: '' });
       fetchParticipants();
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'Erro ao salvar participante');
+    } catch (error: any) {
+      setError(error.response?.data?.message || 'Erro ao salvar participante');
     }
   };
 
@@ -70,210 +70,285 @@ const Participants: React.FC = () => {
     setShowModal(true);
   };
 
-  const handleDelete = async (participant: Participant) => {
-    if (window.confirm(`Tem certeza que deseja excluir ${participant.name}? Esta ação não pode ser desfeita.`)) {
+  const handleDelete = async (id: number) => {
+    if (window.confirm('Tem certeza que deseja excluir este participante?')) {
       try {
-        await participantsAPI.delete(participant.id);
+        await participantsAPI.delete(id);
         setSuccess('Participante excluído com sucesso!');
         fetchParticipants();
-      } catch (err: any) {
-        setError(err.response?.data?.error || 'Erro ao excluir participante');
+      } catch (error: any) {
+        setError(error.response?.data?.message || 'Erro ao excluir participante');
       }
     }
   };
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
-    // Você pode adicionar uma notificação de sucesso aqui
+    setSuccess('Código copiado para a área de transferência!');
   };
 
   const getStatusBadge = (participant: Participant) => {
     if (participant.has_completed_self_assessment && participant.has_completed_peer_assessments) {
-      return <span className="badge badge-success">Completo</span>;
+      return (
+        <span className="participant-status-badge complete">
+          <CheckCircle className="w-3 h-3 mr-1" />
+          Completo
+        </span>
+      );
     } else if (participant.has_completed_self_assessment) {
-      return <span className="badge badge-warning">Autoavaliação</span>;
+      return (
+        <span className="participant-status-badge in-progress">
+          <AlertCircle className="w-3 h-3 mr-1" />
+          Em Progresso
+        </span>
+      );
     } else {
-      return <span className="badge badge-error">Pendente</span>;
+      return (
+        <span className="participant-status-badge pending">
+          <User className="w-3 h-3 mr-1" />
+          Pendente
+        </span>
+      );
     }
+  };
+
+  const filteredParticipants = participants.filter(participant =>
+    participant.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    participant.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    participant.code.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const stats = {
+    total: participants.length,
+    completed: participants.filter(p => p.has_completed_self_assessment && p.has_completed_peer_assessments).length,
+    inProgress: participants.filter(p => p.has_completed_self_assessment && !p.has_completed_peer_assessments).length,
+    pending: participants.filter(p => !p.has_completed_self_assessment).length
   };
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="spinner"></div>
-        <span className="ml-2">Carregando participantes...</span>
+      <div className="participants-loading">
+        <div className="participants-loading-content">
+          <div className="participants-loading-spinner"></div>
+          <p className="participants-loading-text">Carregando participantes...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="participants-container">
       {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-xl font-bold text-gray-900 glow-text">Participantes</h1>
-          <p className="text-sm text-gray-600">Gerencie os participantes da Janela de Johari</p>
+      <div className="participants-header">
+        <div className="participants-title-section">
+          <div className="participants-title-icon">
+            <Users className="w-12 h-12 text-white" />
+          </div>
+          <div>
+            <h1 className="participants-title">Participantes</h1>
+            <p className="participants-subtitle">Gerencie os participantes da avaliação</p>
+          </div>
         </div>
-        <button
-          onClick={() => {
-            setEditingParticipant(null);
-            setFormData({ name: '', email: '' });
-            setShowModal(true);
-          }}
-          className="btn btn-primary animated-gradient shimmer"
-        >
-          <Plus className="h-4 w-4" />
-          Adicionar Participante
-        </button>
+        <div className="participants-actions">
+          <div className="participants-search">
+            <Search className="participants-search-icon" />
+            <input
+              type="text"
+              placeholder="Buscar participantes..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="participants-search-input"
+            />
+          </div>
+          <button
+            onClick={() => {
+              setEditingParticipant(null);
+              setFormData({ name: '', email: '' });
+              setShowModal(true);
+            }}
+            className="participants-add-btn"
+          >
+            <Plus className="w-5 h-5 mr-2" />
+            Adicionar Participante
+          </button>
+        </div>
       </div>
 
-      {/* Alerts */}
+      {/* Stats */}
+      <div className="participants-stats">
+        <div className="participants-stat-card">
+          <div className="participants-stat-header">
+            <div className="participants-stat-icon total">
+              <Users className="w-8 h-8 text-white" />
+            </div>
+            <div className="participants-stat-number">{stats.total}</div>
+          </div>
+          <h3 className="participants-stat-label">Total</h3>
+          <p className="participants-stat-description">Participantes cadastrados</p>
+        </div>
+
+        <div className="participants-stat-card">
+          <div className="participants-stat-header">
+            <div className="participants-stat-icon completed">
+              <CheckCircle className="w-8 h-8 text-white" />
+            </div>
+            <div className="participants-stat-number">{stats.completed}</div>
+          </div>
+          <h3 className="participants-stat-label">Completos</h3>
+          <p className="participants-stat-description">Avaliações finalizadas</p>
+        </div>
+
+        <div className="participants-stat-card">
+          <div className="participants-stat-header">
+            <div className="participants-stat-icon in-progress">
+              <AlertCircle className="w-8 h-8 text-white" />
+            </div>
+            <div className="participants-stat-number">{stats.inProgress}</div>
+          </div>
+          <h3 className="participants-stat-label">Em Progresso</h3>
+          <p className="participants-stat-description">Autoavaliação concluída</p>
+        </div>
+
+        <div className="participants-stat-card">
+          <div className="participants-stat-header">
+            <div className="participants-stat-icon pending">
+              <User className="w-8 h-8 text-white" />
+            </div>
+            <div className="participants-stat-number">{stats.pending}</div>
+          </div>
+          <h3 className="participants-stat-label">Pendentes</h3>
+          <p className="participants-stat-description">Aguardando início</p>
+        </div>
+      </div>
+
+      {/* Messages */}
       {error && (
-        <div className="alert alert-error flex items-center">
-          <AlertCircle className="h-5 w-5 mr-2" />
+        <div className="alert alert-error">
+          <AlertCircle className="w-5 h-5 mr-2" />
           {error}
         </div>
       )}
-
+      
       {success && (
-        <div className="alert alert-success flex items-center">
-          <CheckCircle className="h-5 w-5 mr-2" />
+        <div className="alert alert-success">
+          <CheckCircle className="w-5 h-5 mr-2" />
           {success}
         </div>
       )}
 
-      {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 stagger-animation">
-        <div className="card hover-lift animated-border">
-          <div className="card-body p-4">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <div className="h-8 w-8 bg-blue-100 rounded-lg flex items-center justify-center shimmer">
-                  <User className="h-4 w-4 text-blue-600" />
-                </div>
-              </div>
-              <div className="ml-3">
-                <p className="text-xs font-medium text-gray-600">Total</p>
-                <p className="text-lg font-bold text-gray-900">{Array.isArray(participants) ? participants.length : 0}</p>
-                <p className="text-xs text-gray-500">de 15 disponíveis</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="card hover-lift animated-border">
-          <div className="card-body p-4">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <div className="h-8 w-8 bg-green-100 rounded-lg flex items-center justify-center shimmer">
-                  <CheckCircle className="h-4 w-4 text-green-600" />
-                </div>
-              </div>
-              <div className="ml-3">
-                <p className="text-xs font-medium text-gray-600">Completos</p>
-                <p className="text-lg font-bold text-gray-900">
-                  {Array.isArray(participants) ? participants.filter(p => p.has_completed_self_assessment && p.has_completed_peer_assessments).length : 0}
-                </p>
-                <p className="text-xs text-gray-500">prontos para relatórios</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="card hover-lift animated-border">
-          <div className="card-body p-4">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <div className="h-8 w-8 bg-yellow-100 rounded-lg flex items-center justify-center shimmer">
-                  <AlertCircle className="h-4 w-4 text-yellow-600" />
-                </div>
-              </div>
-              <div className="ml-3">
-                <p className="text-xs font-medium text-gray-600">Pendentes</p>
-                <p className="text-lg font-bold text-gray-900">
-                  {Array.isArray(participants) ? participants.filter(p => !p.has_completed_self_assessment).length : 0}
-                </p>
-                <p className="text-xs text-gray-500">aguardando avaliação</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* Participants List */}
-      <div className="card depth-card hover-lift">
-        <div className="card-header p-4">
-          <h3 className="card-title text-lg glow-text">Lista de Participantes</h3>
-          <p className="card-subtitle text-sm">
-            {!Array.isArray(participants) || participants.length === 0 ? 'Nenhum participante cadastrado' : `${participants.length} participante(s) cadastrado(s)`}
-          </p>
+      <div className="participants-list-card">
+        <div className="participants-list-header">
+          <h2 className="participants-list-title">Lista de Participantes</h2>
         </div>
-        <div className="card-body">
-          {!Array.isArray(participants) || participants.length === 0 ? (
-            <div className="text-center py-8">
-              <User className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Nenhum participante cadastrado</h3>
-              <p className="text-gray-600 mb-4">Comece adicionando o primeiro participante ao sistema.</p>
-              <button
-                onClick={() => setShowModal(true)}
-                className="btn btn-primary"
-              >
-                <Plus className="h-4 w-4" />
-                Adicionar Participante
-              </button>
+        
+        <div className="participants-list-content">
+          {filteredParticipants.length === 0 ? (
+            <div className="participants-empty-state">
+              <div className="participants-empty-icon">
+                <Users className="w-16 h-16 text-gray-400" />
+              </div>
+              <h3 className="participants-empty-title">
+                {searchTerm ? 'Nenhum participante encontrado' : 'Nenhum participante cadastrado'}
+              </h3>
+              <p className="participants-empty-description">
+                {searchTerm 
+                  ? 'Tente ajustar os termos de busca'
+                  : 'Comece adicionando participantes ao sistema'
+                }
+              </p>
+              {!searchTerm && (
+                <button
+                  onClick={() => {
+                    setEditingParticipant(null);
+                    setFormData({ name: '', email: '' });
+                    setShowModal(true);
+                  }}
+                  className="participants-empty-btn"
+                >
+                  <Plus className="w-5 h-5 mr-2" />
+                  Adicionar Primeiro Participante
+                </button>
+              )}
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="table table-modern">
+            <div className="participants-table-responsive">
+              <table className="participants-table">
                 <thead>
                   <tr>
-                    <th>Nome</th>
+                    <th>Participante</th>
                     <th>Email</th>
-                    <th>Código de Acesso</th>
+                    <th>Código</th>
                     <th>Status</th>
                     <th>Ações</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {Array.isArray(participants) ? participants.map((participant) => (
+                  {filteredParticipants.map((participant) => (
                     <tr key={participant.id}>
-                      <td className="font-medium">{participant.name}</td>
-                      <td className="text-gray-600">{participant.email}</td>
                       <td>
-                        <div className="flex items-center gap-2">
-                          <span className="font-mono text-sm bg-gray-100 px-2 py-1 rounded">
-                            {participant.code}
-                          </span>
-                          <button
-                            onClick={() => copyToClipboard(participant.code)}
-                            className="text-gray-400 hover:text-gray-600"
-                            title="Copiar código"
-                          >
-                            <Copy className="h-4 w-4" />
-                          </button>
+                        <div className="participant-info">
+                          <div className="participant-avatar">
+                            {participant.name.charAt(0).toUpperCase()}
+                          </div>
+                          <div className="participant-details">
+                            <p className="participant-name">{participant.name}</p>
+                            <p className="participant-email">{participant.email}</p>
+                          </div>
                         </div>
+                      </td>
+                      <td>{participant.email}</td>
+                      <td>
+                        <span className="participant-code">{participant.code}</span>
                       </td>
                       <td>{getStatusBadge(participant)}</td>
                       <td>
-                        <div className="flex gap-2">
+                        <div className="participants-actions-cell">
+                          <button
+                            onClick={() => copyToClipboard(participant.code)}
+                            className="participants-action-btn view"
+                            title="Copiar código"
+                          >
+                            <Copy className="w-4 h-4" />
+                          </button>
+                          <a
+                            href={`/assessment/${participant.code}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="participants-action-btn view"
+                            title="Visualizar avaliação"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </a>
+                          {participant.has_completed_self_assessment && participant.has_completed_peer_assessments && (
+                            <a
+                              href={`/report/${participant.code}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="participants-action-btn report"
+                              title="Ver relatório"
+                            >
+                              <FileText className="w-4 h-4" />
+                            </a>
+                          )}
                           <button
                             onClick={() => handleEdit(participant)}
-                            className="btn btn-sm btn-outline"
-                            title="Editar"
+                            className="participants-action-btn edit"
+                            title="Editar participante"
                           >
-                            <Edit className="h-4 w-4" />
+                            <Edit className="w-4 h-4" />
                           </button>
                           <button
-                            onClick={() => handleDelete(participant)}
-                            className="btn btn-sm btn-error"
-                            title="Excluir"
+                            onClick={() => handleDelete(participant.id)}
+                            className="participants-action-btn delete"
+                            title="Excluir participante"
                           >
-                            <Trash2 className="h-4 w-4" />
+                            <Trash2 className="w-4 h-4" />
                           </button>
                         </div>
                       </td>
                     </tr>
-                  )) : null}
+                  ))}
                 </tbody>
               </table>
             </div>
@@ -281,83 +356,54 @@ const Participants: React.FC = () => {
         </div>
       </div>
 
-      {/* Modal Moderno */}
+      {/* Modal */}
       {showModal && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-xl font-bold text-gray-900 glow-text">
-                  {editingParticipant ? 'Editar Participante' : 'Adicionar Participante'}
-                </h3>
+        <div className="modal-overlay" onClick={() => setShowModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="card-header">
+              <h2 className="card-title">
+                {editingParticipant ? 'Editar Participante' : 'Novo Participante'}
+              </h2>
+            </div>
+            
+            <form onSubmit={handleSubmit} className="card-body">
+              <div className="form-group">
+                <label className="form-label">Nome</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  required
+                  placeholder="Nome completo do participante"
+                />
+              </div>
+              
+              <div className="form-group">
+                <label className="form-label">Email</label>
+                <input
+                  type="email"
+                  className="form-input"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  required
+                  placeholder="email@exemplo.com"
+                />
+              </div>
+              
+              <div className="card-footer">
                 <button
-                  onClick={() => {
-                    setShowModal(false);
-                    setEditingParticipant(null);
-                    setFormData({ name: '', email: '' });
-                    setError('');
-                  }}
-                  className="text-gray-400 hover:text-gray-600 transition-colors duration-200 p-2 rounded-full hover:bg-gray-100 hover-lift"
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => setShowModal(false)}
                 >
-                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
+                  Cancelar
+                </button>
+                <button type="submit" className="btn btn-primary">
+                  {editingParticipant ? 'Atualizar' : 'Criar'}
                 </button>
               </div>
-
-              <form onSubmit={handleSubmit} className="space-y-5">
-                <div className="form-group">
-                  <label className="form-label">Nome</label>
-                  <input
-                    type="text"
-                    className="form-input modern-focus"
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    required
-                    placeholder="Nome completo do participante"
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label className="form-label">Email</label>
-                  <input
-                    type="email"
-                    className="form-input modern-focus"
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    required
-                    placeholder="email@exemplo.com"
-                  />
-                </div>
-
-                {error && (
-                  <div className="alert alert-error">
-                    {error}
-                  </div>
-                )}
-
-                <div className="flex gap-3 pt-4">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowModal(false);
-                      setEditingParticipant(null);
-                      setFormData({ name: '', email: '' });
-                      setError('');
-                    }}
-                    className="btn btn-outline flex-1 hover-lift"
-                  >
-                    Cancelar
-                  </button>
-                  <button
-                    type="submit"
-                    className="btn btn-primary flex-1 animated-gradient shimmer"
-                  >
-                    {editingParticipant ? 'Atualizar' : 'Adicionar'}
-                  </button>
-                </div>
-              </form>
-            </div>
+            </form>
           </div>
         </div>
       )}
