@@ -80,38 +80,15 @@ const AdminDashboard: React.FC = () => {
   };
 
   const handleBackup = async () => {
-    try {
-      await adminAPI.createBackup();
-      alert('Backup criado com sucesso!');
-    } catch (error: any) {
-      alert('Erro ao criar backup: ' + (error.response?.data?.message || 'Erro desconhecido'));
-    }
+    alert('Funcionalidade de backup não implementada no servidor.');
   };
 
   const handleRestore = async () => {
-    if (window.confirm('Tem certeza que deseja restaurar o backup? Isso irá sobrescrever todos os dados atuais.')) {
-      try {
-        await adminAPI.restoreBackup();
-        alert('Backup restaurado com sucesso!');
-        fetchData();
-      } catch (error: any) {
-        alert('Erro ao restaurar backup: ' + (error.response?.data?.message || 'Erro desconhecido'));
-      }
-    }
+    alert('Funcionalidade de restore não implementada no servidor.');
   };
 
   const handleClearData = async () => {
-    if (window.confirm('ATENÇÃO: Esta ação irá apagar TODOS os dados. Tem certeza absoluta?')) {
-      if (window.confirm('Última chance: Esta ação é IRREVERSÍVEL. Confirma a exclusão de todos os dados?')) {
-        try {
-          await adminAPI.clearAllData();
-          alert('Todos os dados foram apagados!');
-          fetchData();
-        } catch (error: any) {
-          alert('Erro ao apagar dados: ' + (error.response?.data?.message || 'Erro desconhecido'));
-        }
-      }
-    }
+    alert('Funcionalidade de limpeza de dados não implementada no servidor.');
   };
 
   if (loading) {
