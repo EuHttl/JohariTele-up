@@ -159,7 +159,10 @@ const Dashboard: React.FC = () => {
   }
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#f9fafb' }}>
+    <div style={{ 
+      minHeight: '100vh', 
+      background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 50%, #e2e8f0 100%)'
+    }}>
       {/* Hero Section */}
       <div className="dashboard-hero">
         <div className="dashboard-hero-overlay"></div>
@@ -290,23 +293,23 @@ const Dashboard: React.FC = () => {
                 <div style={{
                   fontSize: '2rem',
                   fontWeight: '700',
-                  color: '#111827'
+                  color: '#1e293b'
                 }}>{stats?.total_participants || 0}</div>
                 <div style={{
                   fontSize: '0.875rem',
-                  color: '#6b7280'
+                  color: '#64748b'
                 }}>de 12</div>
               </div>
             </div>
             <h3 style={{
               fontSize: '1.125rem',
               fontWeight: '600',
-              color: '#111827',
+              color: '#1e293b',
               marginBottom: '0.25rem'
             }}>Participantes</h3>
             <p style={{
               fontSize: '0.875rem',
-              color: '#6b7280'
+              color: '#64748b'
             }}>Total cadastrados</p>
             <div style={{
               marginTop: '1rem',
@@ -345,23 +348,23 @@ const Dashboard: React.FC = () => {
                 <div style={{
                   fontSize: '2rem',
                   fontWeight: '700',
-                  color: '#111827'
+                  color: '#1e293b'
                 }}>{stats?.completed_self || 0}</div>
                 <div style={{
                   fontSize: '0.875rem',
-                  color: '#6b7280'
+                  color: '#64748b'
                 }}>{getCompletionPercentage(stats?.completed_self || 0, stats?.total_participants || 1)}%</div>
               </div>
             </div>
             <h3 style={{
               fontSize: '1.125rem',
               fontWeight: '600',
-              color: '#111827',
+              color: '#1e293b',
               marginBottom: '0.25rem'
             }}>Autoavaliações</h3>
             <p style={{
               fontSize: '0.875rem',
-              color: '#6b7280'
+              color: '#64748b'
             }}>Concluídas</p>
             <div style={{
               marginTop: '1rem',
@@ -400,23 +403,23 @@ const Dashboard: React.FC = () => {
                 <div style={{
                   fontSize: '2rem',
                   fontWeight: '700',
-                  color: '#111827'
+                  color: '#1e293b'
                 }}>{stats?.completed_peer || 0}</div>
                 <div style={{
                   fontSize: '0.875rem',
-                  color: '#6b7280'
+                  color: '#64748b'
                 }}>{getCompletionPercentage(stats?.completed_peer || 0, stats?.total_participants || 1)}%</div>
         </div>
       </div>
             <h3 style={{
               fontSize: '1.125rem',
               fontWeight: '600',
-              color: '#111827',
+              color: '#1e293b',
               marginBottom: '0.25rem'
             }}>Entre Pares</h3>
             <p style={{
               fontSize: '0.875rem',
-              color: '#6b7280'
+              color: '#64748b'
             }}>Avaliações</p>
             <div style={{
               marginTop: '1rem',
@@ -454,23 +457,23 @@ const Dashboard: React.FC = () => {
                 <div style={{
                   fontSize: '2rem',
                   fontWeight: '700',
-                  color: '#111827'
+                  color: '#1e293b'
                 }}>{completedParticipants}</div>
                 <div style={{
                   fontSize: '0.875rem',
-                  color: '#6b7280'
+                  color: '#64748b'
                 }}>finalizados</div>
               </div>
             </div>
             <h3 style={{
               fontSize: '1.125rem',
               fontWeight: '600',
-              color: '#111827',
+              color: '#1e293b',
               marginBottom: '0.25rem'
             }}>Completos</h3>
             <p style={{
               fontSize: '0.875rem',
-              color: '#6b7280'
+              color: '#64748b'
             }}>Prontos para análise</p>
             <div style={{
               marginTop: '1rem',
@@ -516,11 +519,11 @@ const Dashboard: React.FC = () => {
                   <h3 style={{
                     fontSize: '1.125rem',
                     fontWeight: '600',
-                    color: '#111827'
+                    color: '#1e293b'
                   }}>Participantes</h3>
                   <p style={{
                     fontSize: '0.875rem',
-                    color: '#6b7280'
+                    color: '#64748b'
                   }}>Lista de todos os participantes cadastrados</p>
                 </div>
               </div>
@@ -573,11 +576,11 @@ const Dashboard: React.FC = () => {
                 <h3 style={{
                   fontSize: '1.125rem',
                   fontWeight: '600',
-                  color: '#111827',
+                  color: '#1e293b',
                   marginBottom: '0.5rem'
                 }}>Nenhum participante cadastrado</h3>
                 <p style={{
-                  color: '#6b7280',
+                  color: '#64748b',
                   marginBottom: '1.5rem'
                 }}>Comece adicionando participantes ao sistema para realizar as avaliações.</p>
                 <Link 
@@ -618,31 +621,31 @@ const Dashboard: React.FC = () => {
                         textAlign: 'left',
                         padding: '0.75rem 1rem',
                         fontWeight: '600',
-                        color: '#111827'
+                        color: '#1e293b'
                       }}>Nome</th>
                       <th style={{
                         textAlign: 'left',
                         padding: '0.75rem 1rem',
                         fontWeight: '600',
-                        color: '#111827'
+                        color: '#1e293b'
                       }}>Email</th>
                       <th style={{
                         textAlign: 'left',
                         padding: '0.75rem 1rem',
                         fontWeight: '600',
-                        color: '#111827'
+                        color: '#1e293b'
                       }}>Código</th>
                       <th style={{
                         textAlign: 'left',
                         padding: '0.75rem 1rem',
                         fontWeight: '600',
-                        color: '#111827'
+                        color: '#1e293b'
                       }}>Status</th>
                       <th style={{
                         textAlign: 'left',
                         padding: '0.75rem 1rem',
                         fontWeight: '600',
-                        color: '#111827'
+                        color: '#1e293b'
                       }}>Ações</th>
                   </tr>
                 </thead>
@@ -679,14 +682,14 @@ const Dashboard: React.FC = () => {
                               {participant.name.charAt(0).toUpperCase()}
                             </div>
                             <span style={{
-                              fontWeight: '500',
-                              color: '#111827'
+                            fontWeight: '500',
+                            color: '#1e293b'
                             }}>{participant.name}</span>
                           </div>
                         </td>
                         <td style={{
-                          padding: '1rem',
-                          color: '#6b7280'
+                        padding: '1rem',
+                        color: '#64748b'
                         }}>{participant.email}</td>
                         <td style={{ padding: '1rem' }}>
                           <span style={{
