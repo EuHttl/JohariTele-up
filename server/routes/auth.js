@@ -13,10 +13,34 @@ if (process.env.DATABASE_URL) {
   db = sqliteInit.db;
 }
 
+// Função para executar query PostgreSQL diretamente
+async function queryPostgres(sql, params = []) {
+  if (!process.env.DATABASE_URL) {
+    throw new Error('PostgreSQL não configurado');
+  }
+  
+  const { Pool } = require('pg');
+  const pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: { rejectUnauthorized: false }
+  });
+  
+  try {
+    const client = await pool.connect();
+    const result = await client.query(sql, params);
+    client.release();
+    await pool.end();
+    return result.rows[0] || null;
+  } catch (error) {
+    console.error('Erro na query PostgreSQL:', error);
+    throw error;
+  }
+}
+
 const JWT_SECRET = process.env.JWT_SECRET || 'johari_secret_key_2024';
 
 // POST /api/auth/login - Login unificado para admin e participantes
-router.post('/login', (req, res) => {
+router.post('/login', async (req, res) => {
   const startTime = Date.now();
   try {
     console.log('🔐 Login attempt started:', { email: req.body.email, timestamp: new Date().toISOString() });
@@ -26,13 +50,101 @@ router.post('/login', (req, res) => {
       console.log('❌ Login failed: missing credentials');
       return res.status(400).json({ error: 'Email e senha são obrigatórios' });
     }
-
-    // Primeiro, tenta encontrar como admin
-    const adminSql = 'SELECT id, username, email, password, name FROM admins WHERE email = $1';
     
-    console.log('🔍 Executando query admin...');
+    // Usar PostgreSQL diretamente se disponível
+    if (process.env.DATABASE_URL) {
+      console.log('🔍 Usando PostgreSQL diretamente...');
+      
+      try {
+        // Buscar admin
+        const admin = await queryPostgres('SELECT id, username, email, password, name FROM admins WHERE email = $1', [email]);
+        
+      if (admin) {
+          console.log('✅ Admin encontrado, verificando senha...');
+        const isMatch = bcrypt.compareSync(password, admin.password);
+        
+        if (!isMatch) {
+          return res.status(401).json({ error: 'Credenciais inválidas' });
+        }
+        
+        // Gerar token JWT para admin
+        const token = jwt.sign(
+          {
+            id: admin.id,
+            username: admin.username,
+            email: admin.email,
+            name: admin.name,
+            role: 'admin'
+          },
+          JWT_SECRET,
+          { expiresIn: '24h' }
+        );
+        
+        console.log('🎉 Admin login successful!');
+        return res.json({
+          token,
+          user: {
+            id: admin.id,
+            username: admin.username,
+            email: admin.email,
+            name: admin.name,
+            role: 'admin'
+          },
+          message: 'Login realizado com sucesso'
+        });
+      }
+      
+      // Se não é admin, tenta como participante
+        console.log('🔍 Admin não encontrado, verificando participante...');
+        const participant = await queryPostgres('SELECT id, name, email, code, password FROM participants WHERE email = $1', [email]);
+        
+        if (!participant) {
+          return res.status(401).json({ error: 'Credenciais inválidas' });
+        }
+        
+        const isMatch = bcrypt.compareSync(password, participant.password);
+        
+        if (!isMatch) {
+          return res.status(401).json({ error: 'Credenciais inválidas' });
+        }
+        
+        // Gerar token JWT para participante
+        const token = jwt.sign(
+          {
+            id: participant.id,
+            email: participant.email,
+            name: participant.name,
+            code: participant.code,
+            role: 'participant'
+          },
+          JWT_SECRET,
+          { expiresIn: '24h' }
+        );
+        
+        console.log('🎉 Participant login successful!');
+        return res.json({
+          token,
+          user: {
+            id: participant.id,
+            email: participant.email,
+            name: participant.name,
+            code: participant.code,
+            role: 'participant'
+          },
+          message: 'Login realizado com sucesso'
+        });
+        
+      } catch (error) {
+        console.error('❌ Erro no login PostgreSQL:', error);
+        return res.status(500).json({ error: 'Erro interno do servidor' });
+      }
+    }
+    
+    // Fallback para SQLite (desenvolvimento)
+    console.log('🔍 Usando SQLite (desenvolvimento)...');
+    const adminSql = 'SELECT id, username, email, password, name FROM admins WHERE email = ?';
+    
     db.get(adminSql, [email], (err, admin) => {
-      console.log('📊 Query admin executada, resultado:', { err: !!err, admin: !!admin });
       
       if (err) {
         console.error('❌ Erro no login (admin):', err);
