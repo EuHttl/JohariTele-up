@@ -144,13 +144,18 @@ router.post('/', async (req, res) => {
 
       // Gerar código único
       const code = uuidv4().substring(0, 8).toUpperCase();
+      const password = code.toLowerCase();
+      
+      // Hash da senha
+      const bcrypt = require('bcryptjs');
+      const hashedPassword = bcrypt.hashSync(password, 10);
       
       // Criar participante
       const insertResult = await queryPostgres(`
         INSERT INTO participants (name, email, code, password, has_completed_self_assessment, has_completed_peer_assessments)
         VALUES ($1, $2, $3, $4, false, false)
         RETURNING id, created_at
-      `, [name, email, code, code.toLowerCase()]);
+      `, [name, email, code, hashedPassword]);
 
       const newParticipant = insertResult.rows[0];
       
