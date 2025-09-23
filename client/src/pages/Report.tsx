@@ -15,6 +15,7 @@ import {
   CheckCircle,
   Info
 } from 'lucide-react';
+import '../styles/reports.css';
 
 const Report: React.FC = () => {
   const { code } = useParams<{ code: string }>();
@@ -252,66 +253,66 @@ const Report: React.FC = () => {
       </div>
 
       {/* Status */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="card">
-          <div className="card-body">
-            <div className="flex items-center gap-3">
-              <User className="h-8 w-8 text-blue-500" />
-              <div>
-                <p className="text-sm font-medium text-gray-600">Autoavaliação</p>
-                <p className={`text-lg font-bold ${participant.has_completed_self_assessment ? 'text-green-600' : 'text-red-600'}`}>
-                  {participant.has_completed_self_assessment ? 'Completa' : 'Pendente'}
-                </p>
-              </div>
+      <div className="individual-status-grid">
+        <div className="individual-status-card">
+          <div className="individual-status-content">
+            <div className="individual-status-icon self">
+              <User className="h-6 w-6" />
+            </div>
+            <div className="individual-status-info">
+              <p className="individual-status-label">Autoavaliação</p>
+              <p className={`individual-status-value ${participant.has_completed_self_assessment ? 'completed' : 'pending'}`}>
+                {participant.has_completed_self_assessment ? 'Completa' : 'Pendente'}
+              </p>
             </div>
           </div>
         </div>
 
-        <div className="card">
-          <div className="card-body">
-            <div className="flex items-center gap-3">
-              <Users className="h-8 w-8 text-purple-500" />
-              <div>
-                <p className="text-sm font-medium text-gray-600">Avaliações Entre Pares</p>
-                <p className={`text-lg font-bold ${participant.has_completed_peer_assessments ? 'text-green-600' : 'text-red-600'}`}>
-                  {participant.has_completed_peer_assessments ? 'Completas' : 'Pendentes'}
-                </p>
-              </div>
+        <div className="individual-status-card">
+          <div className="individual-status-content">
+            <div className="individual-status-icon peers">
+              <Users className="h-6 w-6" />
+            </div>
+            <div className="individual-status-info">
+              <p className="individual-status-label">Avaliações Entre Pares</p>
+              <p className={`individual-status-value ${participant.has_completed_peer_assessments ? 'completed' : 'pending'}`}>
+                {participant.has_completed_peer_assessments ? 'Completas' : 'Pendentes'}
+              </p>
             </div>
           </div>
         </div>
       </div>
 
       {/* Johari Window Quadrants */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="individual-quadrants-grid">
         {Object.entries(report.quadrants).map(([key, quadrant]) => (
-          <div key={key} className="card">
-            <div className="card-header">
-              <div className="flex items-center justify-between">
+          <div key={key} className={`individual-quadrant-card ${key}`}>
+            <div className="individual-quadrant-header">
+              <div className="individual-quadrant-stats">
                 <div>
-                  <h3 className="card-title">{quadrant.name}</h3>
-                  <p className="card-subtitle">{quadrant.description}</p>
+                  <h3 className="individual-quadrant-title">{quadrant.name}</h3>
+                  <p className="individual-quadrant-description">{quadrant.description}</p>
                 </div>
                 <div className="text-right">
-                  <div className="text-2xl font-bold text-gray-900">{quadrant.count}</div>
-                  <div className="text-sm text-gray-600">{quadrant.percentage}%</div>
+                  <div className="individual-quadrant-percentage">{quadrant.percentage}%</div>
+                  <div className="individual-quadrant-count">{quadrant.count} características</div>
                 </div>
               </div>
             </div>
-            <div className="card-body">
+            <div className="individual-quadrant-body">
               {quadrant.characteristics.length > 0 ? (
-                <div className="grid grid-cols-1 gap-2">
+                <div className="individual-characteristics-grid">
                   {quadrant.characteristics.map((characteristic, index) => (
                     <div
                       key={index}
-                      className={`p-2 rounded-md border ${getQuadrantColor(quadrant.name)}`}
+                      className={`individual-characteristic-tag ${key}`}
                     >
                       {characteristic}
                     </div>
                   ))}
                 </div>
               ) : (
-                <p className="text-gray-500 text-center py-4">
+                <p className="individual-empty-state">
                   Nenhuma característica identificada nesta área
                 </p>
               )}
@@ -322,30 +323,30 @@ const Report: React.FC = () => {
 
       {/* Insights */}
       {report.insights.length > 0 && (
-        <div className="card">
-          <div className="card-header">
-            <h3 className="card-title">Insights e Recomendações</h3>
-            <p className="card-subtitle">Análise personalizada baseada nos resultados</p>
+        <div className="individual-insights-card">
+          <div className="individual-insights-header">
+            <h3 className="individual-insights-title">Insights e Recomendações</h3>
+            <p className="individual-insights-subtitle">Análise personalizada baseada nos resultados</p>
           </div>
-          <div className="card-body">
-            <div className="space-y-4">
+          <div className="individual-insights-body">
+            <div className="individual-insights-grid">
               {report.insights.map((insight, index) => (
                 <div
                   key={index}
-                  className={`p-4 rounded-lg border ${getInsightColor(insight.type)}`}
+                  className={`individual-insight-item ${insight.type}`}
                 >
-                  <div className="flex items-start gap-3">
-                    {getInsightIcon(insight.type)}
-                    <div className="flex-1">
-                      <h4 className="font-medium text-gray-900 mb-1">{insight.title}</h4>
-                      <p className="text-gray-700 mb-2">{insight.message}</p>
-                      {insight.recommendation && (
-                        <p className="text-sm text-gray-600 italic">
-                          {insight.recommendation}
-                        </p>
-                      )}
+                  <div className="individual-insight-header">
+                    <div className={`individual-insight-icon ${insight.type}`}>
+                      {getInsightIcon(insight.type)}
                     </div>
+                    <h4 className="individual-insight-title">{insight.title}</h4>
                   </div>
+                  <p className="individual-insight-message">{insight.message}</p>
+                  {insight.recommendation && (
+                    <p className="individual-insight-recommendation">
+                      {insight.recommendation}
+                    </p>
+                  )}
                 </div>
               ))}
             </div>
@@ -354,65 +355,73 @@ const Report: React.FC = () => {
       )}
 
       {/* Johari Window Visualization */}
-      <div className="card">
-        <div className="card-header">
-          <h3 className="card-title">Visualização da Janela de Johari</h3>
-          <p className="card-subtitle">Representação gráfica dos quatro quadrantes</p>
+      <div className="individual-johari-visualization">
+        <div className="individual-johari-header">
+          <h3 className="individual-johari-title">Visualização da Janela de Johari</h3>
+          <p className="individual-johari-subtitle">Representação gráfica dos quatro quadrantes</p>
         </div>
-        <div className="card-body">
-          <div className="grid grid-cols-2 gap-4 max-w-2xl mx-auto">
+        <div className="individual-johari-body">
+          <div className="individual-johari-grid">
             {/* Área Aberta */}
-            <div className="p-4 border-2 border-green-300 rounded-lg bg-green-50">
-              <div className="flex items-center gap-2 mb-2">
-                <Eye className="h-5 w-5 text-green-600" />
-                <h4 className="font-semibold text-green-800">Área Aberta</h4>
+            <div className="individual-johari-quadrant open">
+              <div className="individual-johari-quadrant-header">
+                <div className="individual-johari-quadrant-icon open">
+                  <Eye className="h-5 w-5" />
+                </div>
+                <h4 className="individual-johari-quadrant-title">Área Aberta</h4>
               </div>
-              <p className="text-sm text-green-700 mb-2">
+              <p className="individual-johari-quadrant-description">
                 Eu sei / Outros sabem
               </p>
-              <div className="text-2xl font-bold text-green-600">
+              <div className="individual-johari-quadrant-percentage">
                 {report.quadrants.open.percentage}%
               </div>
             </div>
 
             {/* Área Cega */}
-            <div className="p-4 border-2 border-yellow-300 rounded-lg bg-yellow-50">
-              <div className="flex items-center gap-2 mb-2">
-                <EyeOff className="h-5 w-5 text-yellow-600" />
-                <h4 className="font-semibold text-yellow-800">Área Cega</h4>
+            <div className="individual-johari-quadrant blind">
+              <div className="individual-johari-quadrant-header">
+                <div className="individual-johari-quadrant-icon blind">
+                  <EyeOff className="h-5 w-5" />
+                </div>
+                <h4 className="individual-johari-quadrant-title">Área Cega</h4>
               </div>
-              <p className="text-sm text-yellow-700 mb-2">
+              <p className="individual-johari-quadrant-description">
                 Eu não sei / Outros sabem
               </p>
-              <div className="text-2xl font-bold text-yellow-600">
+              <div className="individual-johari-quadrant-percentage">
                 {report.quadrants.blind.percentage}%
               </div>
             </div>
 
             {/* Área Oculta */}
-            <div className="p-4 border-2 border-blue-300 rounded-lg bg-blue-50">
-              <div className="flex items-center gap-2 mb-2">
-                <Eye className="h-5 w-5 text-blue-600" />
-                <h4 className="font-semibold text-blue-800">Área Oculta</h4>
+            <div className="individual-johari-quadrant hidden">
+              <div className="individual-johari-quadrant-header">
+                <div className="individual-johari-quadrant-icon hidden">
+                  <Eye className="h-5 w-5" />
+                </div>
+                <h4 className="individual-johari-quadrant-title">Área Oculta</h4>
               </div>
-              <p className="text-sm text-blue-700 mb-2">
+              <p className="individual-johari-quadrant-description">
                 Eu sei / Outros não sabem
               </p>
-              <div className="text-2xl font-bold text-blue-600">
+              <div className="individual-johari-quadrant-percentage">
                 {report.quadrants.hidden.percentage}%
               </div>
             </div>
 
             {/* Área Desconhecida */}
-            <div className="p-4 border-2 border-purple-300 rounded-lg bg-purple-50">
-              <div className="flex items-center gap-2 mb-2">
-                <EyeOff className="h-5 w-5 text-purple-600" />
-                <h4 className="font-semibold text-purple-800">Área Desconhecida</h4>
+            <div className="individual-johari-quadrant unknown">
+              <div className="individual-johari-quadrant-header">
+                <div className="individual-johari-quadrant-icon unknown">
+                  <EyeOff className="h-5 w-5" />
+                </div>
+                <h4 className="individual-johari-quadrant-title">Área Desconhecida</h4>
               </div>
-              <p className="text-sm text-purple-700 mb-2">
+              <p className="individual-johari-quadrant-description">
                 Eu não sei / Outros não sabem
               </p>
-              <div className="text-2xl font-bold text-purple-600">
+              <div className="individual-johari-quadrant-percentage">
                 {report.quadrants.unknown.percentage}%
               </div>
             </div>
@@ -421,7 +430,7 @@ const Report: React.FC = () => {
       </div>
 
       {/* Footer */}
-      <div className="text-center text-sm text-gray-500 py-4">
+      <div className="individual-report-footer">
         Relatório gerado em {new Date(report.generated_at).toLocaleString('pt-BR')}
       </div>
     </div>

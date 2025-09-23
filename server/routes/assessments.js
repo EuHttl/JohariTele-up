@@ -362,10 +362,9 @@ router.get('/completed-peers/:code', async (req, res) => {
     
     // Buscar avaliações de pares concluídas
     const query = `
-      SELECT DISTINCT peer_id 
+      SELECT DISTINCT assessed_id as peer_id 
       FROM peer_assessments 
-      WHERE assessor_id = $1 
-      AND completed = true
+      WHERE assessor_id = $1
     `;
     
     const result = await postgresInit.pool.query(query, [participantId]);
