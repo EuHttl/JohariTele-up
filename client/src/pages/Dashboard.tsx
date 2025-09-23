@@ -18,6 +18,7 @@ import {
   Star,
   Heart,
   Brain,
+  Copy,
 } from 'lucide-react';
 import '../styles/dashboard.css';
 
@@ -306,11 +307,11 @@ const Dashboard: React.FC = () => {
                 <table className="dashboard-table">
                   <thead>
                     <tr>
-                      <th>Nome</th>
-                      <th>Email</th>
-                      <th>Código</th>
-                      <th>Status</th>
-                      <th>Ações</th>
+                      <th>PARTICIPANTE</th>
+                      <th>EMAIL</th>
+                      <th>CÓDIGO</th>
+                      <th>STATUS</th>
+                      <th>AÇÕES</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -334,6 +335,16 @@ const Dashboard: React.FC = () => {
                         <td>{getStatusBadge(participant)}</td>
                         <td>
                           <div className="dashboard-actions">
+                            <button
+                              onClick={() => {
+                                navigator.clipboard.writeText(participant.code);
+                                // Você pode adicionar uma notificação aqui se quiser
+                              }}
+                              className="dashboard-action-btn copy"
+                              title="Copiar código"
+                            >
+                              <Copy className="w-4 h-4" />
+                            </button>
                             <Link
                               to={`/assessment/${participant.code}`}
                               className="dashboard-action-btn view"
