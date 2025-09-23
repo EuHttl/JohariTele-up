@@ -57,9 +57,10 @@ router.post('/login', async (req, res) => {
       
       try {
         // Buscar admin
-        const admin = await queryPostgres('SELECT id, username, email, password, name FROM admins WHERE email = $1', [email]);
+        const adminResult = await queryPostgres('SELECT id, username, email, password, name FROM admins WHERE email = $1', [email]);
         
-      if (admin) {
+      if (adminResult && adminResult.rows && adminResult.rows.length > 0) {
+          const admin = adminResult.rows[0];
           console.log('✅ Admin encontrado, verificando senha...');
         const isMatch = bcrypt.compareSync(password, admin.password);
         
@@ -98,7 +99,8 @@ router.post('/login', async (req, res) => {
         console.log('🔍 Admin não encontrado, verificando participante...');
         const participantResult = await queryPostgres('SELECT id, name, email, code, password FROM participants WHERE email = $1', [email]);
         
-        if (participantResult.rows.length === 0) {
+        if (!participantResult || !participantResult.rows || participantResult.rows.length === 0) {
+          console.log('❌ Participante não encontrado ou erro na query');
           return res.status(401).json({ error: 'Credenciais inválidas' });
         }
         
