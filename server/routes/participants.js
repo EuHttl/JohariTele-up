@@ -306,25 +306,46 @@ router.delete('/:id', (req, res) => {
 });
 
 // GET /api/participants/stats/overview - Estatísticas gerais
-router.get('/stats/overview', (req, res) => {
+router.get('/stats/overview', async (req, res) => {
   console.log('📊 GET /api/participants/stats/overview - Buscando estatísticas');
-  const query = `
-    SELECT 
-      COUNT(*) as total_participants,
-      SUM(CASE WHEN has_completed_self_assessment = 1 THEN 1 ELSE 0 END) as completed_self,
-      SUM(CASE WHEN has_completed_peer_assessments = 1 THEN 1 ELSE 0 END) as completed_peer
-    FROM participants
-  `;
   
-  db.get(query, [], (err, row) => {
-    if (err) {
-      console.error('Erro ao buscar estatísticas:', err);
-      return res.status(500).json({ error: 'Erro interno do servidor' });
+  try {
+    if (process.env.DATABASE_URL) {
+      // Usar PostgreSQL diretamente
+      const result = await queryPostgres(`
+        SELECT 
+          COUNT(*) as total_participants,
+          SUM(CASE WHEN has_completed_self_assessment = true THEN 1 ELSE 0 END) as completed_self,
+          SUM(CASE WHEN has_completed_peer_assessments = true THEN 1 ELSE 0 END) as completed_peer
+        FROM participants
+      `);
+      
+      console.log('📊 Estatísticas encontradas:', result.rows[0]);
+      res.json(result.rows[0]);
+    } else {
+      // Fallback para SQLite
+      const query = `
+        SELECT 
+          COUNT(*) as total_participants,
+          SUM(CASE WHEN has_completed_self_assessment = 1 THEN 1 ELSE 0 END) as completed_self,
+          SUM(CASE WHEN has_completed_peer_assessments = 1 THEN 1 ELSE 0 END) as completed_peer
+        FROM participants
+      `;
+      
+      db.get(query, [], (err, row) => {
+        if (err) {
+          console.error('Erro ao buscar estatísticas:', err);
+          return res.status(500).json({ error: 'Erro interno do servidor' });
+        }
+        
+        console.log('📊 Estatísticas encontradas:', row);
+        res.json(row);
+      });
     }
-    
-    console.log('📊 Estatísticas encontradas:', row);
-    res.json(row);
-  });
+  } catch (error) {
+    console.error('Erro ao buscar estatísticas:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
 });
 
 module.exports = router;

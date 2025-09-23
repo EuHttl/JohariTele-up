@@ -32,10 +32,17 @@ const allowedOrigins = [
 // Middleware CORS - DEVE SER O PRIMEIRO MIDDLEWARE
 app.use(cors({
   origin: function (origin, callback) {
+    console.log('🌐 CORS: Origin recebida:', origin);
+    console.log('🌐 CORS: Origins permitidas:', allowedOrigins);
+    
     // Permitir requisições sem origin (ex: mobile apps, Postman)
-    if (!origin) return callback(null, true);
+    if (!origin) {
+      console.log('🌐 CORS: Permitindo requisição sem origin');
+      return callback(null, true);
+    }
     
     if (allowedOrigins.indexOf(origin) !== -1) {
+      console.log('✅ CORS: Origin permitida:', origin);
       callback(null, true);
     } else {
       console.log('🚫 CORS: Origin não permitida:', origin);
@@ -47,6 +54,22 @@ app.use(cors({
   credentials: false,
   optionsSuccessStatus: 200 // Para suporte a navegadores legados
 }));
+
+// Middleware adicional para garantir CORS
+app.use((req, res, next) => {
+  console.log('🌐 CORS: Headers sendo adicionados para:', req.get('Origin'));
+  res.header('Access-Control-Allow-Origin', req.get('Origin') || '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+  res.header('Access-Control-Allow-Credentials', 'false');
+  
+  if (req.method === 'OPTIONS') {
+    console.log('🌐 CORS: Respondendo OPTIONS preflight');
+    res.sendStatus(200);
+  } else {
+    next();
+  }
+});
 
 // Middleware adicional para debug CORS (apenas em desenvolvimento)
 if (process.env.NODE_ENV !== 'production') {
