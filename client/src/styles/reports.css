@@ -590,11 +590,11 @@
 
 /* Chart Container */
 .reports-chart-container {
-  background: white;
+  /* background: white; */
   border-radius: 12px;
   padding: 1.5rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  border: 1px solid #e5e7eb;
+  box-shadow: 0 1px 3px var(--primary-dark);
+  border: 1px solid var(--primary-dark);
   margin-bottom: 2rem;
 }
 
@@ -606,9 +606,9 @@
 }
 
 .reports-chart-title {
+  color: white;
   font-size: 1.125rem;
   font-weight: 600;
-  color: #1f2937;
   margin: 0;
 }
 
