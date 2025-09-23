@@ -174,6 +174,11 @@ export const assessmentsAPI = {
     const response = await api.post(`/assessments/peer/${assessorCode}/${assessedCode}`, { assessments });
     return response.data;
   },
+
+  getCompletedPeerAssessments: async (code: string): Promise<{peer_id: number}[]> => {
+    const response = await api.get(`/assessments/completed-peers/${code}`);
+    return response.data;
+  },
 };
 
 // Reports API

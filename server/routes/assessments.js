@@ -327,4 +327,60 @@ async function checkPeerAssessmentCompletion(participantId, client) {
   }
 }
 
+// GET /api/assessments/completed-peers/:code - Buscar avaliações de pares concluídas
+router.get('/completed-peers/:code', async (req, res) => {
+  console.log('🔍 GET /api/assessments/completed-peers/:code - Iniciando busca...');
+  
+  if (!postgresInit) {
+    console.log('❌ PostgreSQL não configurado');
+    return res.status(500).json({ error: 'PostgreSQL não configurado' });
+  }
+  
+  if (!postgresInit.pool) {
+    console.log('❌ PostgreSQL pool não disponível');
+    return res.status(500).json({ error: 'PostgreSQL pool não disponível' });
+  }
+  
+  try {
+    const { code } = req.params;
+    console.log('🔍 Buscando avaliações de pares concluídas para:', code);
+    
+    // Buscar o ID do participante
+    const participantResult = await postgresInit.pool.query(
+      'SELECT id FROM participants WHERE code = $1',
+      [code]
+    );
+    
+    if (participantResult.rows.length === 0) {
+      console.log('❌ Participante não encontrado:', code);
+      return res.status(404).json({ error: 'Participante não encontrado' });
+    }
+    
+    const participantId = participantResult.rows[0].id;
+    console.log('📋 ID do participante:', participantId);
+    
+    // Buscar avaliações de pares concluídas
+    const query = `
+      SELECT DISTINCT peer_id 
+      FROM peer_assessments 
+      WHERE assessor_id = $1 
+      AND completed = true
+    `;
+    
+    const result = await postgresInit.pool.query(query, [participantId]);
+    console.log('✅ Avaliações de pares concluídas encontradas:', result.rows.length);
+    
+    res.json(result.rows);
+    
+  } catch (error) {
+    console.error('❌ Erro ao buscar avaliações de pares concluídas:', error);
+    console.error('Stack:', error.stack);
+    res.status(500).json({ 
+      error: 'Erro interno do servidor',
+      details: error.message,
+      code: error.code
+    });
+  }
+});
+
 module.exports = router;

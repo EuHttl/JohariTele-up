@@ -22,10 +22,23 @@ const AssessmentPage: React.FC = () => {
   const [currentAssessment, setCurrentAssessment] = useState<'self' | 'peer'>('self');
   const [selectedPeer, setSelectedPeer] = useState<Participant | null>(null);
   const [assessments, setAssessments] = useState<Record<number, boolean>>({});
+  const [completedPeerAssessments, setCompletedPeerAssessments] = useState<Set<number>>(new Set());
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+
+  const loadCompletedPeerAssessments = async (participantCode: string) => {
+    try {
+      // Buscar todas as avaliações de pares já concluídas
+      const completedAssessments = await assessmentsAPI.getCompletedPeerAssessments(participantCode);
+      const completedIds = new Set(completedAssessments.map(assessment => assessment.peer_id));
+      setCompletedPeerAssessments(completedIds);
+    } catch (error) {
+      console.error('Erro ao carregar avaliações de pares concluídas:', error);
+      // Se der erro, continua sem as informações de status
+    }
+  };
 
   const fetchData = useCallback(async () => {
     try {
@@ -47,6 +60,9 @@ const AssessmentPage: React.FC = () => {
       setCharacteristics(characteristicsData);
       setPeers(peersData);
 
+      // Carregar avaliações de pares concluídas
+      await loadCompletedPeerAssessments(participantCode!);
+
       // Carregar autoavaliação se já existir
       if (participantData.has_completed_self_assessment) {
         const selfAssessments = await assessmentsAPI.getSelfAssessment(participantCode!);
@@ -65,7 +81,7 @@ const AssessmentPage: React.FC = () => {
       setError('Erro ao carregar dados do participante');
       setLoading(false);
     }
-  }, [code, user?.code, user?.role]);
+  }, [code, user?.code, user?.role, loadCompletedPeerAssessments]);
 
   useEffect(() => {
     if (code || user?.role === 'participant') {
@@ -104,6 +120,13 @@ const AssessmentPage: React.FC = () => {
       } else if (selectedPeer) {
         await assessmentsAPI.savePeerAssessment(participantCode, selectedPeer.code, assessmentArray);
         setSuccess(`Avaliação de ${selectedPeer.name} salva com sucesso!`);
+        
+        // Marcar avaliação de par como concluída
+        setCompletedPeerAssessments(prev => {
+          const newSet = new Set(prev);
+          newSet.add(selectedPeer.id);
+          return newSet;
+        });
       }
 
       // Limpar seleções para próxima avaliação
@@ -520,8 +543,18 @@ const AssessmentPage: React.FC = () => {
                   style={{
                     padding: '1rem',
                     borderRadius: '12px',
-                    border: `2px solid ${selectedPeer?.id === peer.id ? '#7c3aed' : 'rgba(124, 58, 237, 0.3)'}`,
-                    backgroundColor: selectedPeer?.id === peer.id ? 'rgba(124, 58, 237, 0.1)' : 'rgba(17, 24, 39, 0.5)',
+                    border: `2px solid ${
+                      completedPeerAssessments.has(peer.id) 
+                        ? '#86efac' 
+                        : selectedPeer?.id === peer.id 
+                          ? '#7c3aed' 
+                          : 'rgba(124, 58, 237, 0.3)'
+                    }`,
+                    backgroundColor: completedPeerAssessments.has(peer.id) 
+                      ? 'rgba(34, 197, 94, 0.1)' 
+                      : selectedPeer?.id === peer.id 
+                        ? 'rgba(124, 58, 237, 0.1)' 
+                        : 'rgba(17, 24, 39, 0.5)',
                     color: 'white',
                     textAlign: 'left',
                     transition: 'all 0.3s ease',
@@ -545,9 +578,9 @@ const AssessmentPage: React.FC = () => {
                     <Eye style={{
                       height: '16px',
                       width: '16px',
-                      color: '#9ca3af'
+                      color: completedPeerAssessments.has(peer.id) ? '#86efac' : '#9ca3af'
                     }} />
-                    <div>
+                    <div style={{ flex: 1 }}>
                       <p style={{
                         fontSize: '0.875rem',
                         fontWeight: '600',
@@ -558,10 +591,20 @@ const AssessmentPage: React.FC = () => {
                       </p>
                       <p style={{
                         fontSize: '0.75rem',
-                        color: '#9ca3af'
+                        color: '#9ca3af',
+                        marginBottom: '0.25rem'
                       }}>
                         {peer.code}
                       </p>
+                      {completedPeerAssessments.has(peer.id) && (
+                        <p style={{
+                          fontSize: '0.75rem',
+                          color: '#86efac',
+                          fontWeight: '500'
+                        }}>
+                          ✅ OK
+                        </p>
+                      )}
                     </div>
                   </div>
                 </button>
