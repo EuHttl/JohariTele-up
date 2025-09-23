@@ -153,12 +153,12 @@ router.get('/comparative', async (req, res) => {
       p.id,
       p.name,
       p.code,
-      COUNT(DISTINCT sa.characteristic_id) as self_selected_count,
-      COUNT(DISTINCT pa.characteristic_id) as peer_selected_count,
-      COUNT(DISTINCT CASE WHEN sa.selected = 1 AND pa.selected = 1 THEN c.id END) as open_area_count,
-      COUNT(DISTINCT CASE WHEN (sa.selected = 0 OR sa.selected IS NULL) AND pa.selected = 1 THEN c.id END) as blind_area_count,
-      COUNT(DISTINCT CASE WHEN sa.selected = 1 AND (pa.selected = 0 OR pa.selected IS NULL) THEN c.id END) as hidden_area_count,
-      COUNT(DISTINCT CASE WHEN (sa.selected = 0 OR sa.selected IS NULL) AND (pa.selected = 0 OR pa.selected IS NULL) THEN c.id END) as unknown_area_count
+      COALESCE(COUNT(DISTINCT CASE WHEN sa.selected = 1 THEN sa.characteristic_id END), 0) as self_selected_count,
+      COALESCE(COUNT(DISTINCT CASE WHEN pa.selected = 1 THEN pa.characteristic_id END), 0) as peer_selected_count,
+      COALESCE(COUNT(DISTINCT CASE WHEN sa.selected = 1 AND pa.selected = 1 THEN c.id END), 0) as open_area_count,
+      COALESCE(COUNT(DISTINCT CASE WHEN (sa.selected = 0 OR sa.selected IS NULL) AND pa.selected = 1 THEN c.id END), 0) as blind_area_count,
+      COALESCE(COUNT(DISTINCT CASE WHEN sa.selected = 1 AND (pa.selected = 0 OR pa.selected IS NULL) THEN c.id END), 0) as hidden_area_count,
+      COALESCE(COUNT(DISTINCT CASE WHEN (sa.selected = 0 OR sa.selected IS NULL) AND (pa.selected = 0 OR pa.selected IS NULL) THEN c.id END), 0) as unknown_area_count
     FROM participants p
     CROSS JOIN characteristics c
     LEFT JOIN self_assessments sa ON sa.participant_id = p.id AND sa.characteristic_id = c.id
@@ -235,9 +235,9 @@ router.get('/characteristics', async (req, res) => {
     SELECT 
       c.id,
       c.name,
-      COUNT(DISTINCT CASE WHEN sa.selected = 1 THEN sa.participant_id END) as self_selections,
-      COUNT(DISTINCT CASE WHEN pa.selected = 1 THEN pa.assessed_id END) as peer_selections,
-      COUNT(DISTINCT CASE WHEN sa.selected = 1 AND pa.selected = 1 THEN sa.participant_id END) as consensus_selections
+      COALESCE(COUNT(DISTINCT CASE WHEN sa.selected = 1 THEN sa.participant_id END), 0) as self_selections,
+      COALESCE(COUNT(DISTINCT CASE WHEN pa.selected = 1 THEN pa.assessed_id END), 0) as peer_selections,
+      COALESCE(COUNT(DISTINCT CASE WHEN sa.selected = 1 AND pa.selected = 1 THEN sa.participant_id END), 0) as consensus_selections
     FROM characteristics c
     LEFT JOIN self_assessments sa ON sa.characteristic_id = c.id
     LEFT JOIN peer_assessments pa ON pa.characteristic_id = c.id

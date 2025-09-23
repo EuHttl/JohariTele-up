@@ -1,9 +1,50 @@
 const express = require('express');
 const router = express.Router();
-const { db } = require('../database/init');
+
+// Usar banco dinâmico (PostgreSQL ou SQLite)
+let db;
+if (process.env.DATABASE_URL) {
+  const postgresInit = require('../database/postgres-init');
+  db = postgresInit.db;
+} else {
+  const sqliteInit = require('../database/init');
+  db = sqliteInit.db;
+}
+
+// Função para executar query PostgreSQL diretamente
+async function queryPostgres(sql, params = []) {
+  if (!process.env.DATABASE_URL) {
+    throw new Error('PostgreSQL não configurado');
+  }
+  
+  const { Pool } = require('pg');
+  const pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: { rejectUnauthorized: false },
+    max: 20,
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 2000,
+  });
+  
+  try {
+    console.log('🔍 PostgreSQL: Executando query:', sql.substring(0, 100) + '...');
+    const client = await pool.connect();
+    const result = await client.query(sql, params);
+    client.release();
+    console.log('✅ PostgreSQL: Query executada com sucesso,', result.rows?.length || 0, 'registros');
+    return result;
+  } catch (error) {
+    console.error('❌ PostgreSQL: Erro na query:', error.message);
+    console.error('❌ PostgreSQL: SQL:', sql);
+    console.error('❌ PostgreSQL: Params:', params);
+    throw error;
+  }
+}
 
 // GET /api/admin/assessment-tracking - Rastreamento de avaliações entre pares
-router.get('/assessment-tracking', (req, res) => {
+router.get('/assessment-tracking', async (req, res) => {
+  console.log('🔍 GET /api/admin/assessment-tracking - Iniciando rastreamento...');
+  
   const query = `
     SELECT 
       p1.id as assessor_id,
@@ -27,11 +68,24 @@ router.get('/assessment-tracking', (req, res) => {
     ORDER BY p1.name, p2.name
   `;
   
-  db.all(query, [], (err, rows) => {
-    if (err) {
-      console.error('Erro ao buscar rastreamento de avaliações:', err);
-      return res.status(500).json({ error: 'Erro interno do servidor' });
+  try {
+    let rows;
+    
+    if (process.env.DATABASE_URL) {
+      console.log('🗄️ Usando PostgreSQL para assessment-tracking...');
+      const result = await queryPostgres(query);
+      rows = result.rows;
+    } else {
+      console.log('🗄️ Usando SQLite para assessment-tracking...');
+      rows = await new Promise((resolve, reject) => {
+        db.all(query, [], (err, result) => {
+          if (err) reject(err);
+          else resolve(result);
+        });
+      });
     }
+    
+    console.log('✅ Assessment-tracking: encontrados', rows?.length || 0, 'registros');
     
     // Agrupar por avaliador
     const groupedData = rows.reduce((acc, row) => {
@@ -70,7 +124,10 @@ router.get('/assessment-tracking', (req, res) => {
       },
       evaluations: Object.values(groupedData)
     });
-  });
+  } catch (error) {
+    console.error('❌ Erro ao buscar rastreamento de avaliações:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
 });
 
 // GET /api/admin/assessment-matrix - Matriz de avaliações (quem avaliou quem)
