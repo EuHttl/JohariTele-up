@@ -1,19 +1,38 @@
 const express = require('express');
 const router = express.Router();
 
-// Usar apenas PostgreSQL
-const postgresInit = require('../database/postgres-init');
-const db = postgresInit.db;
+// Usar banco dinâmico (PostgreSQL ou SQLite)
+let db;
+if (process.env.DATABASE_URL) {
+  const postgresInit = require('../database/postgres-init');
+  db = postgresInit.db;
+} else {
+  const sqliteInit = require('../database/init');
+  db = sqliteInit.db;
+}
 
 // GET /api/assessments/characteristics - Buscar todas as características
 router.get('/characteristics', async (req, res) => {
   console.log('🔍 GET /api/assessments/characteristics - Iniciando busca...');
   
   try {
-    console.log('🗄️ Usando PostgreSQL para buscar características...');
-    const rows = await db.all('SELECT id, name FROM characteristics ORDER BY name');
-    console.log('✅ PostgreSQL: Características encontradas:', rows?.length || 0);
-    res.json(rows);
+    if (process.env.DATABASE_URL) {
+      console.log('🗄️ Usando PostgreSQL para buscar características...');
+      const postgresInit = require('../database/postgres-init');
+      const result = await postgresInit.pool.query('SELECT id, name FROM characteristics ORDER BY name');
+      console.log('✅ PostgreSQL: Características encontradas:', result.rows?.length || 0);
+      res.json(result.rows);
+    } else {
+      console.log('🗄️ Usando SQLite para buscar características...');
+      const rows = await new Promise((resolve, reject) => {
+        db.all('SELECT id, name FROM characteristics ORDER BY name', (err, result) => {
+          if (err) reject(err);
+          else resolve(result);
+        });
+      });
+      console.log('✅ SQLite: Características encontradas:', rows?.length || 0);
+      res.json(rows);
+    }
   } catch (error) {
     console.error('❌ Erro ao buscar características:', error);
     console.error('❌ Stack trace:', error.stack);
@@ -26,16 +45,35 @@ router.get('/self/:code', async (req, res) => {
   const { code } = req.params;
   
   try {
-    const query = `
-      SELECT c.id, c.name, sa.selected
-      FROM characteristics c
-      LEFT JOIN self_assessments sa ON c.id = sa.characteristic_id 
-        AND sa.participant_id = (SELECT id FROM participants WHERE code = $1)
-      ORDER BY c.name
-    `;
-    
-    const rows = await db.all(query, [code]);
-    res.json(rows);
+    if (process.env.DATABASE_URL) {
+      const query = `
+        SELECT c.id, c.name, sa.selected
+        FROM characteristics c
+        LEFT JOIN self_assessments sa ON c.id = sa.characteristic_id 
+          AND sa.participant_id = (SELECT id FROM participants WHERE code = $1)
+        ORDER BY c.name
+      `;
+      
+      const postgresInit = require('../database/postgres-init');
+      const result = await postgresInit.pool.query(query, [code]);
+      res.json(result.rows);
+    } else {
+      const query = `
+        SELECT c.id, c.name, sa.selected
+        FROM characteristics c
+        LEFT JOIN self_assessments sa ON c.id = sa.characteristic_id 
+          AND sa.participant_id = (SELECT id FROM participants WHERE code = ?)
+        ORDER BY c.name
+      `;
+      
+      const rows = await new Promise((resolve, reject) => {
+        db.all(query, [code], (err, result) => {
+          if (err) reject(err);
+          else resolve(result);
+        });
+      });
+      res.json(rows);
+    }
   } catch (error) {
     console.error('Erro ao buscar autoavaliação:', error);
     res.status(500).json({ error: 'Erro interno do servidor' });
@@ -105,15 +143,33 @@ router.get('/peers/:code', async (req, res) => {
   const { code } = req.params;
   
   try {
-    const query = `
-      SELECT id, name, code
-      FROM participants 
-      WHERE code != $1
-      ORDER BY name
-    `;
-    
-    const rows = await db.all(query, [code]);
-    res.json(rows);
+    if (process.env.DATABASE_URL) {
+      const query = `
+        SELECT id, name, code
+        FROM participants 
+        WHERE code != $1
+        ORDER BY name
+      `;
+      
+      const postgresInit = require('../database/postgres-init');
+      const result = await postgresInit.pool.query(query, [code]);
+      res.json(result.rows);
+    } else {
+      const query = `
+        SELECT id, name, code
+        FROM participants 
+        WHERE code != ?
+        ORDER BY name
+      `;
+      
+      const rows = await new Promise((resolve, reject) => {
+        db.all(query, [code], (err, result) => {
+          if (err) reject(err);
+          else resolve(result);
+        });
+      });
+      res.json(rows);
+    }
   } catch (error) {
     console.error('Erro ao buscar pares:', error);
     res.status(500).json({ error: 'Erro interno do servidor' });
@@ -125,17 +181,37 @@ router.get('/peer/:assessorCode/:assessedCode', async (req, res) => {
   const { assessorCode, assessedCode } = req.params;
   
   try {
-    const query = `
-      SELECT c.id, c.name, pa.selected
-      FROM characteristics c
-      LEFT JOIN peer_assessments pa ON c.id = pa.characteristic_id 
-        AND pa.assessor_id = (SELECT id FROM participants WHERE code = $1)
-        AND pa.assessed_id = (SELECT id FROM participants WHERE code = $2)
-      ORDER BY c.name
-    `;
-    
-    const rows = await db.all(query, [assessorCode, assessedCode]);
-    res.json(rows);
+    if (process.env.DATABASE_URL) {
+      const query = `
+        SELECT c.id, c.name, pa.selected
+        FROM characteristics c
+        LEFT JOIN peer_assessments pa ON c.id = pa.characteristic_id 
+          AND pa.assessor_id = (SELECT id FROM participants WHERE code = $1)
+          AND pa.assessed_id = (SELECT id FROM participants WHERE code = $2)
+        ORDER BY c.name
+      `;
+      
+      const postgresInit = require('../database/postgres-init');
+      const result = await postgresInit.pool.query(query, [assessorCode, assessedCode]);
+      res.json(result.rows);
+    } else {
+      const query = `
+        SELECT c.id, c.name, pa.selected
+        FROM characteristics c
+        LEFT JOIN peer_assessments pa ON c.id = pa.characteristic_id 
+          AND pa.assessor_id = (SELECT id FROM participants WHERE code = ?)
+          AND pa.assessed_id = (SELECT id FROM participants WHERE code = ?)
+        ORDER BY c.name
+      `;
+      
+      const rows = await new Promise((resolve, reject) => {
+        db.all(query, [assessorCode, assessedCode], (err, result) => {
+          if (err) reject(err);
+          else resolve(result);
+        });
+      });
+      res.json(rows);
+    }
   } catch (error) {
     console.error('Erro ao buscar avaliação entre pares:', error);
     res.status(500).json({ error: 'Erro interno do servidor' });

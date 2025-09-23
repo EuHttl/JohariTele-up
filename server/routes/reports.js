@@ -42,113 +42,182 @@ async function queryPostgres(sql, params = []) {
 }
 
 // GET /api/reports/johari/:code - Relatório individual da Janela de Johari
-router.get('/johari/:code', (req, res) => {
+router.get('/johari/:code', async (req, res) => {
   const { code } = req.params;
   
-  // Buscar dados do participante e suas avaliações
-  const query = `
-    SELECT 
-      p.id,
-      p.name,
-      p.has_completed_self_assessment,
-      p.has_completed_peer_assessments,
-      -- Características selecionadas na autoavaliação
-      GROUP_CONCAT(
-        CASE WHEN sa.selected = 1 THEN c.name END, '|'
-      ) as self_selected,
-      -- Características selecionadas pelos pares
-      GROUP_CONCAT(
-        CASE WHEN pa.selected = 1 THEN c.name END, '|'
-      ) as peer_selected,
-      -- Características não selecionadas na autoavaliação
-      GROUP_CONCAT(
-        CASE WHEN sa.selected = 0 OR sa.selected IS NULL THEN c.name END, '|'
-      ) as self_not_selected,
-      -- Características não selecionadas pelos pares
-      GROUP_CONCAT(
-        CASE WHEN pa.selected = 0 OR pa.selected IS NULL THEN c.name END, '|'
-      ) as peer_not_selected
-    FROM participants p
-    CROSS JOIN characteristics c
-    LEFT JOIN self_assessments sa ON sa.participant_id = p.id AND sa.characteristic_id = c.id
-    LEFT JOIN peer_assessments pa ON pa.assessed_id = p.id AND pa.characteristic_id = c.id
-    WHERE p.code = ?
-    GROUP BY p.id, p.name, p.has_completed_self_assessment, p.has_completed_peer_assessments
-  `;
-  
-  db.get(query, [code], (err, row) => {
-    if (err) {
-      console.error('Erro ao gerar relatório:', err);
-      return res.status(500).json({ error: 'Erro interno do servidor' });
-    }
-    
-    if (!row) {
-      return res.status(404).json({ error: 'Participante não encontrado' });
-    }
-    
-    // Processar dados para calcular os 4 quadrantes
-    const selfSelected = row.self_selected ? row.self_selected.split('|').filter(Boolean) : [];
-    const peerSelected = row.peer_selected ? row.peer_selected.split('|').filter(Boolean) : [];
-    const selfNotSelected = row.self_not_selected ? row.self_not_selected.split('|').filter(Boolean) : [];
-    const peerNotSelected = row.peer_not_selected ? row.peer_not_selected.split('|').filter(Boolean) : [];
-    
-    // Calcular quadrantes
-    const openArea = selfSelected.filter(char => peerSelected.includes(char));
-    const blindArea = peerSelected.filter(char => !selfSelected.includes(char));
-    const hiddenArea = selfSelected.filter(char => !peerSelected.includes(char));
-    const unknownArea = selfNotSelected.filter(char => !peerSelected.includes(char));
-    
-    const report = {
-      participant: {
-        id: row.id,
-        name: row.name,
-        code: code,
-        has_completed_self_assessment: row.has_completed_self_assessment,
-        has_completed_peer_assessments: row.has_completed_peer_assessments
-      },
-      quadrants: {
-        open: {
-          name: 'Área Aberta',
-          description: 'Características conhecidas por você e pelos outros',
-          characteristics: openArea,
-          count: openArea.length,
-          percentage: Math.round((openArea.length / 56) * 100)
-        },
-        blind: {
-          name: 'Área Cega',
-          description: 'Características conhecidas pelos outros, mas não por você',
-          characteristics: blindArea,
-          count: blindArea.length,
-          percentage: Math.round((blindArea.length / 56) * 100)
-        },
-        hidden: {
-          name: 'Área Oculta',
-          description: 'Características conhecidas por você, mas não pelos outros',
-          characteristics: hiddenArea,
-          count: hiddenArea.length,
-          percentage: Math.round((hiddenArea.length / 56) * 100)
-        },
-        unknown: {
-          name: 'Área Desconhecida',
-          description: 'Características desconhecidas por você e pelos outros',
-          characteristics: unknownArea,
-          count: unknownArea.length,
-          percentage: Math.round((unknownArea.length / 56) * 100)
+  try {
+    if (process.env.DATABASE_URL) {
+      // Usar PostgreSQL em produção
+      const query = `
+        SELECT 
+          p.id,
+          p.name,
+          p.has_completed_self_assessment,
+          p.has_completed_peer_assessments,
+          -- Características selecionadas na autoavaliação
+          STRING_AGG(
+            CASE WHEN sa.selected = true THEN c.name END, '|'
+          ) as self_selected,
+          -- Características selecionadas pelos pares
+          STRING_AGG(
+            CASE WHEN pa.selected = true THEN c.name END, '|'
+          ) as peer_selected,
+          -- Características não selecionadas na autoavaliação
+          STRING_AGG(
+            CASE WHEN sa.selected = false OR sa.selected IS NULL THEN c.name END, '|'
+          ) as self_not_selected,
+          -- Características não selecionadas pelos pares
+          STRING_AGG(
+            CASE WHEN pa.selected = false OR pa.selected IS NULL THEN c.name END, '|'
+          ) as peer_not_selected
+        FROM participants p
+        CROSS JOIN characteristics c
+        LEFT JOIN self_assessments sa ON sa.participant_id = p.id AND sa.characteristic_id = c.id
+        LEFT JOIN peer_assessments pa ON pa.assessed_id = p.id AND pa.characteristic_id = c.id
+        WHERE p.code = $1
+        GROUP BY p.id, p.name, p.has_completed_self_assessment, p.has_completed_peer_assessments
+      `;
+      
+      const result = await queryPostgres(query, [code]);
+      
+      if (!result.rows || result.rows.length === 0) {
+        return res.status(404).json({ error: 'Participante não encontrado' });
+      }
+      
+      const row = result.rows[0];
+      processReportData(row, res, code);
+    } else {
+      // Usar SQLite em desenvolvimento
+      const query = `
+        SELECT 
+          p.id,
+          p.name,
+          p.has_completed_self_assessment,
+          p.has_completed_peer_assessments,
+          -- Características selecionadas na autoavaliação
+          GROUP_CONCAT(
+            CASE WHEN sa.selected = 1 THEN c.name END, '|'
+          ) as self_selected,
+          -- Características selecionadas pelos pares
+          GROUP_CONCAT(
+            CASE WHEN pa.selected = 1 THEN c.name END, '|'
+          ) as peer_selected,
+          -- Características não selecionadas na autoavaliação
+          GROUP_CONCAT(
+            CASE WHEN sa.selected = 0 OR sa.selected IS NULL THEN c.name END, '|'
+          ) as self_not_selected,
+          -- Características não selecionadas pelos pares
+          GROUP_CONCAT(
+            CASE WHEN pa.selected = 0 OR pa.selected IS NULL THEN c.name END, '|'
+          ) as peer_not_selected
+        FROM participants p
+        CROSS JOIN characteristics c
+        LEFT JOIN self_assessments sa ON sa.participant_id = p.id AND sa.characteristic_id = c.id
+        LEFT JOIN peer_assessments pa ON pa.assessed_id = p.id AND pa.characteristic_id = c.id
+        WHERE p.code = ?
+        GROUP BY p.id, p.name, p.has_completed_self_assessment, p.has_completed_peer_assessments
+      `;
+      
+      db.get(query, [code], (err, row) => {
+        if (err) {
+          console.error('Erro ao gerar relatório:', err);
+          return res.status(500).json({ error: 'Erro interno do servidor' });
         }
-      },
-      insights: generateInsights(openArea, blindArea, hiddenArea, unknownArea),
-      generated_at: new Date().toISOString()
-    };
-    
-    res.json(report);
-  });
+        
+        if (!row) {
+          return res.status(404).json({ error: 'Participante não encontrado' });
+        }
+        
+        processReportData(row, res, code);
+      });
+    }
+  } catch (error) {
+    console.error('Erro ao gerar relatório:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
 });
+
+// Função auxiliar para processar dados do relatório
+function processReportData(row, res, code) {
+  // Processar dados para calcular os 4 quadrantes
+  const selfSelected = row.self_selected ? row.self_selected.split('|').filter(Boolean) : [];
+  const peerSelected = row.peer_selected ? row.peer_selected.split('|').filter(Boolean) : [];
+  const selfNotSelected = row.self_not_selected ? row.self_not_selected.split('|').filter(Boolean) : [];
+  const peerNotSelected = row.peer_not_selected ? row.peer_not_selected.split('|').filter(Boolean) : [];
+  
+  // Calcular quadrantes
+  const openArea = selfSelected.filter(char => peerSelected.includes(char));
+  const blindArea = peerSelected.filter(char => !selfSelected.includes(char));
+  const hiddenArea = selfSelected.filter(char => !peerSelected.includes(char));
+  const unknownArea = selfNotSelected.filter(char => !peerSelected.includes(char));
+  
+  const report = {
+    participant: {
+      id: row.id,
+      name: row.name,
+      code: code,
+      has_completed_self_assessment: row.has_completed_self_assessment,
+      has_completed_peer_assessments: row.has_completed_peer_assessments
+    },
+    quadrants: {
+      open: {
+        name: 'Área Aberta',
+        description: 'Características conhecidas por você e pelos outros',
+        characteristics: openArea,
+        count: openArea.length,
+        percentage: Math.round((openArea.length / 56) * 100)
+      },
+      blind: {
+        name: 'Área Cega',
+        description: 'Características conhecidas pelos outros, mas não por você',
+        characteristics: blindArea,
+        count: blindArea.length,
+        percentage: Math.round((blindArea.length / 56) * 100)
+      },
+      hidden: {
+        name: 'Área Oculta',
+        description: 'Características conhecidas por você, mas não pelos outros',
+        characteristics: hiddenArea,
+        count: hiddenArea.length,
+        percentage: Math.round((hiddenArea.length / 56) * 100)
+      },
+      unknown: {
+        name: 'Área Desconhecida',
+        description: 'Características desconhecidas por você e pelos outros',
+        characteristics: unknownArea,
+        count: unknownArea.length,
+        percentage: Math.round((unknownArea.length / 56) * 100)
+      }
+    },
+    insights: generateInsights(openArea, blindArea, hiddenArea, unknownArea),
+    generated_at: new Date().toISOString()
+  };
+  
+  res.json(report);
+}
 
 // GET /api/reports/comparative - Relatório comparativo entre todos os participantes
 router.get('/comparative', async (req, res) => {
   console.log('🔍 GET /api/reports/comparative - Iniciando relatório comparativo...');
   
-  const query = `
+  const query = process.env.DATABASE_URL && process.env.NODE_ENV === 'production' ? `
+    SELECT 
+      p.id,
+      p.name,
+      p.code,
+      COALESCE(COUNT(DISTINCT CASE WHEN sa.selected = true THEN sa.characteristic_id END), 0) as self_selected_count,
+      COALESCE(COUNT(DISTINCT CASE WHEN pa.selected = true THEN pa.characteristic_id END), 0) as peer_selected_count,
+      COALESCE(COUNT(DISTINCT CASE WHEN sa.selected = true AND pa.selected = true THEN c.id END), 0) as open_area_count,
+      COALESCE(COUNT(DISTINCT CASE WHEN (sa.selected = false OR sa.selected IS NULL) AND pa.selected = true THEN c.id END), 0) as blind_area_count,
+      COALESCE(COUNT(DISTINCT CASE WHEN sa.selected = true AND (pa.selected = false OR pa.selected IS NULL) THEN c.id END), 0) as hidden_area_count,
+      COALESCE(COUNT(DISTINCT CASE WHEN (sa.selected = false OR sa.selected IS NULL) AND (pa.selected = false OR pa.selected IS NULL) THEN c.id END), 0) as unknown_area_count
+    FROM participants p
+    CROSS JOIN characteristics c
+    LEFT JOIN self_assessments sa ON sa.participant_id = p.id AND sa.characteristic_id = c.id
+    LEFT JOIN peer_assessments pa ON pa.assessed_id = p.id AND pa.characteristic_id = c.id
+    GROUP BY p.id, p.name, p.code
+    ORDER BY p.name
+  ` : `
     SELECT 
       p.id,
       p.name,
@@ -176,8 +245,27 @@ router.get('/comparative', async (req, res) => {
       rows = result.rows;
     } else {
       console.log('🗄️ Usando SQLite para relatório comparativo...');
+      // Usar query SQLite
+      const sqliteQuery = `
+        SELECT 
+          p.id,
+          p.name,
+          p.code,
+          COALESCE(COUNT(DISTINCT CASE WHEN sa.selected = 1 THEN sa.characteristic_id END), 0) as self_selected_count,
+          COALESCE(COUNT(DISTINCT CASE WHEN pa.selected = 1 THEN pa.characteristic_id END), 0) as peer_selected_count,
+          COALESCE(COUNT(DISTINCT CASE WHEN sa.selected = 1 AND pa.selected = 1 THEN c.id END), 0) as open_area_count,
+          COALESCE(COUNT(DISTINCT CASE WHEN (sa.selected = 0 OR sa.selected IS NULL) AND pa.selected = 1 THEN c.id END), 0) as blind_area_count,
+          COALESCE(COUNT(DISTINCT CASE WHEN sa.selected = 1 AND (pa.selected = 0 OR pa.selected IS NULL) THEN c.id END), 0) as hidden_area_count,
+          COALESCE(COUNT(DISTINCT CASE WHEN (sa.selected = 0 OR sa.selected IS NULL) AND (pa.selected = 0 OR pa.selected IS NULL) THEN c.id END), 0) as unknown_area_count
+        FROM participants p
+        CROSS JOIN characteristics c
+        LEFT JOIN self_assessments sa ON sa.participant_id = p.id AND sa.characteristic_id = c.id
+        LEFT JOIN peer_assessments pa ON pa.assessed_id = p.id AND pa.characteristic_id = c.id
+        GROUP BY p.id, p.name, p.code
+        ORDER BY p.name
+      `;
       rows = await new Promise((resolve, reject) => {
-        db.all(query, [], (err, result) => {
+        db.all(sqliteQuery, [], (err, result) => {
           if (err) reject(err);
           else resolve(result);
         });
@@ -254,8 +342,22 @@ router.get('/characteristics', async (req, res) => {
       rows = result.rows;
     } else {
       console.log('🗄️ Usando SQLite para análise de características...');
+      // Usar query SQLite
+      const sqliteQuery = `
+        SELECT 
+          c.id,
+          c.name,
+          COALESCE(COUNT(DISTINCT CASE WHEN sa.selected = 1 THEN sa.participant_id END), 0) as self_selections,
+          COALESCE(COUNT(DISTINCT CASE WHEN pa.selected = 1 THEN pa.assessed_id END), 0) as peer_selections,
+          COALESCE(COUNT(DISTINCT CASE WHEN sa.selected = 1 AND pa.selected = 1 THEN sa.participant_id END), 0) as consensus_selections
+        FROM characteristics c
+        LEFT JOIN self_assessments sa ON sa.characteristic_id = c.id
+        LEFT JOIN peer_assessments pa ON pa.characteristic_id = c.id
+        GROUP BY c.id, c.name
+        ORDER BY consensus_selections DESC, peer_selections DESC
+      `;
       rows = await new Promise((resolve, reject) => {
-        db.all(query, [], (err, result) => {
+        db.all(sqliteQuery, [], (err, result) => {
           if (err) reject(err);
           else resolve(result);
         });
