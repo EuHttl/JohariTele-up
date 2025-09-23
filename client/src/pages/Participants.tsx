@@ -49,10 +49,10 @@ const Participants: React.FC = () => {
 
     try {
       if (editingParticipant) {
-        await participantsAPI.update(editingParticipant.id, formData);
+        await participantsAPI.update(editingParticipant.id, formData.name, formData.email);
         setSuccess('Participante atualizado com sucesso!');
       } else {
-        await participantsAPI.create(formData);
+        await participantsAPI.create(formData.name, formData.email);
         setSuccess('Participante criado com sucesso!');
       }
       
