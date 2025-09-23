@@ -12,18 +12,48 @@ router.get('/characteristics', async (req, res) => {
   console.log('🔍 GET /api/assessments/characteristics - Iniciando busca...');
   
   if (!postgresInit) {
+    console.log('❌ PostgreSQL não configurado - postgresInit é null/undefined');
     return res.status(500).json({ error: 'PostgreSQL não configurado' });
+  }
+  
+  if (!postgresInit.pool) {
+    console.log('❌ PostgreSQL pool não disponível');
+    return res.status(500).json({ error: 'PostgreSQL pool não disponível' });
   }
   
   try {
     console.log('🗄️ Usando PostgreSQL para buscar características...');
+    console.log('🔍 Verificando se tabela characteristics existe...');
+    
+    // Primeiro, verificar se a tabela existe
+    const tableCheck = await postgresInit.pool.query(`
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables 
+        WHERE table_schema = 'public' 
+        AND table_name = 'characteristics'
+      );
+    `);
+    
+    console.log('📊 Tabela characteristics existe:', tableCheck.rows[0].exists);
+    
+    if (!tableCheck.rows[0].exists) {
+      console.log('❌ Tabela characteristics não existe!');
+      return res.status(500).json({ error: 'Tabela characteristics não existe' });
+    }
+    
+    // Contar registros
+    const countResult = await postgresInit.pool.query('SELECT COUNT(*) as count FROM characteristics');
+    console.log('📊 Total de características na tabela:', countResult.rows[0].count);
+    
     const result = await postgresInit.pool.query('SELECT id, name FROM characteristics ORDER BY name');
     console.log('✅ PostgreSQL: Características encontradas:', result.rows?.length || 0);
     res.json(result.rows);
   } catch (error) {
     console.error('❌ Erro ao buscar características:', error);
     console.error('❌ Stack trace:', error.stack);
-    res.status(500).json({ error: 'Erro interno do servidor' });
+    console.error('❌ Error code:', error.code);
+    console.error('❌ Error detail:', error.detail);
+    res.status(500).json({ error: 'Erro interno do servidor', details: error.message });
   }
 });
 
@@ -116,12 +146,42 @@ router.post('/self/:code', async (req, res) => {
 // GET /api/assessments/peers/:code - Buscar participantes para avaliação
 router.get('/peers/:code', async (req, res) => {
   const { code } = req.params;
+  console.log('🔍 GET /api/assessments/peers/:code - Iniciando busca para code:', code);
   
   if (!postgresInit) {
+    console.log('❌ PostgreSQL não configurado - postgresInit é null/undefined');
     return res.status(500).json({ error: 'PostgreSQL não configurado' });
   }
   
+  if (!postgresInit.pool) {
+    console.log('❌ PostgreSQL pool não disponível');
+    return res.status(500).json({ error: 'PostgreSQL pool não disponível' });
+  }
+  
   try {
+    console.log('🗄️ Usando PostgreSQL para buscar participantes...');
+    console.log('🔍 Verificando se tabela participants existe...');
+    
+    // Primeiro, verificar se a tabela existe
+    const tableCheck = await postgresInit.pool.query(`
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables 
+        WHERE table_schema = 'public' 
+        AND table_name = 'participants'
+      );
+    `);
+    
+    console.log('📊 Tabela participants existe:', tableCheck.rows[0].exists);
+    
+    if (!tableCheck.rows[0].exists) {
+      console.log('❌ Tabela participants não existe!');
+      return res.status(500).json({ error: 'Tabela participants não existe' });
+    }
+    
+    // Contar registros
+    const countResult = await postgresInit.pool.query('SELECT COUNT(*) as count FROM participants');
+    console.log('📊 Total de participantes na tabela:', countResult.rows[0].count);
+    
     const query = `
       SELECT id, name, code
       FROM participants 
@@ -129,11 +189,16 @@ router.get('/peers/:code', async (req, res) => {
       ORDER BY name
     `;
     
+    console.log('🔍 Executando query:', query, 'com parâmetro:', code);
     const result = await postgresInit.pool.query(query, [code]);
+    console.log('✅ PostgreSQL: Participantes encontrados:', result.rows?.length || 0);
     res.json(result.rows);
   } catch (error) {
-    console.error('Erro ao buscar pares:', error);
-    res.status(500).json({ error: 'Erro interno do servidor' });
+    console.error('❌ Erro ao buscar pares:', error);
+    console.error('❌ Stack trace:', error.stack);
+    console.error('❌ Error code:', error.code);
+    console.error('❌ Error detail:', error.detail);
+    res.status(500).json({ error: 'Erro interno do servidor', details: error.message });
   }
 });
 
