@@ -90,7 +90,7 @@ const Reports: React.FC = () => {
   const stats = {
     total: participants.length,
     completed: comparativeReport?.summary?.completed_assessments || 0,
-    avgScore: participants.reduce((acc, p) => acc + (p.self_awareness_score || 0), 0) / participantsLength,
+    avgScore: participants.reduce((acc: any, p: any) => acc + (p.self_awareness_score || 0), 0) / participantsLength,
     insights: characteristicAnalysis?.most_selected?.length || 0
   };
 
@@ -175,17 +175,57 @@ const Reports: React.FC = () => {
             <button className="reports-chart-btn">Pizza</button>
           </div>
         </div>
+        
+        {/* Chart Legend */}
+        <div className="reports-chart-legend">
+          <div className="reports-legend-item">
+            <div className="reports-legend-color" style={{backgroundColor: '#8b5cf6'}}></div>
+            <span className="reports-legend-text">Pontuação Combinada (Self + Peer)</span>
+          </div>
+          <div className="reports-legend-info">
+            <span className="text-sm text-gray-600">Eixo Y: 0-100 pontos | Eixo X: Participantes</span>
+          </div>
+        </div>
         <div className="reports-chart-content">
           {comparativeReport?.participants && (
             <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={comparativeReport.participants.map(p => ({
+              <BarChart data={comparativeReport.participants.map((p: any) => ({
                 name: p.name.split(' ')[0],
-                score: Math.round((p.self_awareness_score + p.peer_perception_score) / 2)
+                fullName: p.name,
+                code: p.code,
+                score: Math.round((p.self_awareness_score + p.peer_perception_score) / 2),
+                selfScore: Math.round(p.self_awareness_score),
+                peerScore: Math.round(p.peer_perception_score)
               }))}>
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip />
+                <XAxis 
+                  dataKey="name" 
+                  tick={{ fontSize: 12 }}
+                  angle={-45}
+                  textAnchor="end"
+                  height={80}
+                />
+                <YAxis 
+                  label={{ value: 'Pontuação (0-100)', angle: -90, position: 'insideLeft' }}
+                  domain={[0, 100]}
+                />
+                <Tooltip 
+                  formatter={(value: any, name: any, props: any) => [
+                    <div key="tooltip">
+                      <p><strong>Participante:</strong> {props.payload.fullName}</p>
+                      <p><strong>Código:</strong> {props.payload.code}</p>
+                      <p><strong>Pontuação Combinada:</strong> {value}%</p>
+                      <p><strong>Self-Awareness:</strong> {props.payload.selfScore}%</p>
+                      <p><strong>Peer Perception:</strong> {props.payload.peerScore}%</p>
+                    </div>
+                  ]}
+                  contentStyle={{
+                    backgroundColor: '#1f2937',
+                    border: '1px solid #374151',
+                    borderRadius: '8px',
+                    color: '#f9fafb'
+                  }}
+                />
                 <Bar dataKey="score" fill="#8b5cf6" />
               </BarChart>
             </ResponsiveContainer>
@@ -211,10 +251,41 @@ const Reports: React.FC = () => {
         </div>
       )}
 
+      {/* Score Legend */}
+      <div className="reports-score-legend">
+        <h3 className="reports-legend-title">Legenda de Pontuações</h3>
+        <div className="reports-legend-grid">
+          <div className="reports-legend-badge">
+            <span className="report-score-badge excellent">Excelente</span>
+            <span className="reports-legend-range">80-100%</span>
+          </div>
+          <div className="reports-legend-badge">
+            <span className="report-score-badge good">Bom</span>
+            <span className="reports-legend-range">60-79%</span>
+          </div>
+          <div className="reports-legend-badge">
+            <span className="report-score-badge average">Regular</span>
+            <span className="reports-legend-range">40-59%</span>
+          </div>
+          <div className="reports-legend-badge">
+            <span className="report-score-badge poor">Baixo</span>
+            <span className="reports-legend-range">0-39%</span>
+          </div>
+        </div>
+        <p className="reports-legend-description">
+          Pontuação baseada na Área Aberta da Janela de Johari: consenso entre autopercepção e percepção dos pares
+        </p>
+      </div>
+
       {/* Reports List */}
       <div className="reports-list-card">
         <div className="reports-list-header">
           <h2 className="reports-list-title">Relatórios Individuais</h2>
+          <div className="reports-list-info">
+            <span className="text-sm text-gray-600">
+              Clique em "Visualizar" para ver o relatório completo ou "Baixar" para exportar
+            </span>
+          </div>
         </div>
         
         <div className="reports-list-content">
@@ -241,7 +312,7 @@ const Reports: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {comparativeReport.participants.map((participant) => (
+                  {comparativeReport.participants.map((participant: any) => (
                     <tr key={participant.id}>
                       <td>
                         <div className="report-info">
