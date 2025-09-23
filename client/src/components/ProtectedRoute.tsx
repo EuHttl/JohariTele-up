@@ -15,13 +15,31 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requiredRole 
   console.log('🛡️ ProtectedRoute: User:', user);
   console.log('🛡️ ProtectedRoute: Required role:', requiredRole);
   console.log('🛡️ ProtectedRoute: Token no localStorage:', localStorage.getItem('authToken') ? 'SIM' : 'NÃO');
+  console.log('🛡️ ProtectedRoute: User role:', user?.role);
+  console.log('🛡️ ProtectedRoute: User ID:', user?.id);
 
   if (loading) {
     console.log('🛡️ ProtectedRoute: Ainda carregando...');
     return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="spinner"></div>
-        <span className="ml-2">Carregando...</span>
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        height: '100vh',
+        backgroundColor: '#000000',
+        color: 'white',
+        flexDirection: 'column',
+        gap: '1rem'
+      }}>
+        <div style={{
+          width: '40px',
+          height: '40px',
+          border: '4px solid rgba(124, 58, 237, 0.3)',
+          borderTop: '4px solid #7c3aed',
+          borderRadius: '50%',
+          animation: 'spin 1s linear infinite'
+        }}></div>
+        <span style={{ fontSize: '1.125rem', fontWeight: '500' }}>Carregando...</span>
       </div>
     );
   }

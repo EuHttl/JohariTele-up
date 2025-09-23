@@ -257,11 +257,20 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 // Inicializar banco de dados
-initializeDatabase().then(() => {
-  console.log('✅ Banco inicializado com sucesso');
-}).catch(error => {
-  console.error('❌ Erro na inicialização do banco:', error.message);
-});
+console.log('🗄️ Iniciando servidor...');
+try {
+  if (initializeDatabase && typeof initializeDatabase === 'function') {
+    initializeDatabase().then(() => {
+      console.log('✅ Banco inicializado com sucesso');
+    }).catch(error => {
+      console.error('❌ Erro na inicialização do banco:', error.message);
+    });
+  } else {
+    console.log('⚠️ Função initializeDatabase não encontrada, iniciando servidor sem inicialização do banco');
+  }
+} catch (error) {
+  console.error('❌ Erro geral:', error.message);
+}
 
 app.listen(PORT, () => {
   console.log(`🚀 Servidor rodando na porta ${PORT} (Railway: ${process.env.PORT || 'default'})`);

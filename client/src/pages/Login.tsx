@@ -21,11 +21,14 @@ const Login: React.FC = () => {
     try {
       // Login unificado - funciona para admin e participantes
       const response = await login(email, password);
+      console.log('🎯 Login: Resposta recebida:', response);
       
       // Redirecionar baseado no role
       if (response.user.role === 'admin') {
+        console.log('🎯 Login: Redirecionando para admin dashboard');
         navigate('/app/dashboard');
       } else {
+        console.log('🎯 Login: Redirecionando para participant assessment');
         navigate('/participant/assessment');
       }
     } catch (err: any) {

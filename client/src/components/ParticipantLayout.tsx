@@ -165,16 +165,15 @@ const ParticipantLayout: React.FC = () => {
       {/* Conteúdo principal */}
       <main style={{ 
         paddingTop: '70px', // Espaço para o header fixo
-        minHeight: '100vh'
+        minHeight: 'calc(100vh - 70px)',
+        backgroundColor: '#000000',
+        position: 'relative'
       }}>
-        <div style={{ padding: '2rem' }}>
-          <div style={{ 
-            maxWidth: '1200px', 
-            margin: '0 auto',
-            padding: '0 1.5rem'
-          }}>
-            <Outlet />
-          </div>
+        <div style={{ 
+          position: 'relative',
+          zIndex: 1
+        }}>
+          <Outlet />
         </div>
       </main>
     </div>

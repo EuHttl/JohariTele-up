@@ -23,24 +23,33 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   useEffect(() => {
     const initializeAuth = async () => {
+      console.log('🔐 AuthContext: Inicializando autenticação...');
       const storedToken = localStorage.getItem('authToken');
+      console.log('🔐 AuthContext: Token armazenado:', storedToken ? 'SIM' : 'NÃO');
       
       if (storedToken) {
         try {
+          console.log('🔐 AuthContext: Verificando token...');
           const response = await authAPI.verify(storedToken);
+          console.log('🔐 AuthContext: Resposta da verificação:', response);
+          
           if (response.valid) {
+            console.log('🔐 AuthContext: Token válido, definindo usuário:', response.user);
             setUser(response.user);
             setToken(storedToken);
           } else {
+            console.log('🔐 AuthContext: Token inválido, removendo...');
             localStorage.removeItem('authToken');
             setToken(null);
           }
         } catch (error) {
+          console.error('🔐 AuthContext: Erro na verificação do token:', error);
           localStorage.removeItem('authToken');
           setToken(null);
         }
       }
       
+      console.log('🔐 AuthContext: Finalizando inicialização, setando loading = false');
       setLoading(false);
     };
 
@@ -49,12 +58,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const login = async (email: string, password: string) => {
     try {
+      console.log('🔐 AuthContext: Iniciando login...');
       const response = await authAPI.login(email, password);
+      console.log('🔐 AuthContext: Login bem-sucedido, resposta:', response);
+      
       localStorage.setItem('authToken', response.token);
       setToken(response.token);
       setUser(response.user);
+      
+      console.log('🔐 AuthContext: Estado atualizado - User:', response.user);
       return response; // Retornar a resposta para usar nos componentes
     } catch (error) {
+      console.error('🔐 AuthContext: Erro no login:', error);
       throw error;
     }
   };
