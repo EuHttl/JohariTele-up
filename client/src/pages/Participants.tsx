@@ -11,7 +11,8 @@ import {
   AlertCircle,
   Search,
   Eye,
-  FileText
+  FileText,
+  Users
 } from 'lucide-react';
 import '../styles/participants.css';
 
