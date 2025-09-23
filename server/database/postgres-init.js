@@ -99,6 +99,63 @@ async function initializeDatabase() {
       `);
       console.log('✅ Tabela admins verificada/criada');
 
+      // Criar tabela de participantes
+      await client.query(`
+        CREATE TABLE IF NOT EXISTS participants (
+          id SERIAL PRIMARY KEY,
+          name VARCHAR(255) NOT NULL,
+          email VARCHAR(255) UNIQUE NOT NULL,
+          code VARCHAR(255) UNIQUE NOT NULL,
+          password VARCHAR(255) NOT NULL,
+          has_completed_self_assessment BOOLEAN DEFAULT FALSE,
+          has_completed_peer_assessments BOOLEAN DEFAULT FALSE,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+      console.log('✅ Tabela participants verificada/criada');
+
+      // Criar tabela de características
+      await client.query(`
+        CREATE TABLE IF NOT EXISTS characteristics (
+          id SERIAL PRIMARY KEY,
+          name VARCHAR(255) UNIQUE NOT NULL,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+      console.log('✅ Tabela characteristics verificada/criada');
+
+      // Criar tabela de autoavaliações
+      await client.query(`
+        CREATE TABLE IF NOT EXISTS self_assessments (
+          id SERIAL PRIMARY KEY,
+          participant_id INTEGER NOT NULL,
+          characteristic_id INTEGER NOT NULL,
+          selected BOOLEAN NOT NULL,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (participant_id) REFERENCES participants (id),
+          FOREIGN KEY (characteristic_id) REFERENCES characteristics (id),
+          UNIQUE(participant_id, characteristic_id)
+        )
+      `);
+      console.log('✅ Tabela self_assessments verificada/criada');
+
+      // Criar tabela de avaliações entre pares
+      await client.query(`
+        CREATE TABLE IF NOT EXISTS peer_assessments (
+          id SERIAL PRIMARY KEY,
+          assessor_id INTEGER NOT NULL,
+          assessed_id INTEGER NOT NULL,
+          characteristic_id INTEGER NOT NULL,
+          selected BOOLEAN NOT NULL,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (assessor_id) REFERENCES participants (id),
+          FOREIGN KEY (assessed_id) REFERENCES participants (id),
+          FOREIGN KEY (characteristic_id) REFERENCES characteristics (id),
+          UNIQUE(assessor_id, assessed_id, characteristic_id)
+        )
+      `);
+      console.log('✅ Tabela peer_assessments verificada/criada');
+
       // Verificar se existe administrador
       const adminCount = await client.query('SELECT COUNT(*) FROM admins');
       console.log(`📊 Total de administradores: ${adminCount.rows[0].count}`);
@@ -119,6 +176,20 @@ async function initializeDatabase() {
         console.log('🔑 Senha: admin123');
       } else {
         console.log('ℹ️ Administrador já existe no banco');
+      }
+
+      // Inserir características se não existirem
+      const characteristicsCount = await client.query('SELECT COUNT(*) FROM characteristics');
+      console.log(`📊 Total de características: ${characteristicsCount.rows[0].count}`);
+      
+      if (parseInt(characteristicsCount.rows[0].count) === 0) {
+        console.log('➕ Inserindo características...');
+        
+        for (const characteristic of characteristics) {
+          await client.query('INSERT INTO characteristics (name) VALUES ($1)', [characteristic]);
+        }
+        
+        console.log('✅ Características inseridas com sucesso!');
       }
 
       console.log('✅ Banco PostgreSQL inicializado com sucesso!');
