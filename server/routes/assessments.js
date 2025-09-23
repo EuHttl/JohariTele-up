@@ -2,11 +2,18 @@ const express = require('express');
 const router = express.Router();
 
 // Usar apenas PostgreSQL em produção
-const postgresInit = require('../database/postgres-init');
+let postgresInit;
+if (process.env.DATABASE_URL) {
+  postgresInit = require('../database/postgres-init');
+}
 
 // GET /api/assessments/characteristics - Buscar todas as características
 router.get('/characteristics', async (req, res) => {
   console.log('🔍 GET /api/assessments/characteristics - Iniciando busca...');
+  
+  if (!postgresInit) {
+    return res.status(500).json({ error: 'PostgreSQL não configurado' });
+  }
   
   try {
     console.log('🗄️ Usando PostgreSQL para buscar características...');
@@ -23,6 +30,10 @@ router.get('/characteristics', async (req, res) => {
 // GET /api/assessments/self/:code - Buscar autoavaliação do participante
 router.get('/self/:code', async (req, res) => {
   const { code } = req.params;
+  
+  if (!postgresInit) {
+    return res.status(500).json({ error: 'PostgreSQL não configurado' });
+  }
   
   try {
     const query = `
@@ -48,6 +59,10 @@ router.post('/self/:code', async (req, res) => {
   
   if (!assessments || !Array.isArray(assessments)) {
     return res.status(400).json({ error: 'Avaliações são obrigatórias' });
+  }
+
+  if (!postgresInit) {
+    return res.status(500).json({ error: 'PostgreSQL não configurado' });
   }
 
   try {
@@ -102,6 +117,10 @@ router.post('/self/:code', async (req, res) => {
 router.get('/peers/:code', async (req, res) => {
   const { code } = req.params;
   
+  if (!postgresInit) {
+    return res.status(500).json({ error: 'PostgreSQL não configurado' });
+  }
+  
   try {
     const query = `
       SELECT id, name, code
@@ -121,6 +140,10 @@ router.get('/peers/:code', async (req, res) => {
 // GET /api/assessments/peer/:assessorCode/:assessedCode - Buscar avaliação entre pares
 router.get('/peer/:assessorCode/:assessedCode', async (req, res) => {
   const { assessorCode, assessedCode } = req.params;
+  
+  if (!postgresInit) {
+    return res.status(500).json({ error: 'PostgreSQL não configurado' });
+  }
   
   try {
     const query = `
@@ -147,6 +170,10 @@ router.post('/peer/:assessorCode/:assessedCode', async (req, res) => {
   
   if (!assessments || !Array.isArray(assessments)) {
     return res.status(400).json({ error: 'Avaliações são obrigatórias' });
+  }
+
+  if (!postgresInit) {
+    return res.status(500).json({ error: 'PostgreSQL não configurado' });
   }
 
   try {
