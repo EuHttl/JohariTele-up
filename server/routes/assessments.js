@@ -1,18 +1,63 @@
 const express = require('express');
 const router = express.Router();
-const { db } = require('../database/init');
+
+// Usar banco dinâmico (PostgreSQL ou SQLite)
+let db;
+if (process.env.DATABASE_URL) {
+  const postgresInit = require('../database/postgres-init');
+  db = postgresInit.db;
+} else {
+  const sqliteInit = require('../database/init');
+  db = sqliteInit.db;
+}
+
+// Função para executar query PostgreSQL diretamente
+async function queryPostgres(sql, params = []) {
+  if (!process.env.DATABASE_URL) {
+    throw new Error('PostgreSQL não configurado');
+  }
+  
+  const { Pool } = require('pg');
+  const pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: { rejectUnauthorized: false }
+  });
+  
+  try {
+    const client = await pool.connect();
+    const result = await client.query(sql, params);
+    client.release();
+    await pool.end();
+    return result;
+  } catch (error) {
+    console.error('Erro na query PostgreSQL:', error);
+    throw error;
+  }
+}
 
 // GET /api/assessments/characteristics - Buscar todas as características
-router.get('/characteristics', (req, res) => {
-  const query = 'SELECT id, name FROM characteristics ORDER BY name';
-  
-  db.all(query, [], (err, rows) => {
-    if (err) {
-      console.error('Erro ao buscar características:', err);
-      return res.status(500).json({ error: 'Erro interno do servidor' });
+router.get('/characteristics', async (req, res) => {
+  try {
+    if (process.env.DATABASE_URL) {
+      // Usar PostgreSQL diretamente
+      const result = await queryPostgres('SELECT id, name FROM characteristics ORDER BY name');
+      res.json(result.rows);
+    } else {
+      // Fallback para SQLite
+      const query = 'SELECT id, name FROM characteristics ORDER BY name';
+      
+      db.all(query, [], (err, rows) => {
+        if (err) {
+          console.error('Erro ao buscar características:', err);
+          return res.status(500).json({ error: 'Erro interno do servidor' });
+        }
+        res.json(rows);
+      });
     }
-    res.json(rows);
-  });
+  } catch (error) {
+    console.error('Erro ao buscar características:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
 });
 
 // GET /api/assessments/self/:code - Buscar autoavaliação do participante
