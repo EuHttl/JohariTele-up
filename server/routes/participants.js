@@ -85,30 +85,64 @@ router.get('/', async (req, res) => {
 });
 
 // GET /api/participants/:code - Buscar participante por código
-router.get('/:code', (req, res) => {
+router.get('/:code', async (req, res) => {
   const { code } = req.params;
   
-  const query = `
-    SELECT 
-      id, name, email, code,
-      has_completed_self_assessment,
-      has_completed_peer_assessments
-    FROM participants 
-    WHERE code = ?
-  `;
+  console.log('🔍 GET /api/participants/:code - Buscando participante por código:', code);
+  
+  try {
+    if (process.env.DATABASE_URL) {
+      // Usar PostgreSQL diretamente
+      const result = await queryPostgres(`
+        SELECT 
+          id, name, email, code,
+          has_completed_self_assessment,
+          has_completed_peer_assessments
+        FROM participants 
+        WHERE code = $1
+      `, [code]);
+      
+      console.log('🔍 Resultado da busca PostgreSQL:', result.rows?.length || 0, 'participantes encontrados');
+      
+      if (!result.rows || result.rows.length === 0) {
+        console.log('❌ Participante não encontrado no PostgreSQL');
+        return res.status(404).json({ error: 'Participante não encontrado' });
+      }
+      
+      console.log('✅ Participante encontrado no PostgreSQL:', result.rows[0]);
+      res.json(result.rows[0]);
+    } else {
+      // Fallback para SQLite
+      const query = `
+        SELECT 
+          id, name, email, code,
+          has_completed_self_assessment,
+          has_completed_peer_assessments
+        FROM participants 
+        WHERE code = ?
+      `;
 
-  db.get(query, [code], (err, row) => {
-    if (err) {
-      console.error('Erro ao buscar participante:', err);
-      return res.status(500).json({ error: 'Erro interno do servidor' });
+      db.get(query, [code], (err, row) => {
+        if (err) {
+          console.error('Erro ao buscar participante:', err);
+          return res.status(500).json({ error: 'Erro interno do servidor' });
+        }
+        
+        console.log('🔍 Resultado da busca SQLite:', row ? 'encontrado' : 'não encontrado');
+        
+        if (!row) {
+          console.log('❌ Participante não encontrado no SQLite');
+          return res.status(404).json({ error: 'Participante não encontrado' });
+        }
+        
+        console.log('✅ Participante encontrado no SQLite:', row);
+        res.json(row);
+      });
     }
-    
-    if (!row) {
-      return res.status(404).json({ error: 'Participante não encontrado' });
-    }
-    
-    res.json(row);
-  });
+  } catch (error) {
+    console.error('Erro ao buscar participante:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
 });
 
 // POST /api/participants - Criar novo participante

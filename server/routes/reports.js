@@ -1,6 +1,45 @@
 const express = require('express');
 const router = express.Router();
-const { db } = require('../database/init');
+
+// Usar banco dinâmico (PostgreSQL ou SQLite)
+let db;
+if (process.env.DATABASE_URL) {
+  const postgresInit = require('../database/postgres-init');
+  db = postgresInit.db;
+} else {
+  const sqliteInit = require('../database/init');
+  db = sqliteInit.db;
+}
+
+// Função para executar query PostgreSQL diretamente
+async function queryPostgres(sql, params = []) {
+  if (!process.env.DATABASE_URL) {
+    throw new Error('PostgreSQL não configurado');
+  }
+  
+  const { Pool } = require('pg');
+  const pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: { rejectUnauthorized: false },
+    max: 20,
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 2000,
+  });
+  
+  try {
+    console.log('🔍 PostgreSQL: Executando query:', sql.substring(0, 100) + '...');
+    const client = await pool.connect();
+    const result = await client.query(sql, params);
+    client.release();
+    console.log('✅ PostgreSQL: Query executada com sucesso,', result.rows?.length || 0, 'registros');
+    return result;
+  } catch (error) {
+    console.error('❌ PostgreSQL: Erro na query:', error.message);
+    console.error('❌ PostgreSQL: SQL:', sql);
+    console.error('❌ PostgreSQL: Params:', params);
+    throw error;
+  }
+}
 
 // GET /api/reports/johari/:code - Relatório individual da Janela de Johari
 router.get('/johari/:code', (req, res) => {
@@ -106,7 +145,9 @@ router.get('/johari/:code', (req, res) => {
 });
 
 // GET /api/reports/comparative - Relatório comparativo entre todos os participantes
-router.get('/comparative', (req, res) => {
+router.get('/comparative', async (req, res) => {
+  console.log('🔍 GET /api/reports/comparative - Iniciando relatório comparativo...');
+  
   const query = `
     SELECT 
       p.id,
@@ -126,11 +167,24 @@ router.get('/comparative', (req, res) => {
     ORDER BY p.name
   `;
   
-  db.all(query, [], (err, rows) => {
-    if (err) {
-      console.error('Erro ao gerar relatório comparativo:', err);
-      return res.status(500).json({ error: 'Erro interno do servidor' });
+  try {
+    let rows;
+    
+    if (process.env.DATABASE_URL) {
+      console.log('🗄️ Usando PostgreSQL para relatório comparativo...');
+      const result = await queryPostgres(query);
+      rows = result.rows;
+    } else {
+      console.log('🗄️ Usando SQLite para relatório comparativo...');
+      rows = await new Promise((resolve, reject) => {
+        db.all(query, [], (err, result) => {
+          if (err) reject(err);
+          else resolve(result);
+        });
+      });
     }
+    
+    console.log('✅ Relatório comparativo: encontrados', rows?.length || 0, 'participantes');
     
     const comparativeReport = {
       summary: {
@@ -167,11 +221,16 @@ router.get('/comparative', (req, res) => {
     };
     
     res.json(comparativeReport);
-  });
+  } catch (error) {
+    console.error('❌ Erro ao gerar relatório comparativo:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
 });
 
 // GET /api/reports/characteristics - Análise das características mais/menos selecionadas
-router.get('/characteristics', (req, res) => {
+router.get('/characteristics', async (req, res) => {
+  console.log('🔍 GET /api/reports/characteristics - Iniciando análise de características...');
+  
   const query = `
     SELECT 
       c.id,
@@ -186,11 +245,24 @@ router.get('/characteristics', (req, res) => {
     ORDER BY consensus_selections DESC, peer_selections DESC
   `;
   
-  db.all(query, [], (err, rows) => {
-    if (err) {
-      console.error('Erro ao gerar análise de características:', err);
-      return res.status(500).json({ error: 'Erro interno do servidor' });
+  try {
+    let rows;
+    
+    if (process.env.DATABASE_URL) {
+      console.log('🗄️ Usando PostgreSQL para análise de características...');
+      const result = await queryPostgres(query);
+      rows = result.rows;
+    } else {
+      console.log('🗄️ Usando SQLite para análise de características...');
+      rows = await new Promise((resolve, reject) => {
+        db.all(query, [], (err, result) => {
+          if (err) reject(err);
+          else resolve(result);
+        });
+      });
     }
+    
+    console.log('✅ Análise de características: encontradas', rows?.length || 0, 'características');
     
     const characteristicAnalysis = {
       most_selected: rows.slice(0, 10).map(row => ({
@@ -211,7 +283,10 @@ router.get('/characteristics', (req, res) => {
     };
     
     res.json(characteristicAnalysis);
-  });
+  } catch (error) {
+    console.error('❌ Erro ao gerar análise de características:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
 });
 
 // Função auxiliar para gerar insights individuais

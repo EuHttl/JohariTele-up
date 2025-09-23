@@ -20,42 +20,59 @@ async function queryPostgres(sql, params = []) {
   const { Pool } = require('pg');
   const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
-    ssl: { rejectUnauthorized: false }
+    ssl: { rejectUnauthorized: false },
+    max: 20, // máximo de conexões no pool
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 2000,
   });
   
   try {
+    console.log('🔍 PostgreSQL: Executando query:', sql.substring(0, 100) + '...');
     const client = await pool.connect();
     const result = await client.query(sql, params);
     client.release();
-    await pool.end();
+    console.log('✅ PostgreSQL: Query executada com sucesso,', result.rows?.length || 0, 'registros');
     return result;
   } catch (error) {
-    console.error('Erro na query PostgreSQL:', error);
+    console.error('❌ PostgreSQL: Erro na query:', error.message);
+    console.error('❌ PostgreSQL: SQL:', sql);
+    console.error('❌ PostgreSQL: Params:', params);
     throw error;
+  } finally {
+    // Não fechar o pool imediatamente, deixar para o garbage collector
+    // await pool.end();
   }
 }
 
 // GET /api/assessments/characteristics - Buscar todas as características
 router.get('/characteristics', async (req, res) => {
+  console.log('🔍 GET /api/assessments/characteristics - Iniciando busca...');
+  console.log('🔍 DATABASE_URL configurado:', process.env.DATABASE_URL ? 'SIM' : 'NÃO');
+  
   try {
     if (process.env.DATABASE_URL) {
+      console.log('🗄️ Usando PostgreSQL para buscar características...');
       // Usar PostgreSQL diretamente
       const result = await queryPostgres('SELECT id, name FROM characteristics ORDER BY name');
+      console.log('✅ PostgreSQL: Características encontradas:', result.rows?.length || 0);
       res.json(result.rows);
     } else {
+      console.log('🗄️ Usando SQLite para buscar características...');
       // Fallback para SQLite
       const query = 'SELECT id, name FROM characteristics ORDER BY name';
       
       db.all(query, [], (err, rows) => {
         if (err) {
-          console.error('Erro ao buscar características:', err);
+          console.error('❌ SQLite: Erro ao buscar características:', err);
           return res.status(500).json({ error: 'Erro interno do servidor' });
         }
+        console.log('✅ SQLite: Características encontradas:', rows?.length || 0);
         res.json(rows);
       });
     }
   } catch (error) {
-    console.error('Erro ao buscar características:', error);
+    console.error('❌ Erro geral ao buscar características:', error);
+    console.error('❌ Stack trace:', error.stack);
     res.status(500).json({ error: 'Erro interno do servidor' });
   }
 });
