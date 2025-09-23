@@ -200,41 +200,55 @@ function processReportData(row, res, code) {
 router.get('/comparative', async (req, res) => {
   console.log('🔍 GET /api/reports/comparative - Iniciando relatório comparativo...');
   
-  const query = process.env.DATABASE_URL && process.env.NODE_ENV === 'production' ? `
-    SELECT 
-      p.id,
-      p.name,
-      p.code,
-      COALESCE(COUNT(DISTINCT CASE WHEN sa.selected = true THEN sa.characteristic_id END), 0) as self_selected_count,
-      COALESCE(COUNT(DISTINCT CASE WHEN pa.selected = true THEN pa.characteristic_id END), 0) as peer_selected_count,
-      COALESCE(COUNT(DISTINCT CASE WHEN sa.selected = true AND pa.selected = true THEN c.id END), 0) as open_area_count,
-      COALESCE(COUNT(DISTINCT CASE WHEN (sa.selected = false OR sa.selected IS NULL) AND pa.selected = true THEN c.id END), 0) as blind_area_count,
-      COALESCE(COUNT(DISTINCT CASE WHEN sa.selected = true AND (pa.selected = false OR pa.selected IS NULL) THEN c.id END), 0) as hidden_area_count,
-      COALESCE(COUNT(DISTINCT CASE WHEN (sa.selected = false OR sa.selected IS NULL) AND (pa.selected = false OR pa.selected IS NULL) THEN c.id END), 0) as unknown_area_count
-    FROM participants p
-    CROSS JOIN characteristics c
-    LEFT JOIN self_assessments sa ON sa.participant_id = p.id AND sa.characteristic_id = c.id
-    LEFT JOIN peer_assessments pa ON pa.assessed_id = p.id AND pa.characteristic_id = c.id
-    GROUP BY p.id, p.name, p.code
-    ORDER BY p.name
-  ` : `
-    SELECT 
-      p.id,
-      p.name,
-      p.code,
-      COALESCE(COUNT(DISTINCT CASE WHEN sa.selected = 1 THEN sa.characteristic_id END), 0) as self_selected_count,
-      COALESCE(COUNT(DISTINCT CASE WHEN pa.selected = 1 THEN pa.characteristic_id END), 0) as peer_selected_count,
-      COALESCE(COUNT(DISTINCT CASE WHEN sa.selected = 1 AND pa.selected = 1 THEN c.id END), 0) as open_area_count,
-      COALESCE(COUNT(DISTINCT CASE WHEN (sa.selected = 0 OR sa.selected IS NULL) AND pa.selected = 1 THEN c.id END), 0) as blind_area_count,
-      COALESCE(COUNT(DISTINCT CASE WHEN sa.selected = 1 AND (pa.selected = 0 OR pa.selected IS NULL) THEN c.id END), 0) as hidden_area_count,
-      COALESCE(COUNT(DISTINCT CASE WHEN (sa.selected = 0 OR sa.selected IS NULL) AND (pa.selected = 0 OR pa.selected IS NULL) THEN c.id END), 0) as unknown_area_count
-    FROM participants p
-    CROSS JOIN characteristics c
-    LEFT JOIN self_assessments sa ON sa.participant_id = p.id AND sa.characteristic_id = c.id
-    LEFT JOIN peer_assessments pa ON pa.assessed_id = p.id AND pa.characteristic_id = c.id
-    GROUP BY p.id, p.name, p.code
-    ORDER BY p.name
-  `;
+  if (!process.env.DATABASE_URL) {
+    console.log('❌ PostgreSQL não configurado - usando SQLite');
+  } else {
+    console.log('✅ PostgreSQL configurado - usando PostgreSQL');
+  }
+  
+  let query;
+  
+  if (process.env.DATABASE_URL) {
+    // Query PostgreSQL
+    query = `
+      SELECT 
+        p.id,
+        p.name,
+        p.code,
+        COALESCE(COUNT(DISTINCT CASE WHEN sa.selected = true THEN sa.characteristic_id END), 0) as self_selected_count,
+        COALESCE(COUNT(DISTINCT CASE WHEN pa.selected = true THEN pa.characteristic_id END), 0) as peer_selected_count,
+        COALESCE(COUNT(DISTINCT CASE WHEN sa.selected = true AND pa.selected = true THEN c.id END), 0) as open_area_count,
+        COALESCE(COUNT(DISTINCT CASE WHEN (sa.selected = false OR sa.selected IS NULL) AND pa.selected = true THEN c.id END), 0) as blind_area_count,
+        COALESCE(COUNT(DISTINCT CASE WHEN sa.selected = true AND (pa.selected = false OR pa.selected IS NULL) THEN c.id END), 0) as hidden_area_count,
+        COALESCE(COUNT(DISTINCT CASE WHEN (sa.selected = false OR sa.selected IS NULL) AND (pa.selected = false OR pa.selected IS NULL) THEN c.id END), 0) as unknown_area_count
+      FROM participants p
+      CROSS JOIN characteristics c
+      LEFT JOIN self_assessments sa ON sa.participant_id = p.id AND sa.characteristic_id = c.id
+      LEFT JOIN peer_assessments pa ON pa.assessed_id = p.id AND pa.characteristic_id = c.id
+      GROUP BY p.id, p.name, p.code
+      ORDER BY p.name
+    `;
+  } else {
+    // Query SQLite
+    query = `
+      SELECT 
+        p.id,
+        p.name,
+        p.code,
+        COALESCE(COUNT(DISTINCT CASE WHEN sa.selected = 1 THEN sa.characteristic_id END), 0) as self_selected_count,
+        COALESCE(COUNT(DISTINCT CASE WHEN pa.selected = 1 THEN pa.characteristic_id END), 0) as peer_selected_count,
+        COALESCE(COUNT(DISTINCT CASE WHEN sa.selected = 1 AND pa.selected = 1 THEN c.id END), 0) as open_area_count,
+        COALESCE(COUNT(DISTINCT CASE WHEN (sa.selected = 0 OR sa.selected IS NULL) AND pa.selected = 1 THEN c.id END), 0) as blind_area_count,
+        COALESCE(COUNT(DISTINCT CASE WHEN sa.selected = 1 AND (pa.selected = 0 OR pa.selected IS NULL) THEN c.id END), 0) as hidden_area_count,
+        COALESCE(COUNT(DISTINCT CASE WHEN (sa.selected = 0 OR sa.selected IS NULL) AND (pa.selected = 0 OR pa.selected IS NULL) THEN c.id END), 0) as unknown_area_count
+      FROM participants p
+      CROSS JOIN characteristics c
+      LEFT JOIN self_assessments sa ON sa.participant_id = p.id AND sa.characteristic_id = c.id
+      LEFT JOIN peer_assessments pa ON pa.assessed_id = p.id AND pa.characteristic_id = c.id
+      GROUP BY p.id, p.name, p.code
+      ORDER BY p.name
+    `;
+  }
   
   try {
     let rows;
@@ -245,27 +259,8 @@ router.get('/comparative', async (req, res) => {
       rows = result.rows;
     } else {
       console.log('🗄️ Usando SQLite para relatório comparativo...');
-      // Usar query SQLite
-      const sqliteQuery = `
-        SELECT 
-          p.id,
-          p.name,
-          p.code,
-          COALESCE(COUNT(DISTINCT CASE WHEN sa.selected = 1 THEN sa.characteristic_id END), 0) as self_selected_count,
-          COALESCE(COUNT(DISTINCT CASE WHEN pa.selected = 1 THEN pa.characteristic_id END), 0) as peer_selected_count,
-          COALESCE(COUNT(DISTINCT CASE WHEN sa.selected = 1 AND pa.selected = 1 THEN c.id END), 0) as open_area_count,
-          COALESCE(COUNT(DISTINCT CASE WHEN (sa.selected = 0 OR sa.selected IS NULL) AND pa.selected = 1 THEN c.id END), 0) as blind_area_count,
-          COALESCE(COUNT(DISTINCT CASE WHEN sa.selected = 1 AND (pa.selected = 0 OR pa.selected IS NULL) THEN c.id END), 0) as hidden_area_count,
-          COALESCE(COUNT(DISTINCT CASE WHEN (sa.selected = 0 OR sa.selected IS NULL) AND (pa.selected = 0 OR pa.selected IS NULL) THEN c.id END), 0) as unknown_area_count
-        FROM participants p
-        CROSS JOIN characteristics c
-        LEFT JOIN self_assessments sa ON sa.participant_id = p.id AND sa.characteristic_id = c.id
-        LEFT JOIN peer_assessments pa ON pa.assessed_id = p.id AND pa.characteristic_id = c.id
-        GROUP BY p.id, p.name, p.code
-        ORDER BY p.name
-      `;
       rows = await new Promise((resolve, reject) => {
-        db.all(sqliteQuery, [], (err, result) => {
+        db.all(query, [], (err, result) => {
           if (err) reject(err);
           else resolve(result);
         });
@@ -311,7 +306,10 @@ router.get('/comparative', async (req, res) => {
     res.json(comparativeReport);
   } catch (error) {
     console.error('❌ Erro ao gerar relatório comparativo:', error);
-    res.status(500).json({ error: 'Erro interno do servidor' });
+    console.error('❌ Stack trace:', error.stack);
+    console.error('❌ Error code:', error.code);
+    console.error('❌ Error detail:', error.detail);
+    res.status(500).json({ error: 'Erro interno do servidor', details: error.message });
   }
 });
 
@@ -319,19 +317,45 @@ router.get('/comparative', async (req, res) => {
 router.get('/characteristics', async (req, res) => {
   console.log('🔍 GET /api/reports/characteristics - Iniciando análise de características...');
   
-  const query = `
-    SELECT 
-      c.id,
-      c.name,
-      COALESCE(COUNT(DISTINCT CASE WHEN sa.selected = 1 THEN sa.participant_id END), 0) as self_selections,
-      COALESCE(COUNT(DISTINCT CASE WHEN pa.selected = 1 THEN pa.assessed_id END), 0) as peer_selections,
-      COALESCE(COUNT(DISTINCT CASE WHEN sa.selected = 1 AND pa.selected = 1 THEN sa.participant_id END), 0) as consensus_selections
-    FROM characteristics c
-    LEFT JOIN self_assessments sa ON sa.characteristic_id = c.id
-    LEFT JOIN peer_assessments pa ON pa.characteristic_id = c.id
-    GROUP BY c.id, c.name
-    ORDER BY consensus_selections DESC, peer_selections DESC
-  `;
+  if (!process.env.DATABASE_URL) {
+    console.log('❌ PostgreSQL não configurado - usando SQLite');
+  } else {
+    console.log('✅ PostgreSQL configurado - usando PostgreSQL');
+  }
+  
+  let query;
+  
+  if (process.env.DATABASE_URL) {
+    // Query PostgreSQL
+    query = `
+      SELECT 
+        c.id,
+        c.name,
+        COALESCE(COUNT(DISTINCT CASE WHEN sa.selected = true THEN sa.participant_id END), 0) as self_selections,
+        COALESCE(COUNT(DISTINCT CASE WHEN pa.selected = true THEN pa.assessed_id END), 0) as peer_selections,
+        COALESCE(COUNT(DISTINCT CASE WHEN sa.selected = true AND pa.selected = true THEN sa.participant_id END), 0) as consensus_selections
+      FROM characteristics c
+      LEFT JOIN self_assessments sa ON sa.characteristic_id = c.id
+      LEFT JOIN peer_assessments pa ON pa.characteristic_id = c.id
+      GROUP BY c.id, c.name
+      ORDER BY consensus_selections DESC, peer_selections DESC
+    `;
+  } else {
+    // Query SQLite
+    query = `
+      SELECT 
+        c.id,
+        c.name,
+        COALESCE(COUNT(DISTINCT CASE WHEN sa.selected = 1 THEN sa.participant_id END), 0) as self_selections,
+        COALESCE(COUNT(DISTINCT CASE WHEN pa.selected = 1 THEN pa.assessed_id END), 0) as peer_selections,
+        COALESCE(COUNT(DISTINCT CASE WHEN sa.selected = 1 AND pa.selected = 1 THEN sa.participant_id END), 0) as consensus_selections
+      FROM characteristics c
+      LEFT JOIN self_assessments sa ON sa.characteristic_id = c.id
+      LEFT JOIN peer_assessments pa ON pa.characteristic_id = c.id
+      GROUP BY c.id, c.name
+      ORDER BY consensus_selections DESC, peer_selections DESC
+    `;
+  }
   
   try {
     let rows;
@@ -342,22 +366,8 @@ router.get('/characteristics', async (req, res) => {
       rows = result.rows;
     } else {
       console.log('🗄️ Usando SQLite para análise de características...');
-      // Usar query SQLite
-      const sqliteQuery = `
-        SELECT 
-          c.id,
-          c.name,
-          COALESCE(COUNT(DISTINCT CASE WHEN sa.selected = 1 THEN sa.participant_id END), 0) as self_selections,
-          COALESCE(COUNT(DISTINCT CASE WHEN pa.selected = 1 THEN pa.assessed_id END), 0) as peer_selections,
-          COALESCE(COUNT(DISTINCT CASE WHEN sa.selected = 1 AND pa.selected = 1 THEN sa.participant_id END), 0) as consensus_selections
-        FROM characteristics c
-        LEFT JOIN self_assessments sa ON sa.characteristic_id = c.id
-        LEFT JOIN peer_assessments pa ON pa.characteristic_id = c.id
-        GROUP BY c.id, c.name
-        ORDER BY consensus_selections DESC, peer_selections DESC
-      `;
       rows = await new Promise((resolve, reject) => {
-        db.all(sqliteQuery, [], (err, result) => {
+        db.all(query, [], (err, result) => {
           if (err) reject(err);
           else resolve(result);
         });
@@ -387,7 +397,10 @@ router.get('/characteristics', async (req, res) => {
     res.json(characteristicAnalysis);
   } catch (error) {
     console.error('❌ Erro ao gerar análise de características:', error);
-    res.status(500).json({ error: 'Erro interno do servidor' });
+    console.error('❌ Stack trace:', error.stack);
+    console.error('❌ Error code:', error.code);
+    console.error('❌ Error detail:', error.detail);
+    res.status(500).json({ error: 'Erro interno do servidor', details: error.message });
   }
 });
 
