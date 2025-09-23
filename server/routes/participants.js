@@ -12,28 +12,76 @@ if (process.env.DATABASE_URL) {
   db = sqliteInit.db;
 }
 
-// GET /api/participants - Listar todos os participantes
-router.get('/', (req, res) => {
-  console.log('📊 GET /api/participants - Buscando todos os participantes');
-  const query = `
-    SELECT 
-      id, name, email, code, 
-      has_completed_self_assessment,
-      has_completed_peer_assessments,
-      created_at
-    FROM participants 
-    ORDER BY name
-  `;
-
-  db.all(query, [], (err, rows) => {
-    if (err) {
-      console.error('Erro ao buscar participantes:', err);
-      return res.status(500).json({ error: 'Erro interno do servidor' });
-    }
-    console.log('📊 Participantes encontrados:', rows?.length || 0);
-    console.log('📊 Primeiro participante:', rows?.[0] || 'Nenhum');
-    res.json(rows || []);
+// Função para executar query PostgreSQL diretamente
+async function queryPostgres(sql, params = []) {
+  if (!process.env.DATABASE_URL) {
+    throw new Error('PostgreSQL não configurado');
+  }
+  
+  const { Pool } = require('pg');
+  const pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: { rejectUnauthorized: false }
   });
+  
+  try {
+    const client = await pool.connect();
+    const result = await client.query(sql, params);
+    client.release();
+    await pool.end();
+    return result;
+  } catch (error) {
+    console.error('Erro na query PostgreSQL:', error);
+    throw error;
+  }
+}
+
+// GET /api/participants - Listar todos os participantes
+router.get('/', async (req, res) => {
+  console.log('📊 GET /api/participants - Buscando todos os participantes');
+  
+  try {
+    if (process.env.DATABASE_URL) {
+      // Usar PostgreSQL diretamente
+      const result = await queryPostgres(`
+        SELECT 
+          id, name, email, code, 
+          has_completed_self_assessment,
+          has_completed_peer_assessments,
+          created_at
+        FROM participants 
+        ORDER BY name
+      `);
+      
+      console.log('📊 Participantes encontrados:', result.rows?.length || 0);
+      console.log('📊 Primeiro participante:', result.rows?.[0] || 'Nenhum');
+      res.json(result.rows || []);
+    } else {
+      // Fallback para SQLite
+      const query = `
+        SELECT 
+          id, name, email, code, 
+          has_completed_self_assessment,
+          has_completed_peer_assessments,
+          created_at
+        FROM participants 
+        ORDER BY name
+      `;
+
+      db.all(query, [], (err, rows) => {
+        if (err) {
+          console.error('Erro ao buscar participantes:', err);
+          return res.status(500).json({ error: 'Erro interno do servidor' });
+        }
+        console.log('📊 Participantes encontrados:', rows?.length || 0);
+        console.log('📊 Primeiro participante:', rows?.[0] || 'Nenhum');
+        res.json(rows || []);
+      });
+    }
+  } catch (error) {
+    console.error('Erro ao buscar participantes:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
 });
 
 // GET /api/participants/:code - Buscar participante por código
