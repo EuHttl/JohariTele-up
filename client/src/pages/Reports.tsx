@@ -24,6 +24,7 @@ const Reports: React.FC = () => {
   const [characteristicAnalysis, setCharacteristicAnalysis] = useState<CharacteristicAnalysis | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [chartType, setChartType] = useState<'bar' | 'pie'>('bar');
 
   useEffect(() => {
     fetchReports();
@@ -171,8 +172,18 @@ const Reports: React.FC = () => {
         <div className="reports-chart-header">
           <h2 className="reports-chart-title">Distribuição de Pontuações</h2>
           <div className="reports-chart-actions">
-            <button className="reports-chart-btn active">Barras</button>
-            <button className="reports-chart-btn">Pizza</button>
+            <button 
+              className={`reports-chart-btn ${chartType === 'bar' ? 'active' : ''}`}
+              onClick={() => setChartType('bar')}
+            >
+              Barras
+            </button>
+            <button 
+              className={`reports-chart-btn ${chartType === 'pie' ? 'active' : ''}`}
+              onClick={() => setChartType('pie')}
+            >
+              Pizza
+            </button>
           </div>
         </div>
         
@@ -189,45 +200,88 @@ const Reports: React.FC = () => {
         <div className="reports-chart-content">
           {comparativeReport?.participants && (
             <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={comparativeReport.participants.map((p: any) => ({
-                name: p.name.split(' ')[0],
-                fullName: p.name,
-                code: p.code,
-                score: Math.round((p.self_awareness_score + p.peer_perception_score) / 2),
-                selfScore: Math.round(p.self_awareness_score),
-                peerScore: Math.round(p.peer_perception_score)
-              }))}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis 
-                  dataKey="name" 
-                  tick={{ fontSize: 12 }}
-                  angle={-45}
-                  textAnchor="end"
-                  height={80}
-                />
-                <YAxis 
-                  label={{ value: 'Pontuação (0-100)', angle: -90, position: 'insideLeft' }}
-                  domain={[0, 100]}
-                />
-                <Tooltip 
-                  formatter={(value: any, name: any, props: any) => [
-                    <div key="tooltip">
-                      <p><strong>Participante:</strong> {props.payload.fullName}</p>
-                      <p><strong>Código:</strong> {props.payload.code}</p>
-                      <p><strong>Pontuação Combinada:</strong> {value}%</p>
-                      <p><strong>Self-Awareness:</strong> {props.payload.selfScore}%</p>
-                      <p><strong>Peer Perception:</strong> {props.payload.peerScore}%</p>
-                    </div>
-                  ]}
-                  contentStyle={{
-                    backgroundColor: '#1f2937',
-                    border: '1px solid #374151',
-                    borderRadius: '8px',
-                    color: '#f9fafb'
-                  }}
-                />
-                <Bar dataKey="score" fill="#8b5cf6" />
-              </BarChart>
+              {chartType === 'bar' ? (
+                <BarChart data={comparativeReport.participants.map((p: any) => ({
+                  name: p.name.split(' ')[0],
+                  fullName: p.name,
+                  code: p.code,
+                  score: Math.round((p.self_awareness_score + p.peer_perception_score) / 2),
+                  selfScore: Math.round(p.self_awareness_score),
+                  peerScore: Math.round(p.peer_perception_score)
+                }))}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis 
+                    dataKey="name" 
+                    tick={{ fontSize: 12 }}
+                    angle={-45}
+                    textAnchor="end"
+                    height={80}
+                  />
+                  <YAxis 
+                    label={{ value: 'Pontuação (0-100)', angle: -90, position: 'insideLeft' }}
+                    domain={[0, 100]}
+                  />
+                  <Tooltip 
+                    formatter={(value: any, name: any, props: any) => [
+                      <div key="tooltip">
+                        <p><strong>Participante:</strong> {props.payload.fullName}</p>
+                        <p><strong>Código:</strong> {props.payload.code}</p>
+                        <p><strong>Pontuação Combinada:</strong> {value}%</p>
+                        <p><strong>Self-Awareness:</strong> {props.payload.selfScore}%</p>
+                        <p><strong>Peer Perception:</strong> {props.payload.peerScore}%</p>
+                      </div>
+                    ]}
+                    contentStyle={{
+                      backgroundColor: '#1f2937',
+                      border: '1px solid #374151',
+                      borderRadius: '8px',
+                      color: '#f9fafb'
+                    }}
+                  />
+                  <Bar dataKey="score" fill="#8b5cf6" />
+                </BarChart>
+              ) : (
+                <PieChart>
+                  <Pie
+                    data={comparativeReport.participants.map((p: any) => ({
+                      name: p.name.split(' ')[0],
+                      fullName: p.name,
+                      code: p.code,
+                      value: Math.round((p.self_awareness_score + p.peer_perception_score) / 2),
+                      selfScore: Math.round(p.self_awareness_score),
+                      peerScore: Math.round(p.peer_perception_score)
+                    }))}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    label={({ name, value }) => `${name}: ${value}%`}
+                    outerRadius={80}
+                    fill="#8884d8"
+                    dataKey="value"
+                  >
+                    {comparativeReport.participants.map((entry: any, index: number) => (
+                      <Cell key={`cell-${index}`} fill={`hsl(${index * 45}, 70%, 60%)`} />
+                    ))}
+                  </Pie>
+                  <Tooltip 
+                    formatter={(value: any, name: any, props: any) => [
+                      <div key="tooltip">
+                        <p><strong>Participante:</strong> {props.payload.fullName}</p>
+                        <p><strong>Código:</strong> {props.payload.code}</p>
+                        <p><strong>Pontuação Combinada:</strong> {value}%</p>
+                        <p><strong>Self-Awareness:</strong> {props.payload.selfScore}%</p>
+                        <p><strong>Peer Perception:</strong> {props.payload.peerScore}%</p>
+                      </div>
+                    ]}
+                    contentStyle={{
+                      backgroundColor: '#1f2937',
+                      border: '1px solid #374151',
+                      borderRadius: '8px',
+                      color: '#f9fafb'
+                    }}
+                  />
+                </PieChart>
+              )}
             </ResponsiveContainer>
           )}
         </div>
@@ -325,7 +379,7 @@ const Reports: React.FC = () => {
                           </div>
                         </div>
                       </td>
-                      <td>{participant.code}</td>
+                      <td>{participant.email || 'N/A'}</td>
                       <td>
                         <div className="report-score">
                           <span className="report-score-value">{Math.round((participant.self_awareness_score + participant.peer_perception_score) / 2)}</span>
@@ -333,7 +387,7 @@ const Reports: React.FC = () => {
                         </div>
                       </td>
                       <td className="report-date">
-                        -
+                        {participant.completed_at ? formatDate(participant.completed_at) : '-'}
                       </td>
                       <td>
                         <div className="reports-actions-cell">
