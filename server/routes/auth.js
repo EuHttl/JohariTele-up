@@ -30,7 +30,7 @@ async function queryPostgres(sql, params = []) {
     const result = await client.query(sql, params);
     client.release();
     await pool.end();
-    return result.rows[0] || null;
+    return result; // Retorna o resultado completo com rows
   } catch (error) {
     console.error('Erro na query PostgreSQL:', error);
     throw error;
