@@ -10,24 +10,10 @@ router.get('/characteristics', async (req, res) => {
   console.log('🔍 GET /api/assessments/characteristics - Iniciando busca...');
   
   try {
-    if (process.env.DATABASE_URL && process.env.NODE_ENV === 'production') {
-      // Usar PostgreSQL em produção
-      console.log('🗄️ Usando PostgreSQL para buscar características...');
-      const result = await postgresInit.pool.query('SELECT id, name FROM characteristics ORDER BY name');
-      console.log('✅ PostgreSQL: Características encontradas:', result.rows?.length || 0);
-      res.json(result.rows);
-    } else {
-      // Usar SQLite em desenvolvimento
-      console.log('🗄️ Usando SQLite para buscar características...');
-      const rows = await new Promise((resolve, reject) => {
-        db.all('SELECT id, name FROM characteristics ORDER BY name', (err, result) => {
-          if (err) reject(err);
-          else resolve(result);
-        });
-      });
-      console.log('✅ SQLite: Características encontradas:', rows?.length || 0);
-      res.json(rows);
-    }
+    console.log('🗄️ Usando PostgreSQL para buscar características...');
+    const rows = await db.all('SELECT id, name FROM characteristics ORDER BY name');
+    console.log('✅ PostgreSQL: Características encontradas:', rows?.length || 0);
+    res.json(rows);
   } catch (error) {
     console.error('❌ Erro ao buscar características:', error);
     console.error('❌ Stack trace:', error.stack);
@@ -40,36 +26,16 @@ router.get('/self/:code', async (req, res) => {
   const { code } = req.params;
   
   try {
-    if (process.env.DATABASE_URL && process.env.NODE_ENV === 'production') {
-      // Usar PostgreSQL em produção
-      const query = `
-        SELECT c.id, c.name, sa.selected
-        FROM characteristics c
-        LEFT JOIN self_assessments sa ON c.id = sa.characteristic_id 
-          AND sa.participant_id = (SELECT id FROM participants WHERE code = $1)
-        ORDER BY c.name
-      `;
-      
-      const result = await postgresInit.pool.query(query, [code]);
-      res.json(result.rows);
-    } else {
-      // Usar SQLite em desenvolvimento
-      const query = `
-        SELECT c.id, c.name, sa.selected
-        FROM characteristics c
-        LEFT JOIN self_assessments sa ON c.id = sa.characteristic_id 
-          AND sa.participant_id = (SELECT id FROM participants WHERE code = ?)
-        ORDER BY c.name
-      `;
-      
-      const rows = await new Promise((resolve, reject) => {
-        db.all(query, [code], (err, result) => {
-          if (err) reject(err);
-          else resolve(result);
-        });
-      });
-      res.json(rows);
-    }
+    const query = `
+      SELECT c.id, c.name, sa.selected
+      FROM characteristics c
+      LEFT JOIN self_assessments sa ON c.id = sa.characteristic_id 
+        AND sa.participant_id = (SELECT id FROM participants WHERE code = $1)
+      ORDER BY c.name
+    `;
+    
+    const rows = await db.all(query, [code]);
+    res.json(rows);
   } catch (error) {
     console.error('Erro ao buscar autoavaliação:', error);
     res.status(500).json({ error: 'Erro interno do servidor' });
@@ -86,108 +52,46 @@ router.post('/self/:code', async (req, res) => {
   }
 
   try {
-    if (process.env.DATABASE_URL && process.env.NODE_ENV === 'production') {
-      // Usar PostgreSQL em produção
-      const participantRow = await postgresInit.pool.query('SELECT id FROM participants WHERE code = $1', [code]);
+    // Buscar ID do participante
+    const participantRow = await db.get('SELECT id FROM participants WHERE code = $1', [code]);
+    
+    if (!participantRow) {
+      return res.status(404).json({ error: 'Participante não encontrado' });
+    }
+    
+    const participantId = participantRow.id;
+    
+    // Iniciar transação
+    const client = await postgresInit.pool.connect();
+    
+    try {
+      await client.query('BEGIN');
       
-      if (!participantRow.rows || participantRow.rows.length === 0) {
-        return res.status(404).json({ error: 'Participante não encontrado' });
-      }
+      // Limpar autoavaliações existentes
+      await client.query('DELETE FROM self_assessments WHERE participant_id = $1', [participantId]);
       
-      const participantId = participantRow.rows[0].id;
-      
-      // Iniciar transação
-      const client = await postgresInit.pool.connect();
-      
-      try {
-        await client.query('BEGIN');
-        
-        // Limpar autoavaliações existentes
-        await client.query('DELETE FROM self_assessments WHERE participant_id = $1', [participantId]);
-        
-        // Inserir novas autoavaliações
-        for (const assessment of assessments) {
-          await client.query(
-            'INSERT INTO self_assessments (participant_id, characteristic_id, selected) VALUES ($1, $2, $3)',
-            [participantId, assessment.characteristic_id, assessment.selected]
-          );
-        }
-        
-        // Marcar como concluído
+      // Inserir novas autoavaliações
+      for (const assessment of assessments) {
         await client.query(
-          'UPDATE participants SET has_completed_self_assessment = true WHERE id = $1',
-          [participantId]
+          'INSERT INTO self_assessments (participant_id, characteristic_id, selected) VALUES ($1, $2, $3)',
+          [participantId, assessment.characteristic_id, assessment.selected]
         );
-        
-        await client.query('COMMIT');
-        res.json({ message: 'Autoavaliação salva com sucesso' });
-        
-      } catch (error) {
-        await client.query('ROLLBACK');
-        throw error;
-      } finally {
-        client.release();
-      }
-    } else {
-      // Usar SQLite em desenvolvimento
-      const participantRow = await new Promise((resolve, reject) => {
-        db.get('SELECT id FROM participants WHERE code = ?', [code], (err, result) => {
-          if (err) reject(err);
-          else resolve(result);
-        });
-      });
-      
-      if (!participantRow) {
-        return res.status(404).json({ error: 'Participante não encontrado' });
       }
       
-      const participantId = participantRow.id;
+      // Marcar como concluído
+      await client.query(
+        'UPDATE participants SET has_completed_self_assessment = true WHERE id = $1',
+        [participantId]
+      );
       
-      // Iniciar transação
-      db.serialize(() => {
-        db.run('BEGIN TRANSACTION');
-        
-        // Limpar autoavaliações existentes
-        db.run('DELETE FROM self_assessments WHERE participant_id = ?', [participantId], (err) => {
-          if (err) {
-            db.run('ROLLBACK');
-            return res.status(500).json({ error: 'Erro ao limpar avaliações existentes' });
-          }
-          
-          // Inserir novas autoavaliações
-          let completed = 0;
-          for (const assessment of assessments) {
-            db.run(
-              'INSERT INTO self_assessments (participant_id, characteristic_id, selected) VALUES (?, ?, ?)',
-              [participantId, assessment.characteristic_id, assessment.selected],
-              function(err) {
-                if (err) {
-                  db.run('ROLLBACK');
-                  return res.status(500).json({ error: 'Erro ao salvar avaliação' });
-                }
-                
-                completed++;
-                if (completed === assessments.length) {
-                  // Marcar como concluído
-                  db.run(
-                    'UPDATE participants SET has_completed_self_assessment = 1 WHERE id = ?',
-                    [participantId],
-                    function(err) {
-                      if (err) {
-                        db.run('ROLLBACK');
-                        return res.status(500).json({ error: 'Erro ao marcar como concluído' });
-                      }
-                      
-                      db.run('COMMIT');
-                      res.json({ message: 'Autoavaliação salva com sucesso' });
-                    }
-                  );
-                }
-              }
-            );
-          }
-        });
-      });
+      await client.query('COMMIT');
+      res.json({ message: 'Autoavaliação salva com sucesso' });
+      
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
     }
     
   } catch (error) {
@@ -201,34 +105,15 @@ router.get('/peers/:code', async (req, res) => {
   const { code } = req.params;
   
   try {
-    if (process.env.DATABASE_URL && process.env.NODE_ENV === 'production') {
-      // Usar PostgreSQL em produção
-      const query = `
-        SELECT id, name, code
-        FROM participants 
-        WHERE code != $1
-        ORDER BY name
-      `;
-      
-      const result = await postgresInit.pool.query(query, [code]);
-      res.json(result.rows);
-    } else {
-      // Usar SQLite em desenvolvimento
-      const query = `
-        SELECT id, name, code
-        FROM participants 
-        WHERE code != ?
-        ORDER BY name
-      `;
-      
-      const rows = await new Promise((resolve, reject) => {
-        db.all(query, [code], (err, result) => {
-          if (err) reject(err);
-          else resolve(result);
-        });
-      });
-      res.json(rows);
-    }
+    const query = `
+      SELECT id, name, code
+      FROM participants 
+      WHERE code != $1
+      ORDER BY name
+    `;
+    
+    const rows = await db.all(query, [code]);
+    res.json(rows);
   } catch (error) {
     console.error('Erro ao buscar pares:', error);
     res.status(500).json({ error: 'Erro interno do servidor' });
@@ -240,38 +125,17 @@ router.get('/peer/:assessorCode/:assessedCode', async (req, res) => {
   const { assessorCode, assessedCode } = req.params;
   
   try {
-    if (process.env.DATABASE_URL && process.env.NODE_ENV === 'production') {
-      // Usar PostgreSQL em produção
-      const query = `
-        SELECT c.id, c.name, pa.selected
-        FROM characteristics c
-        LEFT JOIN peer_assessments pa ON c.id = pa.characteristic_id 
-          AND pa.assessor_id = (SELECT id FROM participants WHERE code = $1)
-          AND pa.assessed_id = (SELECT id FROM participants WHERE code = $2)
-        ORDER BY c.name
-      `;
-      
-      const result = await postgresInit.pool.query(query, [assessorCode, assessedCode]);
-      res.json(result.rows);
-    } else {
-      // Usar SQLite em desenvolvimento
-      const query = `
-        SELECT c.id, c.name, pa.selected
-        FROM characteristics c
-        LEFT JOIN peer_assessments pa ON c.id = pa.characteristic_id 
-          AND pa.assessor_id = (SELECT id FROM participants WHERE code = ?)
-          AND pa.assessed_id = (SELECT id FROM participants WHERE code = ?)
-        ORDER BY c.name
-      `;
-      
-      const rows = await new Promise((resolve, reject) => {
-        db.all(query, [assessorCode, assessedCode], (err, result) => {
-          if (err) reject(err);
-          else resolve(result);
-        });
-      });
-      res.json(rows);
-    }
+    const query = `
+      SELECT c.id, c.name, pa.selected
+      FROM characteristics c
+      LEFT JOIN peer_assessments pa ON c.id = pa.characteristic_id 
+        AND pa.assessor_id = (SELECT id FROM participants WHERE code = $1)
+        AND pa.assessed_id = (SELECT id FROM participants WHERE code = $2)
+      ORDER BY c.name
+    `;
+    
+    const rows = await db.all(query, [assessorCode, assessedCode]);
+    res.json(rows);
   } catch (error) {
     console.error('Erro ao buscar avaliação entre pares:', error);
     res.status(500).json({ error: 'Erro interno do servidor' });
