@@ -90,46 +90,109 @@ router.post('/self/:code', async (req, res) => {
   }
 
   try {
-    // Buscar ID do participante
-    const participantRow = await db.get('SELECT id FROM participants WHERE code = $1', [code]);
-    
-    if (!participantRow) {
-      return res.status(404).json({ error: 'Participante não encontrado' });
-    }
-    
-    const participantId = participantRow.id;
-    
-    // Iniciar transação
-    const client = await postgresInit.pool.connect();
-    
-    try {
-      await client.query('BEGIN');
+    if (process.env.DATABASE_URL) {
+      // Usar PostgreSQL em produção
+      const postgresInit = require('../database/postgres-init');
+      const participantRow = await postgresInit.pool.query('SELECT id FROM participants WHERE code = $1', [code]);
       
-      // Limpar autoavaliações existentes
-      await client.query('DELETE FROM self_assessments WHERE participant_id = $1', [participantId]);
-      
-      // Inserir novas autoavaliações
-      for (const assessment of assessments) {
-        await client.query(
-          'INSERT INTO self_assessments (participant_id, characteristic_id, selected) VALUES ($1, $2, $3)',
-          [participantId, assessment.characteristic_id, assessment.selected]
-        );
+      if (!participantRow.rows || participantRow.rows.length === 0) {
+        return res.status(404).json({ error: 'Participante não encontrado' });
       }
       
-      // Marcar como concluído
-      await client.query(
-        'UPDATE participants SET has_completed_self_assessment = true WHERE id = $1',
-        [participantId]
-      );
+      const participantId = participantRow.rows[0].id;
       
-      await client.query('COMMIT');
-      res.json({ message: 'Autoavaliação salva com sucesso' });
+      // Iniciar transação
+      const client = await postgresInit.pool.connect();
       
-    } catch (error) {
-      await client.query('ROLLBACK');
-      throw error;
-    } finally {
-      client.release();
+      try {
+        await client.query('BEGIN');
+        
+        // Limpar autoavaliações existentes
+        await client.query('DELETE FROM self_assessments WHERE participant_id = $1', [participantId]);
+        
+        // Inserir novas autoavaliações
+        for (const assessment of assessments) {
+          await client.query(
+            'INSERT INTO self_assessments (participant_id, characteristic_id, selected) VALUES ($1, $2, $3)',
+            [participantId, assessment.characteristic_id, assessment.selected]
+          );
+        }
+        
+        // Marcar como concluído
+        await client.query(
+          'UPDATE participants SET has_completed_self_assessment = true WHERE id = $1',
+          [participantId]
+        );
+        
+        await client.query('COMMIT');
+        res.json({ message: 'Autoavaliação salva com sucesso' });
+        
+      } catch (error) {
+        await client.query('ROLLBACK');
+        throw error;
+      } finally {
+        client.release();
+      }
+    } else {
+      // Usar SQLite em desenvolvimento
+      const participantRow = await new Promise((resolve, reject) => {
+        db.get('SELECT id FROM participants WHERE code = ?', [code], (err, result) => {
+          if (err) reject(err);
+          else resolve(result);
+        });
+      });
+      
+      if (!participantRow) {
+        return res.status(404).json({ error: 'Participante não encontrado' });
+      }
+      
+      const participantId = participantRow.id;
+      
+      // Iniciar transação
+      db.serialize(() => {
+        db.run('BEGIN TRANSACTION');
+        
+        // Limpar autoavaliações existentes
+        db.run('DELETE FROM self_assessments WHERE participant_id = ?', [participantId], (err) => {
+          if (err) {
+            db.run('ROLLBACK');
+            return res.status(500).json({ error: 'Erro ao limpar avaliações existentes' });
+          }
+          
+          // Inserir novas autoavaliações
+          let completed = 0;
+          for (const assessment of assessments) {
+            db.run(
+              'INSERT INTO self_assessments (participant_id, characteristic_id, selected) VALUES (?, ?, ?)',
+              [participantId, assessment.characteristic_id, assessment.selected],
+              function(err) {
+                if (err) {
+                  db.run('ROLLBACK');
+                  return res.status(500).json({ error: 'Erro ao salvar avaliação' });
+                }
+                
+                completed++;
+                if (completed === assessments.length) {
+                  // Marcar como concluído
+                  db.run(
+                    'UPDATE participants SET has_completed_self_assessment = 1 WHERE id = ?',
+                    [participantId],
+                    function(err) {
+                      if (err) {
+                        db.run('ROLLBACK');
+                        return res.status(500).json({ error: 'Erro ao marcar como concluído' });
+                      }
+                      
+                      db.run('COMMIT');
+                      res.json({ message: 'Autoavaliação salva com sucesso' });
+                    }
+                  );
+                }
+              }
+            );
+          }
+        });
+      });
     }
     
   } catch (error) {
