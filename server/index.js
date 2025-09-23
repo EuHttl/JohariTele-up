@@ -81,14 +81,14 @@ app.get('/api/health', (req, res) => {
 });
 
 // Endpoint para forçar reinicialização do banco (apenas em produção)
-app.post('/api/force-init-db', (req, res) => {
+app.post('/api/force-init-db', async (req, res) => {
   if (process.env.NODE_ENV !== 'production') {
     return res.status(403).json({ error: 'Este endpoint só está disponível em produção' });
   }
   
   console.log('🔄 Forçando reinicialização do banco de dados...');
   try {
-    initializeDatabase();
+    await initializeDatabase();
     res.status(200).json({ 
       message: 'Banco de dados reinicializado com sucesso',
       timestamp: new Date().toISOString()
