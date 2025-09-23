@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { participantsAPI } from '../services/api';
 import { Participant } from '../types';
+import Modal from '../components/Modal';
 import { 
   Plus, 
   Edit, 
@@ -358,56 +359,51 @@ const Participants: React.FC = () => {
       </div>
 
       {/* Modal */}
-      {showModal && (
-        <div className="modal-overlay" onClick={() => setShowModal(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <div className="card-header">
-              <h2 className="card-title">
-                {editingParticipant ? 'Editar Participante' : 'Novo Participante'}
-              </h2>
-            </div>
-            
-            <form onSubmit={handleSubmit} className="card-body">
-              <div className="form-group">
-                <label className="form-label">Nome</label>
-                <input
-                  type="text"
-                  className="form-input"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  required
-                  placeholder="Nome completo do participante"
-                />
-              </div>
-              
-              <div className="form-group">
-                <label className="form-label">Email</label>
-                <input
-                  type="email"
-                  className="form-input"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  required
-                  placeholder="email@exemplo.com"
-                />
-              </div>
-              
-              <div className="card-footer">
-                <button
-                  type="button"
-                  className="btn btn-secondary"
-                  onClick={() => setShowModal(false)}
-                >
-                  Cancelar
-                </button>
-                <button type="submit" className="btn btn-primary">
-                  {editingParticipant ? 'Atualizar' : 'Criar'}
-                </button>
-              </div>
-            </form>
+      <Modal
+        isOpen={showModal}
+        onClose={() => setShowModal(false)}
+        title={editingParticipant ? 'Editar Participante' : 'Novo Participante'}
+        size="md"
+      >
+        <form onSubmit={handleSubmit}>
+          <div className="modal-form-group">
+            <label className="modal-form-label">Nome</label>
+            <input
+              type="text"
+              className="modal-form-input"
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              required
+              placeholder="Nome completo do participante"
+            />
           </div>
-        </div>
-      )}
+          
+          <div className="modal-form-group">
+            <label className="modal-form-label">Email</label>
+            <input
+              type="email"
+              className="modal-form-input"
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              required
+              placeholder="email@exemplo.com"
+            />
+          </div>
+          
+          <div className="modal-actions">
+            <button
+              type="button"
+              className="modal-btn modal-btn-secondary"
+              onClick={() => setShowModal(false)}
+            >
+              Cancelar
+            </button>
+            <button type="submit" className="modal-btn modal-btn-primary">
+              {editingParticipant ? 'Atualizar' : 'Criar'}
+            </button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 };

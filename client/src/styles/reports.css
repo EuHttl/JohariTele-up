@@ -1,8 +1,8 @@
-/* Reports Page Styles - Tema Limpo e Branco */
+/* Reports Page Styles - Tema Escuro Roxo e Preto */
 
 .reports-container {
   min-height: 100vh;
-  background: #f8fafc;
+  background: #0f0f23;
   padding: 2rem;
 }
 
@@ -36,13 +36,13 @@
 .reports-title {
   font-size: 2rem;
   font-weight: 700;
-  color: #1f2937;
+  color: #e2e8f0;
   margin: 0;
 }
 
 .reports-subtitle {
   font-size: 1rem;
-  color: #6b7280;
+  color: #a78bfa;
   margin: 0.25rem 0 0 0;
 }
 
@@ -100,17 +100,19 @@
 }
 
 .reports-stat-card {
-  background: white;
-  border-radius: 12px;
+  background: linear-gradient(135deg, #1e1e3f 0%, #2d1b69 100%);
+  border-radius: 16px;
   padding: 1.5rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  border: 1px solid #e5e7eb;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  border: 1px solid #4c1d95;
   transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
 }
 
 .reports-stat-card:hover {
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  transform: translateY(-1px);
+  box-shadow: 0 12px 40px rgba(168, 85, 247, 0.2);
+  transform: translateY(-4px);
+  border-color: #a855f7;
 }
 
 .reports-stat-header {
@@ -149,20 +151,20 @@
 .reports-stat-number {
   font-size: 2rem;
   font-weight: 700;
-  color: #1f2937;
+  color: #e2e8f0;
   line-height: 1;
 }
 
 .reports-stat-label {
   font-size: 1.125rem;
   font-weight: 600;
-  color: #374151;
+  color: #e2e8f0;
   margin-bottom: 0.25rem;
 }
 
 .reports-stat-description {
   font-size: 0.875rem;
-  color: #6b7280;
+  color: #a78bfa;
 }
 
 /* Reports List */

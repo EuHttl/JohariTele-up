@@ -37,16 +37,6 @@ const Layout: React.FC = () => {
         <div className="header-container">
           {/* Logo e título */}
           <div className="header-logo">
-            <div className="header-logo-icon">
-              <div className="header-logo-container">
-                <img 
-                  src="/images/favicon/favicon-96x96.png" 
-                  alt="Janela de Johari Logo" 
-                  className="w-4 h-4 rounded-md"
-                />
-              </div>
-              <div className="header-logo-badge"></div>
-            </div>
             <div className="header-logo-text">
               <h1>Janela de Johari</h1>
               <p>Sistema de Avaliação Comportamental</p>

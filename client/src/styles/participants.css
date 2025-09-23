@@ -1,8 +1,8 @@
-/* Participants Page Styles - Tema Limpo e Branco */
+/* Participants Page Styles - Tema Escuro Roxo e Preto */
 
 .participants-container {
   min-height: 100vh;
-  background: #f8fafc;
+  background: #0f0f23;
   padding: 2rem;
 }
 
@@ -24,25 +24,25 @@
 .participants-title-icon {
   width: 48px;
   height: 48px;
-  background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
+  background: linear-gradient(135deg, #a855f7 0%, #8b5cf6 100%);
   border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
   color: white;
-  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+  box-shadow: 0 4px 12px rgba(168, 85, 247, 0.3);
 }
 
 .participants-title {
   font-size: 2rem;
   font-weight: 700;
-  color: #1f2937;
+  color: #e2e8f0;
   margin: 0;
 }
 
 .participants-subtitle {
   font-size: 1rem;
-  color: #6b7280;
+  color: #a78bfa;
   margin: 0.25rem 0 0 0;
 }
 
@@ -57,19 +57,19 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.75rem 1.5rem;
-  background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
+  background: linear-gradient(135deg, #a855f7 0%, #8b5cf6 100%);
   color: white;
-  border-radius: 8px;
+  border-radius: 12px;
   font-weight: 600;
   text-decoration: none;
   transition: all 0.3s ease;
-  box-shadow: 0 2px 4px rgba(139, 92, 246, 0.3);
+  box-shadow: 0 4px 12px rgba(168, 85, 247, 0.3);
 }
 
 .participants-add-btn:hover {
-  background: linear-gradient(135deg, #7c3aed 0%, #5b21b6 100%);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(139, 92, 246, 0.4);
+  background: linear-gradient(135deg, #9333ea 0%, #7c3aed 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(168, 85, 247, 0.4);
 }
 
 .participants-search {
@@ -80,17 +80,23 @@
 .participants-search-input {
   width: 100%;
   padding: 0.75rem 1rem 0.75rem 2.5rem;
-  border: 2px solid #e5e7eb;
-  border-radius: 8px;
+  border: 2px solid #4c1d95;
+  border-radius: 12px;
   font-size: 0.875rem;
-  background: white;
+  background: rgba(30, 30, 63, 0.5);
+  color: #e2e8f0;
   transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
 }
 
 .participants-search-input:focus {
   outline: none;
-  border-color: #8b5cf6;
-  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+  border-color: #a855f7;
+  box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.2);
+}
+
+.participants-search-input::placeholder {
+  color: #a78bfa;
 }
 
 .participants-search-icon {
@@ -98,7 +104,7 @@
   left: 0.75rem;
   top: 50%;
   transform: translateY(-50%);
-  color: #9ca3af;
+  color: #a78bfa;
   width: 16px;
   height: 16px;
 }
@@ -112,17 +118,19 @@
 }
 
 .participants-stat-card {
-  background: white;
-  border-radius: 12px;
+  background: linear-gradient(135deg, #1e1e3f 0%, #2d1b69 100%);
+  border-radius: 16px;
   padding: 1.5rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  border: 1px solid #e5e7eb;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  border: 1px solid #4c1d95;
   transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
 }
 
 .participants-stat-card:hover {
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  transform: translateY(-1px);
+  box-shadow: 0 12px 40px rgba(168, 85, 247, 0.2);
+  transform: translateY(-4px);
+  border-color: #a855f7;
 }
 
 .participants-stat-header {
@@ -161,41 +169,42 @@
 .participants-stat-number {
   font-size: 2rem;
   font-weight: 700;
-  color: #1f2937;
+  color: #e2e8f0;
   line-height: 1;
 }
 
 .participants-stat-label {
   font-size: 1.125rem;
   font-weight: 600;
-  color: #374151;
+  color: #e2e8f0;
   margin-bottom: 0.25rem;
 }
 
 .participants-stat-description {
   font-size: 0.875rem;
-  color: #6b7280;
+  color: #a78bfa;
 }
 
 /* Participants List */
 .participants-list-card {
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  border: 1px solid #e5e7eb;
+  background: linear-gradient(135deg, #1e1e3f 0%, #2d1b69 100%);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  border: 1px solid #4c1d95;
   overflow: hidden;
+  backdrop-filter: blur(10px);
 }
 
 .participants-list-header {
   padding: 1.5rem;
-  border-bottom: 1px solid #e5e7eb;
-  background: #f9fafb;
+  border-bottom: 1px solid #4c1d95;
+  background: rgba(168, 85, 247, 0.05);
 }
 
 .participants-list-title {
   font-size: 1.125rem;
   font-weight: 600;
-  color: #1f2937;
+  color: #e2e8f0;
   margin: 0;
 }
 
