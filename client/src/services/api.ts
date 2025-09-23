@@ -214,6 +214,38 @@ export const adminAPI = {
   getParticipantProgress: async () => {
     const response = await api.get('/admin/participant-progress');
     return response.data;
+  },
+
+  // Configurações do sistema
+  getSettings: async () => {
+    const response = await api.get('/admin/settings');
+    return response.data;
+  },
+
+  updateSettings: async (settings: any) => {
+    const response = await api.put('/admin/settings', settings);
+    return response.data;
+  },
+
+  // Gerenciamento de dados
+  createBackup: async () => {
+    const response = await api.post('/admin/backup');
+    return response.data;
+  },
+
+  restoreBackup: async (filename: string) => {
+    const response = await api.post('/admin/restore', { filename });
+    return response.data;
+  },
+
+  clearData: async () => {
+    const response = await api.delete('/admin/clear-data');
+    return response.data;
+  },
+
+  getBackups: async () => {
+    const response = await api.get('/admin/backups');
+    return response.data;
   }
 };
 

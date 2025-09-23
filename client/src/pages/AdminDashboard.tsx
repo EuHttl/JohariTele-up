@@ -51,6 +51,22 @@ interface SystemStatus {
   storage: 'online' | 'offline';
 }
 
+interface SystemSettings {
+  email_notifications: boolean;
+  auto_backup: boolean;
+  debug_mode: boolean;
+  backup_frequency: string;
+  last_backup: string | null;
+  backup_retention_days: number;
+}
+
+interface BackupFile {
+  filename: string;
+  size: number;
+  created: string;
+  modified: string;
+}
+
 const AdminDashboard: React.FC = () => {
   const { user } = useAuth();
   const [tracking, setTracking] = useState<AssessmentTracking | null>(null);
@@ -59,8 +75,11 @@ const AdminDashboard: React.FC = () => {
     api: 'online',
     storage: 'online'
   });
+  const [settings, setSettings] = useState<SystemSettings | null>(null);
+  const [backups, setBackups] = useState<BackupFile[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [activeTab, setActiveTab] = useState('overview');
 
   useEffect(() => {
@@ -69,8 +88,15 @@ const AdminDashboard: React.FC = () => {
 
   const fetchData = async () => {
     try {
-      const trackingData = await adminAPI.getAssessmentTracking();
+      const [trackingData, settingsData, backupsData] = await Promise.all([
+        adminAPI.getAssessmentTracking(),
+        adminAPI.getSettings(),
+        adminAPI.getBackups()
+      ]);
+      
       setTracking(trackingData);
+      setSettings(settingsData);
+      setBackups(backupsData);
     } catch (error: any) {
       console.error('Erro ao carregar dados:', error);
       setError(error.response?.data?.message || 'Erro ao carregar dados do admin');
@@ -80,15 +106,90 @@ const AdminDashboard: React.FC = () => {
   };
 
   const handleBackup = async () => {
-    alert('Funcionalidade de backup não implementada no servidor.');
+    try {
+      setLoading(true);
+      setError('');
+      setSuccess('');
+      
+      const result = await adminAPI.createBackup();
+      setSuccess(`Backup criado com sucesso: ${result.filename}`);
+      
+      // Atualizar lista de backups
+      const backupsData = await adminAPI.getBackups();
+      setBackups(backupsData);
+    } catch (error: any) {
+      console.error('Erro ao criar backup:', error);
+      setError(error.response?.data?.error || 'Erro ao criar backup');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleRestore = async () => {
-    alert('Funcionalidade de restore não implementada no servidor.');
+  const handleRestore = async (filename: string) => {
+    if (!window.confirm(`Tem certeza que deseja restaurar o backup "${filename}"? Esta ação irá substituir todos os dados atuais.`)) {
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError('');
+      setSuccess('');
+      
+      const result = await adminAPI.restoreBackup(filename);
+      setSuccess(`Backup restaurado com sucesso: ${result.filename}`);
+      
+      // Recarregar dados
+      await fetchData();
+    } catch (error: any) {
+      console.error('Erro ao restaurar backup:', error);
+      setError(error.response?.data?.error || 'Erro ao restaurar backup');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleClearData = async () => {
-    alert('Funcionalidade de limpeza de dados não implementada no servidor.');
+    if (!window.confirm('Tem certeza que deseja limpar TODOS os dados do sistema? Esta ação não pode ser desfeita.')) {
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError('');
+      setSuccess('');
+      
+      const result = await adminAPI.clearData();
+      setSuccess(result.message);
+      
+      // Recarregar dados
+      await fetchData();
+    } catch (error: any) {
+      console.error('Erro ao limpar dados:', error);
+      setError(error.response?.data?.error || 'Erro ao limpar dados');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSettingToggle = async (settingKey: keyof SystemSettings) => {
+    if (!settings) return;
+
+    try {
+      const newSettings = {
+        ...settings,
+        [settingKey]: !settings[settingKey]
+      };
+      
+      const updatedSettings = await adminAPI.updateSettings(newSettings);
+      setSettings(updatedSettings);
+      setSuccess('Configuração atualizada com sucesso');
+      
+      // Limpar mensagem de sucesso após 3 segundos
+      setTimeout(() => setSuccess(''), 3000);
+    } catch (error: any) {
+      console.error('Erro ao atualizar configuração:', error);
+      setError(error.response?.data?.error || 'Erro ao atualizar configuração');
+    }
   };
 
   if (loading) {
@@ -256,21 +357,30 @@ const AdminDashboard: React.FC = () => {
                   <p className="admin-setting-label">Notificações por Email</p>
                   <p className="admin-setting-description">Enviar lembretes automáticos</p>
                 </div>
-                <div className="admin-setting-toggle active"></div>
+                <button 
+                  className={`admin-setting-toggle ${settings?.email_notifications ? 'active' : ''}`}
+                  onClick={() => handleSettingToggle('email_notifications')}
+                ></button>
               </div>
               <div className="admin-setting-item">
                 <div className="admin-setting-info">
                   <p className="admin-setting-label">Backup Automático</p>
                   <p className="admin-setting-description">Criar backup diário</p>
                 </div>
-                <div className="admin-setting-toggle"></div>
+                <button 
+                  className={`admin-setting-toggle ${settings?.auto_backup ? 'active' : ''}`}
+                  onClick={() => handleSettingToggle('auto_backup')}
+                ></button>
               </div>
               <div className="admin-setting-item">
                 <div className="admin-setting-info">
                   <p className="admin-setting-label">Modo Debug</p>
                   <p className="admin-setting-description">Logs detalhados</p>
                 </div>
-                <div className="admin-setting-toggle"></div>
+                <button 
+                  className={`admin-setting-toggle ${settings?.debug_mode ? 'active' : ''}`}
+                  onClick={() => handleSettingToggle('debug_mode')}
+                ></button>
               </div>
             </div>
           </div>
@@ -290,10 +400,6 @@ const AdminDashboard: React.FC = () => {
                 <Download className="w-4 h-4 mr-2" />
                 Criar Backup
               </button>
-              <button className="admin-db-btn" onClick={handleRestore}>
-                <Upload className="w-4 h-4 mr-2" />
-                Restaurar Backup
-              </button>
               <button className="admin-db-btn danger" onClick={handleClearData}>
                 <XCircle className="w-4 h-4 mr-2" />
                 Limpar Dados
@@ -304,11 +410,16 @@ const AdminDashboard: React.FC = () => {
               <div className="admin-db-info-grid">
                 <div className="admin-db-info-item">
                   <p className="admin-db-info-label">Último Backup</p>
-                  <p className="admin-db-info-value">Hoje, 14:30</p>
+                  <p className="admin-db-info-value">
+                    {backups.length > 0 
+                      ? new Date(backups[0].created).toLocaleString('pt-BR')
+                      : 'Nenhum backup'
+                    }
+                  </p>
                 </div>
                 <div className="admin-db-info-item">
-                  <p className="admin-db-info-label">Tamanho do DB</p>
-                  <p className="admin-db-info-value">2.4 MB</p>
+                  <p className="admin-db-info-label">Backups Disponíveis</p>
+                  <p className="admin-db-info-value">{backups.length}</p>
                 </div>
                 <div className="admin-db-info-item">
                   <p className="admin-db-info-label">Registros</p>
@@ -320,6 +431,32 @@ const AdminDashboard: React.FC = () => {
                 </div>
               </div>
             </div>
+
+            {backups.length > 0 && (
+              <div className="admin-backups-list">
+                <h4 className="admin-backups-title">Backups Disponíveis</h4>
+                <div className="admin-backups-grid">
+                  {backups.slice(0, 5).map((backup, index) => (
+                    <div key={index} className="admin-backup-item">
+                      <div className="admin-backup-info">
+                        <p className="admin-backup-filename">{backup.filename}</p>
+                        <p className="admin-backup-details">
+                          {new Date(backup.created).toLocaleDateString('pt-BR')} • 
+                          {(backup.size / 1024).toFixed(1)} KB
+                        </p>
+                      </div>
+                      <button 
+                        className="admin-backup-restore-btn"
+                        onClick={() => handleRestore(backup.filename)}
+                      >
+                        <Upload className="w-4 h-4" />
+                        Restaurar
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -328,6 +465,13 @@ const AdminDashboard: React.FC = () => {
         <div className="alert alert-error">
           <XCircle className="w-5 h-5 mr-2" />
           {error}
+        </div>
+      )}
+
+      {success && (
+        <div className="alert alert-success">
+          <CheckCircle className="w-5 h-5 mr-2" />
+          {success}
         </div>
       )}
     </div>

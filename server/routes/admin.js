@@ -233,4 +233,324 @@ router.get('/participant-progress', (req, res) => {
   });
 });
 
+// GET /api/admin/settings - Buscar configurações do sistema
+router.get('/settings', async (req, res) => {
+  try {
+    // Por enquanto retorna configurações padrão
+    // Em produção, isso viria de uma tabela de configurações
+    const settings = {
+      email_notifications: true,
+      auto_backup: false,
+      debug_mode: false,
+      backup_frequency: 'daily', // daily, weekly, monthly
+      last_backup: null,
+      backup_retention_days: 30
+    };
+
+    res.json(settings);
+  } catch (error) {
+    console.error('❌ Erro ao buscar configurações:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+// PUT /api/admin/settings - Atualizar configurações do sistema
+router.put('/settings', async (req, res) => {
+  try {
+    const { email_notifications, auto_backup, debug_mode, backup_frequency } = req.body;
+    
+    // Em produção, salvaria na tabela de configurações
+    const updatedSettings = {
+      email_notifications: email_notifications || false,
+      auto_backup: auto_backup || false,
+      debug_mode: debug_mode || false,
+      backup_frequency: backup_frequency || 'daily',
+      last_backup: null,
+      backup_retention_days: 30,
+      updated_at: new Date().toISOString()
+    };
+
+    console.log('✅ Configurações atualizadas:', updatedSettings);
+    res.json(updatedSettings);
+  } catch (error) {
+    console.error('❌ Erro ao atualizar configurações:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+// POST /api/admin/backup - Criar backup do banco de dados
+router.post('/backup', async (req, res) => {
+  try {
+    const fs = require('fs').promises;
+    const path = require('path');
+    
+    // Criar diretório de backups se não existir
+    const backupDir = path.join(__dirname, '../backups');
+    try {
+      await fs.access(backupDir);
+    } catch {
+      await fs.mkdir(backupDir, { recursive: true });
+    }
+    
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const backupFileName = `johari-backup-${timestamp}.json`;
+    const backupPath = path.join(backupDir, backupFileName);
+    
+    let backupData = {};
+    
+    if (process.env.DATABASE_URL) {
+      // Backup PostgreSQL
+      console.log('🗄️ Criando backup PostgreSQL...');
+      
+      // Buscar dados de todas as tabelas
+      const tables = ['participants', 'characteristics', 'self_assessments', 'peer_assessments'];
+      
+      for (const table of tables) {
+        const result = await queryPostgres(`SELECT * FROM ${table}`);
+        backupData[table] = result.rows;
+      }
+      
+      backupData.metadata = {
+        type: 'postgresql',
+        timestamp: new Date().toISOString(),
+        version: '1.0.0',
+        tables: tables
+      };
+    } else {
+      // Backup SQLite
+      console.log('🗄️ Criando backup SQLite...');
+      
+      const tables = ['participants', 'characteristics', 'self_assessments', 'peer_assessments'];
+      
+      for (const table of tables) {
+        const rows = await new Promise((resolve, reject) => {
+          db.all(`SELECT * FROM ${table}`, [], (err, result) => {
+            if (err) reject(err);
+            else resolve(result);
+          });
+        });
+        backupData[table] = rows;
+      }
+      
+      backupData.metadata = {
+        type: 'sqlite',
+        timestamp: new Date().toISOString(),
+        version: '1.0.0',
+        tables: tables
+      };
+    }
+    
+    // Salvar backup em arquivo
+    await fs.writeFile(backupPath, JSON.stringify(backupData, null, 2));
+    
+    console.log('✅ Backup criado:', backupFileName);
+    
+    res.json({
+      success: true,
+      message: 'Backup criado com sucesso',
+      filename: backupFileName,
+      path: backupPath,
+      size: (await fs.stat(backupPath)).size,
+      timestamp: new Date().toISOString()
+    });
+    
+  } catch (error) {
+    console.error('❌ Erro ao criar backup:', error);
+    res.status(500).json({ 
+      error: 'Erro ao criar backup',
+      details: error.message 
+    });
+  }
+});
+
+// POST /api/admin/restore - Restaurar backup do banco de dados
+router.post('/restore', async (req, res) => {
+  try {
+    const { filename } = req.body;
+    
+    if (!filename) {
+      return res.status(400).json({ error: 'Nome do arquivo de backup é obrigatório' });
+    }
+    
+    const fs = require('fs').promises;
+    const path = require('path');
+    
+    const backupPath = path.join(__dirname, '../backups', filename);
+    
+    // Verificar se arquivo existe
+    try {
+      await fs.access(backupPath);
+    } catch {
+      return res.status(404).json({ error: 'Arquivo de backup não encontrado' });
+    }
+    
+    // Ler arquivo de backup
+    const backupContent = await fs.readFile(backupPath, 'utf8');
+    const backupData = JSON.parse(backupContent);
+    
+    console.log('🔄 Restaurando backup:', filename);
+    
+    if (process.env.DATABASE_URL) {
+      // Restaurar PostgreSQL
+      console.log('🗄️ Restaurando PostgreSQL...');
+      
+      // Limpar tabelas existentes
+      const tables = ['peer_assessments', 'self_assessments', 'participants', 'characteristics'];
+      for (const table of tables) {
+        await queryPostgres(`TRUNCATE TABLE ${table} RESTART IDENTITY CASCADE`);
+      }
+      
+      // Restaurar dados
+      for (const [tableName, data] of Object.entries(backupData)) {
+        if (tableName === 'metadata') continue;
+        
+        if (data && data.length > 0) {
+          const columns = Object.keys(data[0]);
+          const values = data.map(row => 
+            columns.map(col => `$${columns.indexOf(col) + 1}`).join(', ')
+          );
+          
+          for (const row of data) {
+            const query = `INSERT INTO ${tableName} (${columns.join(', ')}) VALUES (${values[0]})`;
+            await queryPostgres(query, columns.map(col => row[col]));
+          }
+        }
+      }
+    } else {
+      // Restaurar SQLite
+      console.log('🗄️ Restaurando SQLite...');
+      
+      // Limpar tabelas existentes
+      const tables = ['peer_assessments', 'self_assessments', 'participants', 'characteristics'];
+      for (const table of tables) {
+        await new Promise((resolve, reject) => {
+          db.run(`DELETE FROM ${table}`, [], (err) => {
+            if (err) reject(err);
+            else resolve();
+          });
+        });
+      }
+      
+      // Restaurar dados
+      for (const [tableName, data] of Object.entries(backupData)) {
+        if (tableName === 'metadata') continue;
+        
+        if (data && data.length > 0) {
+          for (const row of data) {
+            const columns = Object.keys(row);
+            const placeholders = columns.map(() => '?').join(', ');
+            const query = `INSERT INTO ${tableName} (${columns.join(', ')}) VALUES (${placeholders})`;
+            
+            await new Promise((resolve, reject) => {
+              db.run(query, Object.values(row), (err) => {
+                if (err) reject(err);
+                else resolve();
+              });
+            });
+          }
+        }
+      }
+    }
+    
+    console.log('✅ Backup restaurado com sucesso');
+    
+    res.json({
+      success: true,
+      message: 'Backup restaurado com sucesso',
+      filename: filename,
+      timestamp: new Date().toISOString()
+    });
+    
+  } catch (error) {
+    console.error('❌ Erro ao restaurar backup:', error);
+    res.status(500).json({ 
+      error: 'Erro ao restaurar backup',
+      details: error.message 
+    });
+  }
+});
+
+// DELETE /api/admin/clear-data - Limpar todos os dados do sistema
+router.delete('/clear-data', async (req, res) => {
+  try {
+    console.log('⚠️ Limpando todos os dados do sistema...');
+    
+    if (process.env.DATABASE_URL) {
+      // Limpar PostgreSQL
+      const tables = ['peer_assessments', 'self_assessments', 'participants'];
+      
+      for (const table of tables) {
+        await queryPostgres(`TRUNCATE TABLE ${table} RESTART IDENTITY CASCADE`);
+      }
+    } else {
+      // Limpar SQLite
+      const tables = ['peer_assessments', 'self_assessments', 'participants'];
+      
+      for (const table of tables) {
+        await new Promise((resolve, reject) => {
+          db.run(`DELETE FROM ${table}`, [], (err) => {
+            if (err) reject(err);
+            else resolve();
+          });
+        });
+      }
+    }
+    
+    console.log('✅ Dados limpos com sucesso');
+    
+    res.json({
+      success: true,
+      message: 'Todos os dados foram limpos com sucesso',
+      timestamp: new Date().toISOString()
+    });
+    
+  } catch (error) {
+    console.error('❌ Erro ao limpar dados:', error);
+    res.status(500).json({ 
+      error: 'Erro ao limpar dados',
+      details: error.message 
+    });
+  }
+});
+
+// GET /api/admin/backups - Listar backups disponíveis
+router.get('/backups', async (req, res) => {
+  try {
+    const fs = require('fs').promises;
+    const path = require('path');
+    
+    const backupDir = path.join(__dirname, '../backups');
+    
+    try {
+      const files = await fs.readdir(backupDir);
+      const backupFiles = [];
+      
+      for (const file of files) {
+        if (file.endsWith('.json')) {
+          const filePath = path.join(backupDir, file);
+          const stats = await fs.stat(filePath);
+          
+          backupFiles.push({
+            filename: file,
+            size: stats.size,
+            created: stats.birthtime,
+            modified: stats.mtime
+          });
+        }
+      }
+      
+      // Ordenar por data de criação (mais recente primeiro)
+      backupFiles.sort((a, b) => new Date(b.created) - new Date(a.created));
+      
+      res.json(backupFiles);
+    } catch {
+      res.json([]);
+    }
+    
+  } catch (error) {
+    console.error('❌ Erro ao listar backups:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
 module.exports = router;
