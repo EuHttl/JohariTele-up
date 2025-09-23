@@ -42,7 +42,7 @@ const Layout: React.FC = () => {
                 <img 
                   src="/images/favicon/favicon-96x96.png" 
                   alt="Janela de Johari Logo" 
-                  className="w-6 h-6 rounded-md"
+                  className="w-4 h-4 rounded-md"
                 />
               </div>
               <div className="header-logo-badge"></div>

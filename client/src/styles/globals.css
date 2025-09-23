@@ -1,4 +1,4 @@
-/* Estilos globais limpos e claros */
+/* Estilos globais - Tema Escuro Roxo e Preto */
 
 /* Reset básico */
 * {
@@ -13,8 +13,8 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background: #f8fafc;
-  color: #1f2937;
+  background: #0f0f23;
+  color: #e2e8f0;
   line-height: 1.6;
 }
 
@@ -23,46 +23,46 @@ code {
     monospace;
 }
 
-/* Variáveis CSS para design limpo */
+/* Variáveis CSS para tema escuro roxo e preto */
 :root {
-  --primary-color: #8b5cf6;
-  --primary-dark: #7c3aed;
-  --primary-light: #a78bfa;
-  --secondary-color: #6366f1;
-  --secondary-dark: #5b21b6;
-  --secondary-light: #c4b5fd;
-  --accent-color: #10b981;
-  --accent-dark: #059669;
-  --accent-light: #6ee7b7;
-  --success-color: #10b981;
-  --success-dark: #059669;
-  --success-light: #6ee7b7;
-  --warning-color: #f59e0b;
-  --warning-dark: #d97706;
-  --warning-light: #fcd34d;
-  --error-color: #ef4444;
-  --error-dark: #dc2626;
+  --primary-color: #a855f7;
+  --primary-dark: #9333ea;
+  --primary-light: #c084fc;
+  --secondary-color: #8b5cf6;
+  --secondary-dark: #7c3aed;
+  --secondary-light: #a78bfa;
+  --accent-color: #06d6a0;
+  --accent-dark: #05a085;
+  --accent-light: #4ecdc4;
+  --success-color: #06d6a0;
+  --success-dark: #05a085;
+  --success-light: #4ecdc4;
+  --warning-color: #ffd93d;
+  --warning-dark: #fbbf24;
+  --warning-light: #fde68a;
+  --error-color: #ff6b6b;
+  --error-dark: #ef4444;
   --error-light: #fca5a5;
   --info-color: #3b82f6;
   --info-dark: #2563eb;
   --info-light: #93c5fd;
   
-  /* Gradientes limpos */
-  --gradient-primary: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
-  --gradient-secondary: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-  --gradient-card: linear-gradient(135deg, #ffffff 0%, #f9fafb 100%);
+  /* Gradientes escuros */
+  --gradient-primary: linear-gradient(135deg, #a855f7 0%, #8b5cf6 100%);
+  --gradient-secondary: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  --gradient-card: linear-gradient(135deg, #1e1e3f 0%, #2d1b69 100%);
   
-  /* Cores claras */
-  --gray-50: #f9fafb;
-  --gray-100: #f3f4f6;
-  --gray-200: #e5e7eb;
-  --gray-300: #d1d5db;
-  --gray-400: #9ca3af;
+  /* Cores escuras */
+  --gray-50: #1a1a2e;
+  --gray-100: #16213e;
+  --gray-200: #0f0f23;
+  --gray-300: #2d1b69;
+  --gray-400: #4c1d95;
   --gray-500: #6b7280;
-  --gray-600: #4b5563;
-  --gray-700: #374151;
-  --gray-800: #1f2937;
-  --gray-900: #111827;
+  --gray-600: #9ca3af;
+  --gray-700: #d1d5db;
+  --gray-800: #e5e7eb;
+  --gray-900: #f3f4f6;
   
   /* Sombras suaves */
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
@@ -86,7 +86,7 @@ code {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: #f8fafc;
+  background: #0f0f23;
 }
 
 /* Scrollbar personalizada */
@@ -95,17 +95,17 @@ code {
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--gray-100);
+  background: var(--gray-200);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--gray-300);
+  background: var(--primary-color);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--gray-400);
+  background: var(--primary-dark);
 }
 
 /* Seleção de texto */
