@@ -35,8 +35,8 @@ router.get('/', async (req, res) => {
   console.log('📊 GET /api/participants - Buscando todos os participantes');
   
   try {
-    if (process.env.DATABASE_URL) {
-      // Usar PostgreSQL diretamente
+    if (process.env.DATABASE_URL && process.env.NODE_ENV === 'production') {
+      // Usar PostgreSQL diretamente apenas em produção
       const result = await queryPostgres(`
         SELECT 
           id, name, email, code, 
@@ -85,8 +85,8 @@ router.get('/:code', async (req, res) => {
   console.log('🔍 GET /api/participants/:code - Buscando participante por código:', code);
   
   try {
-    if (process.env.DATABASE_URL) {
-      // Usar PostgreSQL diretamente
+    if (process.env.DATABASE_URL && process.env.NODE_ENV === 'production') {
+      // Usar PostgreSQL diretamente apenas em produção
       const result = await queryPostgres(`
         SELECT 
           id, name, email, code,
@@ -152,8 +152,8 @@ router.post('/', async (req, res) => {
   }
 
   try {
-    if (process.env.DATABASE_URL) {
-      // Usar PostgreSQL diretamente
+    if (process.env.DATABASE_URL && process.env.NODE_ENV === 'production') {
+      // Usar PostgreSQL diretamente apenas em produção
       
       // Verificar se já existe participante com esse email
       const existingUser = await queryPostgres('SELECT id FROM participants WHERE email = $1', [email]);
@@ -269,8 +269,8 @@ router.put('/:id', async (req, res) => {
   }
 
   try {
-    if (process.env.DATABASE_URL) {
-      // Usar PostgreSQL diretamente
+    if (process.env.DATABASE_URL && process.env.NODE_ENV === 'production') {
+      // Usar PostgreSQL diretamente apenas em produção
       const result = await queryPostgres(`
         UPDATE participants 
         SET name = $1, email = $2
@@ -348,8 +348,8 @@ router.get('/stats/overview', async (req, res) => {
   console.log('📊 GET /api/participants/stats/overview - Buscando estatísticas');
   
   try {
-    if (process.env.DATABASE_URL) {
-      // Usar PostgreSQL diretamente
+    if (process.env.DATABASE_URL && process.env.NODE_ENV === 'production') {
+      // Usar PostgreSQL diretamente apenas em produção
       const result = await queryPostgres(`
         SELECT 
           COUNT(*) as total_participants,

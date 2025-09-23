@@ -260,11 +260,19 @@ if (process.env.NODE_ENV === 'production') {
 console.log('🗄️ Iniciando servidor...');
 try {
   if (initializeDatabase && typeof initializeDatabase === 'function') {
-    initializeDatabase().then(() => {
-      console.log('✅ Banco inicializado com sucesso');
-    }).catch(error => {
-      console.error('❌ Erro na inicialização do banco:', error.message);
-    });
+    // Verificar se é uma Promise (PostgreSQL) ou função síncrona (SQLite)
+    const result = initializeDatabase();
+    if (result && typeof result.then === 'function') {
+      // PostgreSQL - retorna Promise
+      result.then(() => {
+        console.log('✅ Banco PostgreSQL inicializado com sucesso');
+      }).catch(error => {
+        console.error('❌ Erro na inicialização do banco PostgreSQL:', error.message);
+      });
+    } else {
+      // SQLite - função síncrona
+      console.log('✅ Banco SQLite inicializado com sucesso');
+    }
   } else {
     console.log('⚠️ Função initializeDatabase não encontrada, iniciando servidor sem inicialização do banco');
   }
