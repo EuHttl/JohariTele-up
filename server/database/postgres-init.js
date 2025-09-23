@@ -157,7 +157,7 @@ async function initializeDatabase() {
       console.log('✅ Tabela peer_assessments verificada/criada');
 
       // Verificar se existe administrador
-      const adminCount = await client.query('SELECT COUNT(*) FROM admins');
+      const adminCount = await client.query('SELECT COUNT(*) as count FROM admins');
       console.log(`📊 Total de administradores: ${adminCount.rows[0].count}`);
       
       if (parseInt(adminCount.rows[0].count) === 0) {
@@ -179,13 +179,13 @@ async function initializeDatabase() {
       }
 
       // Inserir características se não existirem
-      const characteristicsCount = await client.query('SELECT COUNT(*) FROM characteristics');
+      const characteristicsCount = await client.query('SELECT COUNT(*) as count FROM characteristics');
       console.log(`📊 Total de características: ${characteristicsCount.rows[0].count}`);
       
       if (parseInt(characteristicsCount.rows[0].count) === 0) {
         console.log('➕ Inserindo características...');
         
-        for (const characteristic of characteristics) {
+        for (const characteristic of johariCharacteristics) {
           await client.query('INSERT INTO characteristics (name) VALUES ($1)', [characteristic]);
         }
         
@@ -272,4 +272,4 @@ const db = {
   }
 };
 
-module.exports = { db, initializeDatabase };
+module.exports = { db, initializeDatabase, pool };
