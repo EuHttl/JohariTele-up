@@ -2,15 +2,9 @@ const express = require('express');
 const router = express.Router();
 const { v4: uuidv4 } = require('uuid');
 
-// Usar banco dinâmico (PostgreSQL ou SQLite)
-let db;
-if (process.env.DATABASE_URL) {
-  const postgresInit = require('../database/postgres-init');
-  db = postgresInit.db;
-} else {
-  const sqliteInit = require('../database/init');
-  db = sqliteInit.db;
-}
+// Usar apenas PostgreSQL
+const postgresInit = require('../database/postgres-init');
+const db = postgresInit.db;
 
 // Função para executar query PostgreSQL diretamente
 async function queryPostgres(sql, params = []) {
@@ -231,13 +225,18 @@ router.post('/', async (req, res) => {
 
           // Gerar código único
           const code = uuidv4().substring(0, 8).toUpperCase();
+          const password = code; // Senha igual ao código em maiúsculo
+          
+          // Hash da senha
+          const bcrypt = require('bcryptjs');
+          const hashedPassword = bcrypt.hashSync(password, 10);
           
           const insertQuery = `
-            INSERT INTO participants (name, email, code)
-            VALUES (?, ?, ?)
+            INSERT INTO participants (name, email, code, password)
+            VALUES (?, ?, ?, ?)
           `;
           
-          db.run(insertQuery, [name, email, code], function(err) {
+          db.run(insertQuery, [name, email, code, hashedPassword], function(err) {
             if (err) {
               console.error('Erro ao criar participante:', err);
               return res.status(500).json({ error: 'Erro interno do servidor' });
