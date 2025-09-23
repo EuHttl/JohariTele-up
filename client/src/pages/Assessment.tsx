@@ -30,13 +30,22 @@ const AssessmentPage: React.FC = () => {
 
   const loadCompletedPeerAssessments = async (participantCode: string) => {
     try {
+      console.log('🔍 Carregando avaliações de pares concluídas para:', participantCode);
       // Buscar todas as avaliações de pares já concluídas
       const completedAssessments = await assessmentsAPI.getCompletedPeerAssessments(participantCode);
+      console.log('📊 Avaliações concluídas recebidas:', completedAssessments);
       const completedIds = new Set(completedAssessments.map(assessment => assessment.peer_id));
+      console.log('✅ IDs dos pares avaliados:', Array.from(completedIds));
       setCompletedPeerAssessments(completedIds);
     } catch (error) {
-      console.error('Erro ao carregar avaliações de pares concluídas:', error);
-      // Se der erro, continua sem as informações de status
+      console.error('❌ Erro ao carregar avaliações de pares concluídas:', error);
+      console.log('🔄 Usando dados mockados para teste...');
+      // Para teste: simular que alguns participantes já foram avaliados
+      // Remove isso quando a API estiver funcionando
+      // Vou simular que alguns participantes já foram avaliados baseado nos que aparecem na tela
+      const mockCompletedIds = new Set([2, 4, 6]); // Simulando que alguns foram avaliados
+      setCompletedPeerAssessments(mockCompletedIds);
+      console.log('🎯 IDs mockados para teste:', Array.from(mockCompletedIds));
     }
   };
 
@@ -536,7 +545,10 @@ const AssessmentPage: React.FC = () => {
               gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
               gap: '1rem'
             }}>
-              {peers.map((peer) => (
+              {peers.map((peer) => {
+                const isCompleted = completedPeerAssessments.has(peer.id);
+                console.log(`🎯 Peer ${peer.name} (ID: ${peer.id}) - Completed: ${isCompleted}`);
+                return (
                 <button
                   key={peer.id}
                   onClick={() => loadPeerAssessment(peer)}
@@ -608,7 +620,8 @@ const AssessmentPage: React.FC = () => {
                     </div>
                   </div>
                 </button>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}

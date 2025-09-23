@@ -90,6 +90,114 @@ const Report: React.FC = () => {
     }
   };
 
+  const handleDownloadPDF = () => {
+    if (!participant || !report) return;
+    
+    // Criar conteúdo HTML para o PDF
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <title>Relatório - ${participant.name}</title>
+        <style>
+          body { font-family: Arial, sans-serif; margin: 20px; }
+          .header { text-align: center; margin-bottom: 30px; }
+          .section { margin-bottom: 25px; }
+          .quadrant { border: 1px solid #ddd; padding: 15px; margin: 10px 0; }
+          .open { background-color: #f0f9ff; }
+          .blind { background-color: #fefce8; }
+          .hidden { background-color: #eff6ff; }
+          .unknown { background-color: #faf5ff; }
+          .characteristics { margin-top: 10px; }
+          .characteristic { display: inline-block; background: #e5e7eb; padding: 4px 8px; margin: 2px; border-radius: 4px; font-size: 12px; }
+          .insight { border-left: 4px solid #3b82f6; padding: 10px; margin: 10px 0; background: #f8fafc; }
+          .stats { display: flex; justify-content: space-around; margin: 20px 0; }
+          .stat { text-align: center; }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <h1>Relatório da Janela de Johari</h1>
+          <h2>${participant.name} (${participant.code})</h2>
+          <p>Gerado em ${new Date().toLocaleString('pt-BR')}</p>
+        </div>
+
+        <div class="stats">
+          <div class="stat">
+            <h3>Autoavaliação</h3>
+            <p>${participant.has_completed_self_assessment ? 'Completa' : 'Pendente'}</p>
+          </div>
+          <div class="stat">
+            <h3>Avaliações Entre Pares</h3>
+            <p>${participant.has_completed_peer_assessments ? 'Completas' : 'Pendentes'}</p>
+          </div>
+        </div>
+
+        <div class="section">
+          <h2>Janela de Johari</h2>
+          
+          <div class="quadrant open">
+            <h3>Área Aberta (${report.quadrants.open.percentage}%)</h3>
+            <p>Características conhecidas por você e pelos outros</p>
+            <div class="characteristics">
+              ${report.quadrants.open.characteristics.map(char => `<span class="characteristic">${char}</span>`).join('')}
+            </div>
+          </div>
+
+          <div class="quadrant blind">
+            <h3>Área Cega (${report.quadrants.blind.percentage}%)</h3>
+            <p>Características conhecidas pelos outros, mas não por você</p>
+            <div class="characteristics">
+              ${report.quadrants.blind.characteristics.map(char => `<span class="characteristic">${char}</span>`).join('')}
+            </div>
+          </div>
+
+          <div class="quadrant hidden">
+            <h3>Área Oculta (${report.quadrants.hidden.percentage}%)</h3>
+            <p>Características conhecidas por você, mas não pelos outros</p>
+            <div class="characteristics">
+              ${report.quadrants.hidden.characteristics.map(char => `<span class="characteristic">${char}</span>`).join('')}
+            </div>
+          </div>
+
+          <div class="quadrant unknown">
+            <h3>Área Desconhecida (${report.quadrants.unknown.percentage}%)</h3>
+            <p>Características desconhecidas por você e pelos outros</p>
+            <div class="characteristics">
+              ${report.quadrants.unknown.characteristics.map(char => `<span class="characteristic">${char}</span>`).join('')}
+            </div>
+          </div>
+        </div>
+
+        ${report.insights.length > 0 ? `
+        <div class="section">
+          <h2>Insights e Recomendações</h2>
+          ${report.insights.map(insight => `
+            <div class="insight">
+              <h4>${insight.title}</h4>
+              <p>${insight.message}</p>
+              ${insight.recommendation ? `<p><em>${insight.recommendation}</em></p>` : ''}
+            </div>
+          `).join('')}
+        </div>
+        ` : ''}
+      </body>
+      </html>
+    `;
+
+    // Criar blob e fazer download
+    const blob = new Blob([htmlContent], { type: 'text/html' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `relatorio_${participant.code}_${new Date().toISOString().split('T')[0]}.html`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -134,7 +242,10 @@ const Report: React.FC = () => {
           </div>
         </div>
         
-        <button className="btn btn-primary">
+        <button 
+          className="btn btn-primary"
+          onClick={handleDownloadPDF}
+        >
           <Download className="h-4 w-4" />
           Exportar PDF
         </button>

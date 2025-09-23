@@ -256,7 +256,8 @@ router.post('/peer/:assessorCode/:assessedCode', async (req, res) => {
       return res.status(404).json({ error: 'Participante não encontrado' });
     }
     
-    const { assessor_id, assessed_id } = row;
+    const assessor_id = row.assessor_id;
+    const assessed_id = row.assessed_id;
     
     // Iniciar transação
     const client = await postgresInit.pool.connect();

@@ -92,6 +92,131 @@ const Reports: React.FC = () => {
     });
   };
 
+  const handleExportAllReports = () => {
+    if (!comparativeReport) return;
+    
+    const filteredParticipants = getFilteredParticipants();
+    
+    // Criar conteúdo HTML para o relatório geral
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <title>Relatório Comparativo - Janela de Johari</title>
+        <style>
+          body { font-family: Arial, sans-serif; margin: 20px; }
+          .header { text-align: center; margin-bottom: 30px; }
+          .section { margin-bottom: 25px; }
+          .participant { border: 1px solid #ddd; padding: 15px; margin: 10px 0; }
+          .stats { display: flex; justify-content: space-around; margin: 20px 0; }
+          .stat { text-align: center; }
+          .quadrant-stats { display: flex; justify-content: space-between; margin: 10px 0; }
+          .quadrant-stat { text-align: center; padding: 10px; border: 1px solid #eee; }
+          .open { background-color: #f0f9ff; }
+          .blind { background-color: #fefce8; }
+          .hidden { background-color: #eff6ff; }
+          .unknown { background-color: #faf5ff; }
+          table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+          th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+          th { background-color: #f2f2f2; }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <h1>Relatório Comparativo - Janela de Johari</h1>
+          <p>Gerado em ${new Date().toLocaleString('pt-BR')}</p>
+        </div>
+
+        <div class="stats">
+          <div class="stat">
+            <h3>Total de Participantes</h3>
+            <p>${comparativeReport.summary.total_participants}</p>
+          </div>
+          <div class="stat">
+            <h3>Avaliações Completas</h3>
+            <p>${comparativeReport.summary.completed_assessments}</p>
+          </div>
+          <div class="stat">
+            <h3>Taxa de Conclusão</h3>
+            <p>${Math.round((comparativeReport.summary.completed_assessments / comparativeReport.summary.total_participants) * 100)}%</p>
+          </div>
+        </div>
+
+        <div class="section">
+          <h2>Resumo por Participante</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>Nome</th>
+                <th>Código</th>
+                <th>Área Aberta</th>
+                <th>Área Cega</th>
+                <th>Área Oculta</th>
+                <th>Área Desconhecida</th>
+                <th>Score Autoconsciência</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${filteredParticipants.map((participant: any) => `
+                <tr>
+                  <td>${participant.name}</td>
+                  <td>${participant.code}</td>
+                  <td>${participant.quadrants.open.count} (${participant.quadrants.open.percentage}%)</td>
+                  <td>${participant.quadrants.blind.count} (${participant.quadrants.blind.percentage}%)</td>
+                  <td>${participant.quadrants.hidden.count} (${participant.quadrants.hidden.percentage}%)</td>
+                  <td>${participant.quadrants.unknown.count} (${participant.quadrants.unknown.percentage}%)</td>
+                  <td>${participant.self_awareness_score}%</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+
+        ${characteristicAnalysis ? `
+        <div class="section">
+          <h2>Análise de Características</h2>
+          <h3>Mais Selecionadas</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>Característica</th>
+                <th>Autoavaliações</th>
+                <th>Avaliações entre Pares</th>
+                <th>Consenso</th>
+                <th>% Consenso</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${characteristicAnalysis.most_selected.map((char: any) => `
+                <tr>
+                  <td>${char.name}</td>
+                  <td>${char.self_selections}</td>
+                  <td>${char.peer_selections}</td>
+                  <td>${char.consensus_selections}</td>
+                  <td>${char.consensus_percentage}%</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+        ` : ''}
+      </body>
+      </html>
+    `;
+
+    // Criar blob e fazer download
+    const blob = new Blob([htmlContent], { type: 'text/html' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `relatorio_comparativo_${new Date().toISOString().split('T')[0]}.html`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+  };
+
   if (loading) {
     return (
       <div className="reports-loading">
@@ -145,7 +270,10 @@ const Reports: React.FC = () => {
             <Filter className="w-5 h-5 mr-2" />
             Filtrar
           </button>
-          <button className="reports-export-btn">
+          <button 
+            className="reports-export-btn"
+            onClick={handleExportAllReports}
+          >
             <Download className="w-5 h-5 mr-2" />
             Exportar
           </button>
