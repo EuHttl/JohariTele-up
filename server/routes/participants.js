@@ -144,7 +144,7 @@ router.post('/', async (req, res) => {
 
       // Gerar código único
       const code = uuidv4().substring(0, 8).toUpperCase();
-      const password = code.toLowerCase();
+      const password = code; // Senha igual ao código em maiúsculo
       
       // Hash da senha
       const bcrypt = require('bcryptjs');
@@ -166,7 +166,7 @@ router.post('/', async (req, res) => {
         name,
         email,
         code,
-        password: code.toLowerCase(),
+        password: code, // Senha igual ao código em maiúsculo
         has_completed_self_assessment: false,
         has_completed_peer_assessments: false,
         created_at: newParticipant.created_at,
