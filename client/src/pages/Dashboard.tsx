@@ -321,7 +321,10 @@ const Dashboard: React.FC = () => {
                             <div className="dashboard-participant-avatar">
                               {participant.name.charAt(0).toUpperCase()}
                             </div>
-                            <span className="dashboard-participant-name">{participant.name}</span>
+                            <div className="dashboard-participant-details">
+                              <p className="dashboard-participant-name">{participant.name}</p>
+                              <p className="dashboard-participant-email">{participant.email}</p>
+                            </div>
                           </div>
                         </td>
                         <td className="dashboard-participant-email">{participant.email}</td>
