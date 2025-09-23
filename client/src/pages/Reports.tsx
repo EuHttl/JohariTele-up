@@ -13,7 +13,8 @@ import {
   BarChart3,
   FileText,
   Share,
-  Filter
+  Filter,
+  Target
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import '../styles/reports.css';
@@ -83,11 +84,14 @@ const Reports: React.FC = () => {
     );
   }
 
+  const participants = comparativeReport?.participants || [];
+  const participantsLength = participants.length || 1;
+  
   const stats = {
-    total: comparativeReport?.participants.length || 0,
-    completed: comparativeReport?.summary.completed_assessments || 0,
-    avgScore: comparativeReport?.participants.reduce((acc, p) => acc + (p.self_awareness_score || 0), 0) / (comparativeReport?.participants.length || 1) || 0,
-    insights: characteristicAnalysis?.most_selected.length || 0
+    total: participants.length,
+    completed: comparativeReport?.summary?.completed_assessments || 0,
+    avgScore: participants.reduce((acc, p) => acc + (p.self_awareness_score || 0), 0) / participantsLength,
+    insights: characteristicAnalysis?.most_selected?.length || 0
   };
 
   return (
@@ -176,7 +180,7 @@ const Reports: React.FC = () => {
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={comparativeReport.participants.map(p => ({
                 name: p.name.split(' ')[0],
-                score: Math.round(p.average_score || 0)
+                score: Math.round((p.self_awareness_score + p.peer_perception_score) / 2)
               }))}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="name" />
@@ -189,20 +193,19 @@ const Reports: React.FC = () => {
         </div>
       </div>
 
-      {/* Insights */}
-      {characteristicAnalysis?.insights && (
-        <div className="reports-insights">
-          <div className="reports-insight-card">
-            <div className="reports-insight-header">
-              <div className="reports-insight-icon">
-                <Lightbulb className="w-6 h-6 text-white" />
+      {/* Characteristics Analysis */}
+      {characteristicAnalysis && (
+        <div className="reports-characteristics">
+          <div className="reports-characteristic-card">
+            <div className="reports-characteristic-header">
+              <div className="reports-characteristic-icon">
+                <Target className="w-6 h-6 text-white" />
               </div>
-              <h3 className="reports-insight-title">Principais Insights</h3>
+              <h3 className="reports-characteristic-title">Análise de Características</h3>
             </div>
-            <div className="reports-insight-content">
-              {characteristicAnalysis.insights.map((insight, index) => (
-                <p key={index} className="mb-2">{insight}</p>
-              ))}
+            <div className="reports-characteristic-content">
+              <p className="mb-2">Total de características mais selecionadas: {characteristicAnalysis.most_selected?.length || 0}</p>
+              <p className="mb-2">Total de características menos selecionadas: {characteristicAnalysis.least_selected?.length || 0}</p>
             </div>
           </div>
         </div>
@@ -247,19 +250,19 @@ const Reports: React.FC = () => {
                           </div>
                           <div className="report-details">
                             <p className="report-name">{participant.name}</p>
-                            <p className="report-email">{participant.email}</p>
+                            <p className="report-code">{participant.code}</p>
                           </div>
                         </div>
                       </td>
-                      <td>{participant.email}</td>
+                      <td>{participant.code}</td>
                       <td>
                         <div className="report-score">
-                          <span className="report-score-value">{Math.round(participant.average_score || 0)}</span>
-                          {getScoreBadge(participant.average_score || 0)}
+                          <span className="report-score-value">{Math.round((participant.self_awareness_score + participant.peer_perception_score) / 2)}</span>
+                          {getScoreBadge((participant.self_awareness_score + participant.peer_perception_score) / 2)}
                         </div>
                       </td>
                       <td className="report-date">
-                        {participant.updated_at ? formatDate(participant.updated_at) : '-'}
+                        -
                       </td>
                       <td>
                         <div className="reports-actions-cell">
@@ -270,23 +273,19 @@ const Reports: React.FC = () => {
                           >
                             <Eye className="w-4 h-4" />
                           </Link>
-                          {participant.has_completed_self_assessment && participant.has_completed_peer_assessments && (
-                            <>
-                              <Link
-                                to={`/report/${participant.code}`}
-                                className="reports-action-btn download"
-                                title="Baixar relatório"
-                              >
-                                <Download className="w-4 h-4" />
-                              </Link>
-                              <button
-                                className="reports-action-btn share"
-                                title="Compartilhar relatório"
-                              >
-                                <Share className="w-4 h-4" />
-                              </button>
-                            </>
-                          )}
+                          <Link
+                            to={`/report/${participant.code}`}
+                            className="reports-action-btn download"
+                            title="Baixar relatório"
+                          >
+                            <Download className="w-4 h-4" />
+                          </Link>
+                          <button
+                            className="reports-action-btn share"
+                            title="Compartilhar relatório"
+                          >
+                            <Share className="w-4 h-4" />
+                          </button>
                         </div>
                       </td>
                     </tr>
