@@ -25,6 +25,12 @@ const Reports: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [chartType, setChartType] = useState<'bar' | 'pie'>('bar');
+  const [showFilters, setShowFilters] = useState(false);
+  const [filters, setFilters] = useState({
+    scoreRange: { min: 0, max: 100 },
+    name: '',
+    status: 'all' // all, completed, incomplete
+  });
 
   useEffect(() => {
     fetchReports();
@@ -63,6 +69,29 @@ const Reports: React.FC = () => {
     return new Date(dateString).toLocaleDateString('pt-BR');
   };
 
+  const getFilteredParticipants = () => {
+    if (!comparativeReport?.participants) return [];
+    
+    return comparativeReport.participants.filter((participant: any) => {
+      const score = Math.round((participant.self_awareness_score + participant.peer_perception_score) / 2);
+      const nameMatch = participant.name.toLowerCase().includes(filters.name.toLowerCase());
+      const scoreMatch = score >= filters.scoreRange.min && score <= filters.scoreRange.max;
+      const statusMatch = filters.status === 'all' || 
+        (filters.status === 'completed' && participant.completed_at) ||
+        (filters.status === 'incomplete' && !participant.completed_at);
+      
+      return nameMatch && scoreMatch && statusMatch;
+    });
+  };
+
+  const clearFilters = () => {
+    setFilters({
+      scoreRange: { min: 0, max: 100 },
+      name: '',
+      status: 'all'
+    });
+  };
+
   if (loading) {
     return (
       <div className="reports-loading">
@@ -85,13 +114,13 @@ const Reports: React.FC = () => {
     );
   }
 
-  const participants = comparativeReport?.participants || [];
-  const participantsLength = participants.length || 1;
+  const filteredParticipants = getFilteredParticipants();
+  const participantsLength = filteredParticipants.length || 1;
   
   const stats = {
-    total: participants.length,
-    completed: comparativeReport?.summary?.completed_assessments || 0,
-    avgScore: participants.reduce((acc: any, p: any) => acc + (p.self_awareness_score || 0), 0) / participantsLength,
+    total: filteredParticipants.length,
+    completed: filteredParticipants.filter((p: any) => p.completed_at).length,
+    avgScore: filteredParticipants.reduce((acc: any, p: any) => acc + (p.self_awareness_score || 0), 0) / participantsLength,
     insights: characteristicAnalysis?.most_selected?.length || 0
   };
 
@@ -109,7 +138,10 @@ const Reports: React.FC = () => {
           </div>
         </div>
         <div className="reports-actions">
-          <button className="reports-filter-btn">
+          <button 
+            className={`reports-filter-btn ${showFilters ? 'active' : ''}`}
+            onClick={() => setShowFilters(!showFilters)}
+          >
             <Filter className="w-5 h-5 mr-2" />
             Filtrar
           </button>
@@ -119,6 +151,78 @@ const Reports: React.FC = () => {
           </button>
         </div>
       </div>
+
+      {/* Filters Panel */}
+      {showFilters && (
+        <div className="reports-filters-panel">
+          <div className="reports-filters-header">
+            <h3 className="reports-filters-title">Filtros</h3>
+            <button 
+              className="reports-clear-filters-btn"
+              onClick={clearFilters}
+            >
+              Limpar Filtros
+            </button>
+          </div>
+          
+          <div className="reports-filters-content">
+            <div className="reports-filter-group">
+              <label className="reports-filter-label">Nome do Participante</label>
+              <input
+                type="text"
+                className="reports-filter-input"
+                placeholder="Digite o nome..."
+                value={filters.name}
+                onChange={(e) => setFilters({...filters, name: e.target.value})}
+              />
+            </div>
+
+            <div className="reports-filter-group">
+              <label className="reports-filter-label">Faixa de Pontuação</label>
+              <div className="reports-range-inputs">
+                <input
+                  type="number"
+                  className="reports-filter-input"
+                  placeholder="Mín"
+                  min="0"
+                  max="100"
+                  value={filters.scoreRange.min}
+                  onChange={(e) => setFilters({
+                    ...filters, 
+                    scoreRange: {...filters.scoreRange, min: parseInt(e.target.value) || 0}
+                  })}
+                />
+                <span className="reports-range-separator">-</span>
+                <input
+                  type="number"
+                  className="reports-filter-input"
+                  placeholder="Máx"
+                  min="0"
+                  max="100"
+                  value={filters.scoreRange.max}
+                  onChange={(e) => setFilters({
+                    ...filters, 
+                    scoreRange: {...filters.scoreRange, max: parseInt(e.target.value) || 100}
+                  })}
+                />
+              </div>
+            </div>
+
+            <div className="reports-filter-group">
+              <label className="reports-filter-label">Status da Avaliação</label>
+              <select
+                className="reports-filter-select"
+                value={filters.status}
+                onChange={(e) => setFilters({...filters, status: e.target.value})}
+              >
+                <option value="all">Todos</option>
+                <option value="completed">Concluídas</option>
+                <option value="incomplete">Incompletas</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Stats */}
       <div className="reports-stats">
@@ -201,7 +305,7 @@ const Reports: React.FC = () => {
           {comparativeReport?.participants && (
             <ResponsiveContainer width="100%" height={300}>
               {chartType === 'bar' ? (
-                <BarChart data={comparativeReport.participants.map((p: any) => ({
+                <BarChart data={getFilteredParticipants().map((p: any) => ({
                   name: p.name.split(' ')[0],
                   fullName: p.name,
                   code: p.code,
@@ -243,7 +347,7 @@ const Reports: React.FC = () => {
               ) : (
                 <PieChart>
                   <Pie
-                    data={comparativeReport.participants.map((p: any) => ({
+                    data={getFilteredParticipants().map((p: any) => ({
                       name: p.name.split(' ')[0],
                       fullName: p.name,
                       code: p.code,
@@ -259,7 +363,7 @@ const Reports: React.FC = () => {
                     fill="#8884d8"
                     dataKey="value"
                   >
-                    {comparativeReport.participants.map((entry: any, index: number) => (
+                    {getFilteredParticipants().map((entry: any, index: number) => (
                       <Cell key={`cell-${index}`} fill={`hsl(${index * 45}, 70%, 60%)`} />
                     ))}
                   </Pie>
@@ -343,7 +447,7 @@ const Reports: React.FC = () => {
         </div>
         
         <div className="reports-list-content">
-          {!comparativeReport?.participants || comparativeReport.participants.length === 0 ? (
+          {!comparativeReport?.participants || getFilteredParticipants().length === 0 ? (
             <div className="reports-empty-state">
               <div className="reports-empty-icon">
                 <FileText className="w-16 h-16 text-gray-400" />
@@ -366,7 +470,7 @@ const Reports: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {comparativeReport.participants.map((participant: any) => (
+                  {getFilteredParticipants().map((participant: any) => (
                     <tr key={participant.id}>
                       <td>
                         <div className="report-info">
