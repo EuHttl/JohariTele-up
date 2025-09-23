@@ -19,6 +19,8 @@ import {
   Heart,
   Brain,
   Copy,
+  Lightbulb,
+  TrendingUp,
 } from 'lucide-react';
 import '../styles/dashboard.css';
 
@@ -260,26 +262,26 @@ const Dashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* Participants Table */}
+      {/* Insights Section */}
       <div className="dashboard-participants-section">
         <div className="dashboard-participants-card">
           <div className="dashboard-participants-header">
             <div className="dashboard-participants-title-section">
               <div className="dashboard-participants-title-group">
                 <div className="dashboard-participants-title-icon">
-                  <Users className="w-5 h-5 text-white" />
+                  <Lightbulb className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <h3 className="dashboard-participants-title">Participantes</h3>
-                  <p className="dashboard-participants-subtitle">Lista de todos os participantes cadastrados</p>
+                  <h3 className="dashboard-participants-title">Insights da Avaliação</h3>
+                  <p className="dashboard-participants-subtitle">Análise e métricas do progresso das avaliações</p>
                 </div>
               </div>
               <Link 
-                to="/app/participants" 
+                to="/app/reports" 
                 className="dashboard-participants-add-btn"
               >
-                <Plus className="w-4 h-4 mr-2" />
-                Adicionar
+                <BarChart3 className="w-4 h-4 mr-2" />
+                Ver Relatórios
               </Link>
             </div>
           </div>
@@ -292,7 +294,7 @@ const Dashboard: React.FC = () => {
                 </div>
                 <h3 className="dashboard-empty-title">Nenhum participante cadastrado</h3>
                 <p className="dashboard-empty-description">
-                  Comece adicionando participantes ao sistema para realizar as avaliações.
+                  Comece adicionando participantes ao sistema para ver insights das avaliações.
                 </p>
                 <Link 
                   to="/app/participants" 
@@ -303,77 +305,144 @@ const Dashboard: React.FC = () => {
                 </Link>
               </div>
             ) : (
-              <div className="dashboard-table-responsive">
-                <table className="dashboard-table">
-                  <thead>
-                    <tr>
-                      <th>PARTICIPANTE</th>
-                      <th>EMAIL</th>
-                      <th>CÓDIGO</th>
-                      <th>STATUS</th>
-                      <th>AÇÕES</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {participantsArray.map((participant) => (
-                      <tr key={participant.id}>
-                        <td>
-                          <div className="dashboard-participant-info">
-                            <div className="dashboard-participant-avatar">
-                              {participant.name.charAt(0).toUpperCase()}
-                            </div>
-                            <div className="dashboard-participant-details">
-                              <p className="dashboard-participant-name">{participant.name}</p>
-                              <p className="dashboard-participant-email">{participant.email}</p>
-                            </div>
+              <div className="dashboard-insights-grid">
+                {/* Progress Overview */}
+                <div className="dashboard-insight-card">
+                  <div className="dashboard-insight-header">
+                    <div className="dashboard-insight-icon">
+                      <TrendingUp className="w-6 h-6" />
+                    </div>
+                    <h3 className="dashboard-insight-title">Progresso Geral</h3>
+                  </div>
+                  <div className="dashboard-insight-content">
+                    <div className="dashboard-progress-item">
+                      <div className="dashboard-progress-label">
+                        <CheckCircle className="w-4 h-4 text-green-500 mr-2" />
+                        Avaliações Completas
+                      </div>
+                      <div className="dashboard-progress-value">
+                        {stats?.completed_self || 0} / {stats?.total_participants || 0}
+                      </div>
+                      <div className="dashboard-progress-bar">
+                        <div 
+                          className="dashboard-progress-fill"
+                          style={{ width: `${getCompletionPercentage(stats?.completed_self || 0, stats?.total_participants || 1)}%` }}
+                        ></div>
+                      </div>
+                    </div>
+                    <div className="dashboard-progress-item">
+                      <div className="dashboard-progress-label">
+                        <Users className="w-4 h-4 text-blue-500 mr-2" />
+                        Avaliações por Pares
+                      </div>
+                      <div className="dashboard-progress-value">
+                        {stats?.completed_peer || 0} / {stats?.total_participants || 0}
+                      </div>
+                      <div className="dashboard-progress-bar">
+                        <div 
+                          className="dashboard-progress-fill"
+                          style={{ width: `${getCompletionPercentage(stats?.completed_peer || 0, stats?.total_participants || 1)}%` }}
+                        ></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Status Distribution */}
+                <div className="dashboard-insight-card">
+                  <div className="dashboard-insight-header">
+                    <div className="dashboard-insight-icon">
+                      <Target className="w-6 h-6" />
+                    </div>
+                    <h3 className="dashboard-insight-title">Distribuição de Status</h3>
+                  </div>
+                  <div className="dashboard-insight-content">
+                    <div className="dashboard-status-distribution">
+                      <div className="dashboard-status-item">
+                        <div className="dashboard-status-dot complete"></div>
+                        <span className="dashboard-status-label">Completos</span>
+                        <span className="dashboard-status-count">
+                          {participantsArray.filter(p => p.has_completed_self_assessment && p.has_completed_peer_assessments).length}
+                        </span>
+                      </div>
+                      <div className="dashboard-status-item">
+                        <div className="dashboard-status-dot in-progress"></div>
+                        <span className="dashboard-status-label">Em Progresso</span>
+                        <span className="dashboard-status-count">
+                          {participantsArray.filter(p => p.has_completed_self_assessment && !p.has_completed_peer_assessments).length}
+                        </span>
+                      </div>
+                      <div className="dashboard-status-item">
+                        <div className="dashboard-status-dot pending"></div>
+                        <span className="dashboard-status-label">Pendentes</span>
+                        <span className="dashboard-status-count">
+                          {participantsArray.filter(p => !p.has_completed_self_assessment).length}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Quick Actions */}
+                <div className="dashboard-insight-card">
+                  <div className="dashboard-insight-header">
+                    <div className="dashboard-insight-icon">
+                      <Sparkles className="w-6 h-6" />
+                    </div>
+                    <h3 className="dashboard-insight-title">Ações Rápidas</h3>
+                  </div>
+                  <div className="dashboard-insight-content">
+                    <div className="dashboard-quick-actions">
+                      <Link to="/app/participants" className="dashboard-quick-action">
+                        <Users className="w-5 h-5" />
+                        <span>Gerenciar Participantes</span>
+                      </Link>
+                      <Link to="/app/reports" className="dashboard-quick-action">
+                        <BarChart3 className="w-5 h-5" />
+                        <span>Ver Relatórios</span>
+                      </Link>
+                      <Link to="/app/admin" className="dashboard-quick-action">
+                        <Award className="w-5 h-5" />
+                        <span>Painel Admin</span>
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Recent Activity */}
+                <div className="dashboard-insight-card">
+                  <div className="dashboard-insight-header">
+                    <div className="dashboard-insight-icon">
+                      <Clock className="w-6 h-6" />
+                    </div>
+                    <h3 className="dashboard-insight-title">Atividade Recente</h3>
+                  </div>
+                  <div className="dashboard-insight-content">
+                    <div className="dashboard-activity-list">
+                      {participantsArray.slice(0, 3).map((participant) => (
+                        <div key={participant.id} className="dashboard-activity-item">
+                          <div className="dashboard-activity-avatar">
+                            {participant.name.charAt(0).toUpperCase()}
                           </div>
-                        </td>
-                        <td className="dashboard-participant-email">{participant.email}</td>
-                        <td>
-                          <span className="dashboard-participant-code">{participant.code}</span>
-                        </td>
-                        <td>{getStatusBadge(participant)}</td>
-                        <td>
-                          <div className="dashboard-actions">
-                            <button
-                              onClick={() => {
-                                navigator.clipboard.writeText(participant.code);
-                                // Você pode adicionar uma notificação aqui se quiser
-                              }}
-                              className="dashboard-action-btn copy"
-                              title="Copiar código"
-                            >
-                              <Copy className="w-4 h-4" />
-                            </button>
+                          <div className="dashboard-activity-info">
+                            <p className="dashboard-activity-name">{participant.name}</p>
+                            <p className="dashboard-activity-status">
+                              {getStatusBadge(participant)}
+                            </p>
+                          </div>
+                          <div className="dashboard-activity-action">
                             <Link
                               to={`/assessment/${participant.code}`}
-                              className="dashboard-action-btn view"
-                              title="Visualizar Avaliação"
+                              className="dashboard-activity-btn"
                             >
                               <Eye className="w-4 h-4" />
                             </Link>
-                            {participant.has_completed_self_assessment && participant.has_completed_peer_assessments ? (
-                              <Link
-                                to={`/report/${participant.code}`}
-                                className="dashboard-action-btn report"
-                                title="Ver Relatório"
-                              >
-                                <FileText className="w-4 h-4" />
-                              </Link>
-                            ) : (
-                              <span 
-                                className="dashboard-action-btn disabled"
-                                title="Relatório indisponível - avaliação incompleta"
-                              >
-                                <FileText className="w-4 h-4" />
-                              </span>
-                            )}
                           </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
           </div>
