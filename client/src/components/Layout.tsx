@@ -38,7 +38,7 @@ const Layout: React.FC = () => {
           {/* Logo e título */}
           <div className="header-logo">
             <div className="header-logo-text">
-              <h1>Janela de Johari</h1>
+              <h1>Janela de Johari - TeleUp</h1>
               <p>Sistema de Avaliação Comportamental</p>
             </div>
           </div>

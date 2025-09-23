@@ -297,3 +297,75 @@
     font-size: 1.125rem;
   }
 }
+
+/* iPhone 13/14 specific breakpoints */
+@media (max-width: 428px) {
+  .modal {
+    margin: 0.5rem;
+    max-height: calc(100vh - 1rem);
+  }
+  
+  .modal-header {
+    padding: 0.75rem;
+  }
+  
+  .modal-body {
+    padding: 0.75rem;
+  }
+  
+  .modal-footer {
+    padding: 0.75rem;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .modal-btn {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .form-group {
+    margin-bottom: 1rem;
+  }
+  
+  .form-label {
+    font-size: 0.875rem;
+  }
+  
+  .form-input,
+  .form-select,
+  .form-textarea {
+    padding: 0.75rem;
+    font-size: 0.875rem;
+  }
+}
+
+@media (max-width: 390px) {
+  .modal {
+    margin: 0.25rem;
+    max-height: calc(100vh - 0.5rem);
+  }
+  
+  .modal-header {
+    padding: 0.5rem;
+  }
+  
+  .modal-body {
+    padding: 0.5rem;
+  }
+  
+  .modal-footer {
+    padding: 0.5rem;
+  }
+  
+  .modal-title {
+    font-size: 1rem;
+  }
+  
+  .form-input,
+  .form-select,
+  .form-textarea {
+    padding: 0.5rem;
+    font-size: 0.8125rem;
+  }
+}

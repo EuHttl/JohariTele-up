@@ -802,3 +802,164 @@
     padding: 1rem;
   }
 }
+
+/* iPhone 13/14 specific breakpoints */
+@media (max-width: 428px) {
+  .reports-container {
+    padding: 0.75rem;
+  }
+  
+  .reports-title {
+    font-size: 1.5rem;
+  }
+  
+  .reports-subtitle {
+    font-size: 0.875rem;
+  }
+  
+  .reports-header {
+    gap: 0.75rem;
+  }
+  
+  .reports-actions {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .reports-filter-btn,
+  .reports-export-btn {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .reports-stats {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+  
+  .reports-stat-card {
+    padding: 1rem;
+  }
+  
+  .reports-filters-panel {
+    padding: 1rem;
+  }
+  
+  .reports-filters-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+  
+  .reports-clear-filters-btn {
+    width: 100%;
+    text-align: center;
+  }
+  
+  .reports-filters-content {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .reports-range-inputs {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .reports-range-separator {
+    display: none;
+  }
+  
+  .reports-chart-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  
+  .reports-chart-actions {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .reports-chart-btn {
+    flex: 1;
+  }
+  
+  .reports-table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .reports-table {
+    min-width: 600px;
+  }
+  
+  .reports-table th,
+  .reports-table td {
+    padding: 0.5rem 0.25rem;
+    font-size: 0.75rem;
+  }
+  
+  .reports-legend-grid {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+}
+
+@media (max-width: 390px) {
+  .reports-container {
+    padding: 0.5rem;
+  }
+  
+  .reports-title {
+    font-size: 1.25rem;
+  }
+  
+  .reports-subtitle {
+    font-size: 0.8125rem;
+  }
+  
+  .reports-stats {
+    gap: 0.5rem;
+  }
+  
+  .reports-stat-card {
+    padding: 0.75rem;
+  }
+  
+  .reports-stat-number {
+    font-size: 1.5rem;
+  }
+  
+  .reports-stat-label {
+    font-size: 0.875rem;
+  }
+  
+  .reports-stat-description {
+    font-size: 0.75rem;
+  }
+  
+  .reports-filters-panel {
+    padding: 0.75rem;
+  }
+  
+  .reports-filter-input,
+  .reports-filter-select {
+    padding: 0.5rem;
+    font-size: 0.8125rem;
+  }
+  
+  .reports-table th,
+  .reports-table td {
+    padding: 0.375rem 0.25rem;
+    font-size: 0.6875rem;
+  }
+  
+  .reports-actions-cell {
+    gap: 0.125rem;
+  }
+  
+  .reports-action-btn {
+    padding: 0.25rem;
+  }
+}
