@@ -85,9 +85,9 @@ const Reports: React.FC = () => {
 
   const stats = {
     total: comparativeReport?.participants.length || 0,
-    completed: comparativeReport?.participants.filter(p => p.has_completed_self_assessment && p.has_completed_peer_assessments).length || 0,
-    avgScore: comparativeReport?.participants.reduce((acc, p) => acc + (p.average_score || 0), 0) / (comparativeReport?.participants.length || 1) || 0,
-    insights: characteristicAnalysis?.insights.length || 0
+    completed: comparativeReport?.summary.completed_assessments || 0,
+    avgScore: comparativeReport?.participants.reduce((acc, p) => acc + (p.self_awareness_score || 0), 0) / (comparativeReport?.participants.length || 1) || 0,
+    insights: characteristicAnalysis?.most_selected.length || 0
   };
 
   return (
