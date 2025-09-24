@@ -19,6 +19,7 @@ import {
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import PDFExportButton, { ComparativeReportPDFButton, ElementPDFButton } from '../components/PDFExportButton';
 import AdvancedFilters, { FilterOptions } from '../components/AdvancedFilters';
+import ResponsiveTable from '../components/ResponsiveTable';
 import '../styles/reports.css';
 import '../styles/pdf-export.css';
 import '../styles/advanced-filters.css';
@@ -698,89 +699,117 @@ const Reports: React.FC = () => {
                 </p>
               </div>
               
-              <div className="participants-table-responsive">
-                <table className="participants-table">
-                <thead>
-                  <tr>
-                    <th>Participante</th>
-                    <th>Email</th>
-                    <th>Pontuação</th>
-                      <th>Auto</th>
-                      <th>Pares</th>
-                      <th>Status</th>
-                    <th>Ações</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {getFilteredParticipants().map((participant: any) => (
-                    <tr key={participant.id}>
-                      <td>
-                          <div className="participant-info">
-                            <div className="participant-avatar">
-                            {participant.name.charAt(0).toUpperCase()}
-                          </div>
-                            <div className="participant-details">
-                              <p className="participant-name">{participant.name}</p>
-                              <p className="participant-code">{participant.code}</p>
-                          </div>
+              <ResponsiveTable
+                columns={[
+                  {
+                    key: 'name',
+                    label: 'Participante',
+                    sortable: true,
+                    render: (value, participant) => (
+                      <div className="participant-info">
+                        <div className="participant-avatar">
+                          {participant.name.charAt(0).toUpperCase()}
                         </div>
-                      </td>
-                        <td className="participant-email">{participant.email || 'N/A'}</td>
-                        <td>
-                          <div className="participant-score">
-                            <span className="participant-score-value">
-                              {Math.round((participant.self_awareness_score + participant.peer_perception_score) / 2)}
-                            </span>
-                          {getScoreBadge((participant.self_awareness_score + participant.peer_perception_score) / 2)}
+                        <div className="participant-details">
+                          <p className="participant-name">{participant.name}</p>
+                          <p className="participant-code">{participant.code}</p>
                         </div>
-                      </td>
-                        <td className="participant-self-score">
-                          {Math.round(participant.self_awareness_score)}%
-                        </td>
-                        <td className="participant-peer-score">
-                          {Math.round(participant.peer_perception_score)}%
-                        </td>
-                        <td>
-                          <span className={`participant-status ${participant.self_awareness_score > 0 && participant.peer_perception_score > 0 ? 'completed' : 'incomplete'}`}>
-                            {participant.self_awareness_score > 0 && participant.peer_perception_score > 0 ? 'Completo' : 'Incompleto'}
-                          </span>
-                      </td>
-                      <td>
-                          <div className="participant-actions">
-                          <Link
-                            to={`/report/${participant.code}`}
-                              className="participant-action-btn report"
-                              title="Ver relatório individual"
-                            >
-                              <FileText className="w-4 h-4" />
-                            </Link>
-                            <PDFExportButton
-                              type="individual"
-                              data={{
-                                title: `Relatório Individual - ${participant.name}`,
-                                subtitle: 'Análise de Autoconsciência e Desenvolvimento',
-                                participantName: participant.name,
-                                participantCode: participant.code,
-                                generatedAt: new Date(),
-                                content: `Relatório individual de ${participant.name} (${participant.code})\n\nPontuação Geral: ${Math.round((participant.self_awareness_score + participant.peer_perception_score) / 2)}%\nAutoavaliação: ${Math.round(participant.self_awareness_score)}%\nPercepção dos Pares: ${Math.round(participant.peer_perception_score)}%\n\nStatus: ${participant.self_awareness_score > 0 && participant.peer_perception_score > 0 ? 'Completo' : 'Incompleto'}`
-                              }}
-                              className="participant-action-btn download"
-                          >
-                            <Download className="w-4 h-4" />
-                            </PDFExportButton>
-                          <button
-                              className="participant-action-btn share"
-                            title="Compartilhar relatório"
-                          >
-                            <Share className="w-4 h-4" />
-                          </button>
+                      </div>
+                    )
+                  },
+                  {
+                    key: 'email',
+                    label: 'Email',
+                    sortable: true,
+                    mobile: false,
+                    render: (value) => <span className="participant-email">{value || 'N/A'}</span>
+                  },
+                  {
+                    key: 'score',
+                    label: 'Pontuação',
+                    sortable: true,
+                    render: (value, participant) => {
+                      const score = Math.round((participant.self_awareness_score + participant.peer_perception_score) / 2);
+                      return (
+                        <div className="participant-score">
+                          <span className="participant-score-value">{score}</span>
+                          {getScoreBadge(score)}
                         </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              </div>
+                      );
+                    }
+                  },
+                  {
+                    key: 'self_score',
+                    label: 'Auto',
+                    sortable: true,
+                    mobile: false,
+                    render: (value, participant) => (
+                      <span className="participant-self-score">
+                        {Math.round(participant.self_awareness_score)}%
+                      </span>
+                    )
+                  },
+                  {
+                    key: 'peer_score',
+                    label: 'Pares',
+                    sortable: true,
+                    mobile: false,
+                    render: (value, participant) => (
+                      <span className="participant-peer-score">
+                        {Math.round(participant.peer_perception_score)}%
+                      </span>
+                    )
+                  },
+                  {
+                    key: 'status',
+                    label: 'Status',
+                    render: (value, participant) => (
+                      <span className={`participant-status ${participant.self_awareness_score > 0 && participant.peer_perception_score > 0 ? 'completed' : 'incomplete'}`}>
+                        {participant.self_awareness_score > 0 && participant.peer_perception_score > 0 ? 'Completo' : 'Incompleto'}
+                      </span>
+                    )
+                  },
+                  {
+                    key: 'actions',
+                    label: 'Ações',
+                    mobile: false,
+                    render: (value, participant) => (
+                      <div className="participant-actions">
+                        <Link
+                          to={`/report/${participant.code}`}
+                          className="participant-action-btn report"
+                          title="Ver relatório individual"
+                        >
+                          <FileText className="w-4 h-4" />
+                        </Link>
+                        <PDFExportButton
+                          type="individual"
+                          data={{
+                            title: `Relatório Individual - ${participant.name}`,
+                            subtitle: 'Análise de Autoconsciência e Desenvolvimento',
+                            participantName: participant.name,
+                            participantCode: participant.code,
+                            generatedAt: new Date(),
+                            content: `Relatório individual de ${participant.name} (${participant.code})\n\nPontuação Geral: ${Math.round((participant.self_awareness_score + participant.peer_perception_score) / 2)}%\nAutoavaliação: ${Math.round(participant.self_awareness_score)}%\nPercepção dos Pares: ${Math.round(participant.peer_perception_score)}%\n\nStatus: ${participant.self_awareness_score > 0 && participant.peer_perception_score > 0 ? 'Completo' : 'Incompleto'}`
+                          }}
+                          className="participant-action-btn download"
+                        >
+                          <Download className="w-4 h-4" />
+                        </PDFExportButton>
+                        <button
+                          className="participant-action-btn share"
+                          title="Compartilhar relatório"
+                        >
+                          <Share className="w-4 h-4" />
+                        </button>
+                      </div>
+                    )
+                  }
+                ]}
+                data={getFilteredParticipants()}
+                className="participants-table"
+                emptyMessage="Nenhum participante encontrado"
+              />
             </div>
           )}
 

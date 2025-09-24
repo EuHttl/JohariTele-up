@@ -1,6 +1,7 @@
 import React from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import MobileNavigation from './MobileNavigation';
 import { 
   LayoutDashboard, 
   Users, 
@@ -32,6 +33,9 @@ const Layout: React.FC = () => {
 
   return (
     <div className="app">
+      {/* Mobile Navigation */}
+      <MobileNavigation isAuthenticated={!!user} onLogout={handleLogout} />
+      
       {/* Header fixo */}
       <header className="header-fixed">
         <div className="header-container">

@@ -1021,3 +1021,41 @@
     display: none;
   }
 }
+
+/* Mobile Navigation - Hide desktop nav on mobile */
+@media (max-width: 768px) {
+  .header-nav {
+    display: none;
+  }
+  
+  .header-logo-text h1 {
+    font-size: 1rem;
+  }
+  
+  .header-logo-text p {
+    display: none;
+  }
+  
+  .header-container {
+    padding: 0 4rem 0 1rem; /* Space for mobile menu button */
+  }
+  
+  .main-content {
+    padding: 0.75rem;
+    margin-top: 70px;
+  }
+}
+
+@media (max-width: 480px) {
+  .header-logo-text h1 {
+    font-size: 0.875rem;
+  }
+  
+  .header-container {
+    padding: 0 3.5rem 0 0.75rem;
+  }
+  
+  .main-content {
+    padding: 0.5rem;
+  }
+}

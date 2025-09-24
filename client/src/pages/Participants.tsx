@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { participantsAPI } from '../services/api';
 import { Participant } from '../types';
 import Modal from '../components/Modal';
+import ResponsiveTable from '../components/ResponsiveTable';
 import { 
   Plus, 
   Edit, 
@@ -274,75 +275,86 @@ const Participants: React.FC = () => {
               )}
             </div>
           ) : (
-            <div className="participants-table-responsive">
-              <table className="participants-table">
-                <thead>
-                  <tr>
-                    <th>Participante</th>
-                    <th>Email</th>
-                    <th>Código</th>
-                    <th>Status</th>
-                    <th>Ações</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredParticipants.map((participant) => (
-                    <tr key={participant.id}>
-                      <td>
-                        <div className="participant-info">
-                          <div className="participant-avatar">
-                            {participant.name.charAt(0).toUpperCase()}
-                          </div>
-                          <div className="participant-details">
-                            <p className="participant-name">{participant.name}</p>
-                            <p className="participant-email">{participant.email}</p>
-                          </div>
-                        </div>
-                      </td>
-                      <td>{participant.email}</td>
-                      <td>
-                        <span className="participant-code">{participant.code}</span>
-                      </td>
-                      <td>{getStatusBadge(participant)}</td>
-                      <td>
-                        <div className="participants-actions-cell">
-                          <button
-                            onClick={() => copyToClipboard(participant.code)}
-                            className="participants-action-btn view"
-                            title="Copiar código"
-                          >
-                            <Copy className="w-4 h-4" />
-                          </button>
-                          <a
-                            href={`/report/${participant.code}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="participants-action-btn report"
-                            title="Visualizar relatório individual"
-                          >
-                            <FileText className="w-4 h-4" />
-                          </a>
-                          <button
-                            onClick={() => handleEdit(participant)}
-                            className="participants-action-btn edit"
-                            title="Editar usuário"
-                          >
-                            <Edit className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() => handleDelete(participant.id)}
-                            className="participants-action-btn delete"
-                            title="Excluir participante"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <ResponsiveTable
+              columns={[
+                {
+                  key: 'name',
+                  label: 'Participante',
+                  sortable: true,
+                  render: (value, participant) => (
+                    <div className="participant-info">
+                      <div className="participant-avatar">
+                        {participant.name.charAt(0).toUpperCase()}
+                      </div>
+                      <div className="participant-details">
+                        <p className="participant-name">{participant.name}</p>
+                        <p className="participant-email">{participant.email}</p>
+                      </div>
+                    </div>
+                  )
+                },
+                {
+                  key: 'email',
+                  label: 'Email',
+                  sortable: true,
+                  mobile: false
+                },
+                {
+                  key: 'code',
+                  label: 'Código',
+                  sortable: true,
+                  render: (value) => <span className="participant-code">{value}</span>
+                },
+                {
+                  key: 'status',
+                  label: 'Status',
+                  render: (value, participant) => getStatusBadge(participant)
+                },
+                {
+                  key: 'actions',
+                  label: 'Ações',
+                  mobile: false,
+                  render: (value, participant) => (
+                    <div className="participants-actions-cell">
+                      <button
+                        onClick={() => copyToClipboard(participant.code)}
+                        className="participants-action-btn view"
+                        title="Copiar código"
+                      >
+                        <Copy className="w-4 h-4" />
+                      </button>
+                      <a
+                        href={`/report/${participant.code}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="participants-action-btn report"
+                        title="Visualizar relatório individual"
+                      >
+                        <FileText className="w-4 h-4" />
+                      </a>
+                      <button
+                        onClick={() => handleEdit(participant)}
+                        className="participants-action-btn edit"
+                        title="Editar usuário"
+                      >
+                        <Edit className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(participant.id)}
+                        className="participants-action-btn delete"
+                        title="Excluir participante"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )
+                }
+              ]}
+              data={filteredParticipants}
+              className="participants-table"
+              emptyMessage="Nenhum participante encontrado"
+              loading={loading}
+            />
           )}
         </div>
       </div>

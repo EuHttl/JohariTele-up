@@ -1,0 +1,305 @@
+/* Responsive Table Styles */
+.responsive-table-container {
+  width: 100%;
+  overflow: hidden;
+}
+
+/* Desktop Table */
+.responsive-table-desktop {
+  display: block;
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.responsive-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: linear-gradient(135deg, #1a1a2e, #16213e);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.responsive-table-header {
+  background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+  color: white;
+  padding: 1rem;
+  text-align: left;
+  font-weight: 600;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  position: relative;
+}
+
+.responsive-table-header.sortable {
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.3s ease;
+}
+
+.responsive-table-header.sortable:hover {
+  background: linear-gradient(135deg, #7c3aed, #6d28d9);
+}
+
+.responsive-table-header-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.responsive-table-row {
+  border-bottom: 1px solid rgba(139, 92, 246, 0.1);
+  transition: all 0.3s ease;
+}
+
+.responsive-table-row:hover {
+  background: rgba(139, 92, 246, 0.05);
+}
+
+.responsive-table-row:last-child {
+  border-bottom: none;
+}
+
+.responsive-table-cell {
+  padding: 1rem;
+  color: #e5e7eb;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+/* Mobile Cards */
+.responsive-table-mobile {
+  display: none;
+  gap: 1rem;
+}
+
+.responsive-table-card {
+  background: linear-gradient(135deg, #1a1a2e, #16213e);
+  border: 1px solid rgba(139, 92, 246, 0.2);
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.responsive-table-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(139, 92, 246, 0.2);
+  border-color: rgba(139, 92, 246, 0.4);
+}
+
+.responsive-table-card-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid rgba(139, 92, 246, 0.1);
+}
+
+.responsive-table-card-item:last-child {
+  border-bottom: none;
+}
+
+.responsive-table-card-label {
+  font-weight: 600;
+  color: #8b5cf6;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  min-width: 120px;
+}
+
+.responsive-table-card-value {
+  color: #e5e7eb;
+  font-size: 0.875rem;
+  text-align: right;
+  flex: 1;
+  word-break: break-word;
+}
+
+/* Loading State */
+.responsive-table-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  color: #8b5cf6;
+  text-align: center;
+}
+
+.loading-spinner {
+  width: 2rem;
+  height: 2rem;
+  border: 3px solid rgba(139, 92, 246, 0.2);
+  border-top: 3px solid #8b5cf6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Empty State */
+.responsive-table-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  color: #6b7280;
+  text-align: center;
+  background: linear-gradient(135deg, #1a1a2e, #16213e);
+  border-radius: 12px;
+  border: 1px solid rgba(139, 92, 246, 0.2);
+}
+
+/* Responsive Breakpoints */
+@media (max-width: 768px) {
+  .responsive-table-desktop {
+    display: none;
+  }
+  
+  .responsive-table-mobile {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .responsive-table-card {
+    padding: 1rem;
+  }
+  
+  .responsive-table-card-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  
+  .responsive-table-card-label {
+    min-width: auto;
+    font-size: 0.75rem;
+  }
+  
+  .responsive-table-card-value {
+    text-align: left;
+    font-size: 0.875rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .responsive-table-card {
+    padding: 0.75rem;
+    margin: 0 -0.5rem;
+  }
+  
+  .responsive-table-card-item {
+    padding: 0.5rem 0;
+  }
+  
+  .responsive-table-card-label {
+    font-size: 0.75rem;
+  }
+  
+  .responsive-table-card-value {
+    font-size: 0.8rem;
+  }
+}
+
+/* Tablet adjustments */
+@media (min-width: 481px) and (max-width: 768px) {
+  .responsive-table-card {
+    padding: 1.25rem;
+  }
+  
+  .responsive-table-card-item {
+    flex-direction: row;
+    align-items: center;
+  }
+  
+  .responsive-table-card-label {
+    min-width: 140px;
+  }
+}
+
+/* Touch optimizations */
+@media (hover: none) and (pointer: coarse) {
+  .responsive-table-header.sortable {
+    padding: 1.25rem;
+  }
+  
+  .responsive-table-cell {
+    padding: 1.25rem;
+  }
+  
+  .responsive-table-card {
+    padding: 1.5rem;
+  }
+  
+  .responsive-table-card-item {
+    padding: 1rem 0;
+  }
+}
+
+/* High DPI displays */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .responsive-table {
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  }
+  
+  .responsive-table-card {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .responsive-table-row,
+  .responsive-table-card,
+  .responsive-table-header.sortable,
+  .loading-spinner {
+    transition: none;
+    animation: none;
+  }
+}
+
+/* Dark mode optimizations */
+@media (prefers-color-scheme: dark) {
+  .responsive-table {
+    background: linear-gradient(135deg, #0f0f23, #1a1a2e);
+  }
+  
+  .responsive-table-card {
+    background: linear-gradient(135deg, #0f0f23, #1a1a2e);
+  }
+}
+
+/* Print styles */
+@media print {
+  .responsive-table-desktop {
+    display: block !important;
+  }
+  
+  .responsive-table-mobile {
+    display: none !important;
+  }
+  
+  .responsive-table {
+    box-shadow: none;
+    border: 1px solid #000;
+  }
+  
+  .responsive-table-header {
+    background: #f0f0f0 !important;
+    color: #000 !important;
+  }
+  
+  .responsive-table-cell {
+    color: #000 !important;
+  }
+}
