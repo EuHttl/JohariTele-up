@@ -523,24 +523,6 @@ const Reports: React.FC = () => {
         </div>
       </div>
 
-      {/* Characteristics Analysis */}
-      {characteristicAnalysis && (
-        <div className="reports-characteristics">
-          <div className="reports-characteristic-card">
-            <div className="reports-characteristic-header">
-              <div className="reports-characteristic-icon">
-                <Target className="w-6 h-6 text-white" />
-              </div>
-              <h3 className="reports-characteristic-title">Análise de Características</h3>
-            </div>
-            <div className="reports-characteristic-content">
-              <p className="mb-2">Total de características mais selecionadas: {characteristicAnalysis.most_selected?.length || 0}</p>
-              <p className="mb-2">Total de características menos selecionadas: {characteristicAnalysis.least_selected?.length || 0}</p>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Score Legend */}
       <div className="reports-score-legend">
         <h3 className="reports-legend-title">Legenda de Pontuações</h3>
