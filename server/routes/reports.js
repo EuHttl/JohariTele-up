@@ -243,6 +243,7 @@ router.get('/comparative', async (req, res) => {
         p.id,
         p.name,
         p.code,
+        p.created_at,
         p.has_completed_self_assessment,
         p.has_completed_peer_assessments,
         COALESCE(COUNT(DISTINCT CASE WHEN sa.selected = true THEN sa.characteristic_id END), 0) as self_selected_count,
@@ -254,7 +255,7 @@ router.get('/comparative', async (req, res) => {
       FROM participants p
       LEFT JOIN self_assessments sa ON sa.participant_id = p.id
       LEFT JOIN peer_assessments pa ON pa.assessed_id = p.id
-      GROUP BY p.id, p.name, p.code, p.has_completed_self_assessment, p.has_completed_peer_assessments
+      GROUP BY p.id, p.name, p.code, p.created_at, p.has_completed_self_assessment, p.has_completed_peer_assessments
       ORDER BY p.name
     `;
   } else {
@@ -264,6 +265,7 @@ router.get('/comparative', async (req, res) => {
         p.id,
         p.name,
         p.code,
+        p.created_at,
         p.has_completed_self_assessment,
         p.has_completed_peer_assessments,
         COALESCE(COUNT(DISTINCT CASE WHEN sa.selected = 1 THEN sa.characteristic_id END), 0) as self_selected_count,
@@ -275,7 +277,7 @@ router.get('/comparative', async (req, res) => {
       FROM participants p
       LEFT JOIN self_assessments sa ON sa.participant_id = p.id
       LEFT JOIN peer_assessments pa ON pa.assessed_id = p.id
-      GROUP BY p.id, p.name, p.code, p.has_completed_self_assessment, p.has_completed_peer_assessments
+      GROUP BY p.id, p.name, p.code, p.created_at, p.has_completed_self_assessment, p.has_completed_peer_assessments
       ORDER BY p.name
     `;
   }
@@ -309,6 +311,7 @@ router.get('/comparative', async (req, res) => {
         id: row.id,
         name: row.name,
         code: row.code,
+        created_at: row.created_at,
         quadrants: {
           open: {
             count: row.open_area_count,
