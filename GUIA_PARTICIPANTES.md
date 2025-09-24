@@ -237,3 +237,11 @@ R: Sim, todas as informações são confidenciais e usadas apenas para desenvolv
 ---
 
 **📚 Boa sorte na sua jornada de autoconhecimento!**
+
+
+
+
+
+
+
+

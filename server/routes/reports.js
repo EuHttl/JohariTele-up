@@ -209,43 +209,45 @@ router.get('/comparative', async (req, res) => {
   let query;
   
   if (process.env.DATABASE_URL) {
-    // Query PostgreSQL - Corrigida para incluir todos os participantes
+    // Query PostgreSQL - Simplificada para garantir que todos os participantes sejam incluídos
     query = `
       SELECT 
         p.id,
         p.name,
         p.code,
+        p.has_completed_self_assessment,
+        p.has_completed_peer_assessments,
         COALESCE(COUNT(DISTINCT CASE WHEN sa.selected = true THEN sa.characteristic_id END), 0) as self_selected_count,
         COALESCE(COUNT(DISTINCT CASE WHEN pa.selected = true THEN pa.characteristic_id END), 0) as peer_selected_count,
-        COALESCE(COUNT(DISTINCT CASE WHEN sa.selected = true AND pa.selected = true THEN c.id END), 0) as open_area_count,
-        COALESCE(COUNT(DISTINCT CASE WHEN (sa.selected = false OR sa.selected IS NULL) AND pa.selected = true THEN c.id END), 0) as blind_area_count,
-        COALESCE(COUNT(DISTINCT CASE WHEN sa.selected = true AND (pa.selected = false OR pa.selected IS NULL) THEN c.id END), 0) as hidden_area_count,
-        COALESCE(COUNT(DISTINCT CASE WHEN (sa.selected = false OR sa.selected IS NULL) AND (pa.selected = false OR pa.selected IS NULL) THEN c.id END), 0) as unknown_area_count
+        COALESCE(COUNT(DISTINCT CASE WHEN sa.selected = true AND pa.selected = true THEN sa.characteristic_id END), 0) as open_area_count,
+        COALESCE(COUNT(DISTINCT CASE WHEN (sa.selected = false OR sa.selected IS NULL) AND pa.selected = true THEN pa.characteristic_id END), 0) as blind_area_count,
+        COALESCE(COUNT(DISTINCT CASE WHEN sa.selected = true AND (pa.selected = false OR pa.selected IS NULL) THEN sa.characteristic_id END), 0) as hidden_area_count,
+        COALESCE(COUNT(DISTINCT CASE WHEN (sa.selected = false OR sa.selected IS NULL) AND (pa.selected = false OR pa.selected IS NULL) THEN sa.characteristic_id END), 0) as unknown_area_count
       FROM participants p
-      CROSS JOIN characteristics c
-      LEFT JOIN self_assessments sa ON sa.participant_id = p.id AND sa.characteristic_id = c.id
-      LEFT JOIN peer_assessments pa ON pa.assessed_id = p.id AND pa.characteristic_id = c.id
-      GROUP BY p.id, p.name, p.code
+      LEFT JOIN self_assessments sa ON sa.participant_id = p.id
+      LEFT JOIN peer_assessments pa ON pa.assessed_id = p.id
+      GROUP BY p.id, p.name, p.code, p.has_completed_self_assessment, p.has_completed_peer_assessments
       ORDER BY p.name
     `;
   } else {
-    // Query SQLite - Corrigida para incluir todos os participantes
+    // Query SQLite - Simplificada para garantir que todos os participantes sejam incluídos
     query = `
       SELECT 
         p.id,
         p.name,
         p.code,
+        p.has_completed_self_assessment,
+        p.has_completed_peer_assessments,
         COALESCE(COUNT(DISTINCT CASE WHEN sa.selected = 1 THEN sa.characteristic_id END), 0) as self_selected_count,
         COALESCE(COUNT(DISTINCT CASE WHEN pa.selected = 1 THEN pa.characteristic_id END), 0) as peer_selected_count,
-        COALESCE(COUNT(DISTINCT CASE WHEN sa.selected = 1 AND pa.selected = 1 THEN c.id END), 0) as open_area_count,
-        COALESCE(COUNT(DISTINCT CASE WHEN (sa.selected = 0 OR sa.selected IS NULL) AND pa.selected = 1 THEN c.id END), 0) as blind_area_count,
-        COALESCE(COUNT(DISTINCT CASE WHEN sa.selected = 1 AND (pa.selected = 0 OR pa.selected IS NULL) THEN c.id END), 0) as hidden_area_count,
-        COALESCE(COUNT(DISTINCT CASE WHEN (sa.selected = 0 OR sa.selected IS NULL) AND (pa.selected = 0 OR pa.selected IS NULL) THEN c.id END), 0) as unknown_area_count
+        COALESCE(COUNT(DISTINCT CASE WHEN sa.selected = 1 AND pa.selected = 1 THEN sa.characteristic_id END), 0) as open_area_count,
+        COALESCE(COUNT(DISTINCT CASE WHEN (sa.selected = 0 OR sa.selected IS NULL) AND pa.selected = 1 THEN pa.characteristic_id END), 0) as blind_area_count,
+        COALESCE(COUNT(DISTINCT CASE WHEN sa.selected = 1 AND (pa.selected = 0 OR pa.selected IS NULL) THEN sa.characteristic_id END), 0) as hidden_area_count,
+        COALESCE(COUNT(DISTINCT CASE WHEN (sa.selected = 0 OR sa.selected IS NULL) AND (pa.selected = 0 OR pa.selected IS NULL) THEN sa.characteristic_id END), 0) as unknown_area_count
       FROM participants p
-      CROSS JOIN characteristics c
-      LEFT JOIN self_assessments sa ON sa.participant_id = p.id AND sa.characteristic_id = c.id
-      LEFT JOIN peer_assessments pa ON pa.assessed_id = p.id AND pa.characteristic_id = c.id
-      GROUP BY p.id, p.name, p.code
+      LEFT JOIN self_assessments sa ON sa.participant_id = p.id
+      LEFT JOIN peer_assessments pa ON pa.assessed_id = p.id
+      GROUP BY p.id, p.name, p.code, p.has_completed_self_assessment, p.has_completed_peer_assessments
       ORDER BY p.name
     `;
   }

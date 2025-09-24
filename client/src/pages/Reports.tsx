@@ -78,7 +78,8 @@ const Reports: React.FC = () => {
       const scoreMatch = score >= filters.scoreRange.min && score <= filters.scoreRange.max;
       
       // Verificar se o participante completou as avaliações baseado nos scores
-      const hasCompletedAssessments = participant.self_awareness_score > 0 && participant.peer_perception_score > 0;
+      // Considera completado se tem pelo menos uma avaliação (score >= 0)
+      const hasCompletedAssessments = participant.self_awareness_score >= 0 && participant.peer_perception_score >= 0;
       const statusMatch = filters.status === 'all' || 
         (filters.status === 'completed' && hasCompletedAssessments) ||
         (filters.status === 'incomplete' && !hasCompletedAssessments);
