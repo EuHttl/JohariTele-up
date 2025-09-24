@@ -87,6 +87,20 @@ const Reports: React.FC = () => {
     });
   };
 
+  // Função separada para dados do gráfico - sem filtros restritivos
+  const getChartData = () => {
+    if (!comparativeReport?.participants) return [];
+    
+    return comparativeReport.participants.map((p: any) => ({
+      name: p.name.split(' ')[0],
+      fullName: p.name,
+      code: p.code,
+      score: Math.round((p.self_awareness_score + p.peer_perception_score) / 2),
+      selfScore: Math.round(p.self_awareness_score),
+      peerScore: Math.round(p.peer_perception_score)
+    }));
+  };
+
   const clearFilters = () => {
     setFilters({
       scoreRange: { min: 0, max: 100 },
@@ -436,14 +450,7 @@ const Reports: React.FC = () => {
           {comparativeReport?.participants && (
             <ResponsiveContainer width="100%" height={300}>
               {chartType === 'bar' ? (
-                <BarChart data={getFilteredParticipants().map((p: any) => ({
-                  name: p.name.split(' ')[0],
-                  fullName: p.name,
-                  code: p.code,
-                  score: Math.round((p.self_awareness_score + p.peer_perception_score) / 2),
-                  selfScore: Math.round(p.self_awareness_score),
-                  peerScore: Math.round(p.peer_perception_score)
-                }))}>
+                <BarChart data={getChartData()}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis 
                     dataKey="name" 
@@ -478,23 +485,16 @@ const Reports: React.FC = () => {
               ) : (
                 <PieChart>
                   <Pie
-                    data={getFilteredParticipants().map((p: any) => ({
-                      name: p.name.split(' ')[0],
-                      fullName: p.name,
-                      code: p.code,
-                      value: Math.round((p.self_awareness_score + p.peer_perception_score) / 2),
-                      selfScore: Math.round(p.self_awareness_score),
-                      peerScore: Math.round(p.peer_perception_score)
-                    }))}
+                    data={getChartData()}
                     cx="50%"
                     cy="50%"
                     labelLine={false}
-                    label={({ name, value }) => `${name}: ${value}%`}
+                    label={({ name, score }) => `${name}: ${score}%`}
                     outerRadius={80}
                     fill="#8884d8"
-                    dataKey="value"
+                    dataKey="score"
                   >
-                    {getFilteredParticipants().map((entry: any, index: number) => (
+                    {getChartData().map((entry: any, index: number) => (
                       <Cell key={`cell-${index}`} fill={`hsl(${index * 45}, 70%, 60%)`} />
                     ))}
                   </Pie>

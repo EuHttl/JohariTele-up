@@ -162,13 +162,7 @@ router.post('/', async (req, res) => {
         return res.status(400).json({ error: 'Email já cadastrado' });
       }
 
-      // Verificar limite de 15 participantes
-      const countResult = await queryPostgres('SELECT COUNT(*) as count FROM participants');
-      const count = parseInt(countResult.rows[0].count);
-      
-      if (count >= 15) {
-        return res.status(400).json({ error: 'Limite de 15 participantes atingido' });
-      }
+      // Limite de participantes removido - sem restrições
 
       // Gerar código único
       const code = uuidv4().substring(0, 8).toUpperCase();
@@ -212,43 +206,33 @@ router.post('/', async (req, res) => {
           return res.status(400).json({ error: 'Email já cadastrado' });
         }
 
-        // Verificar limite de 15 participantes
-        db.get('SELECT COUNT(*) as count FROM participants', (err, countRow) => {
+        // Limite de participantes removido - sem restrições
+        
+        // Gerar código único
+        const code = uuidv4().substring(0, 8).toUpperCase();
+        const password = code; // Senha igual ao código em maiúsculo
+        
+        // Hash da senha
+        const bcrypt = require('bcryptjs');
+        const hashedPassword = bcrypt.hashSync(password, 10);
+        
+        const insertQuery = `
+          INSERT INTO participants (name, email, code, password)
+          VALUES (?, ?, ?, ?)
+        `;
+        
+        db.run(insertQuery, [name, email, code, hashedPassword], function(err) {
           if (err) {
-            console.error('Erro ao contar participantes:', err);
+            console.error('Erro ao criar participante:', err);
             return res.status(500).json({ error: 'Erro interno do servidor' });
           }
           
-          if (countRow.count >= 15) {
-            return res.status(400).json({ error: 'Limite de 15 participantes atingido' });
-          }
-
-          // Gerar código único
-          const code = uuidv4().substring(0, 8).toUpperCase();
-          const password = code; // Senha igual ao código em maiúsculo
-          
-          // Hash da senha
-          const bcrypt = require('bcryptjs');
-          const hashedPassword = bcrypt.hashSync(password, 10);
-          
-          const insertQuery = `
-            INSERT INTO participants (name, email, code, password)
-            VALUES (?, ?, ?, ?)
-          `;
-          
-          db.run(insertQuery, [name, email, code, hashedPassword], function(err) {
-            if (err) {
-              console.error('Erro ao criar participante:', err);
-              return res.status(500).json({ error: 'Erro interno do servidor' });
-            }
-            
-            res.status(201).json({
-              id: this.lastID,
-              name,
-              email,
-              code,
-              message: 'Participante criado com sucesso'
-            });
+          res.status(201).json({
+            id: this.lastID,
+            name,
+            email,
+            code,
+            message: 'Participante criado com sucesso'
           });
         });
       });

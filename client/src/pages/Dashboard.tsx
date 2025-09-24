@@ -185,17 +185,11 @@ const Dashboard: React.FC = () => {
             </div>
             <div className="dashboard-stats-numbers">
               <div className="dashboard-stats-number">{stats?.total_participants || 0}</div>
-              <div className="dashboard-stats-subtitle">de 12</div>
+              <div className="dashboard-stats-subtitle">cadastrados</div>
             </div>
           </div>
           <h3 className="dashboard-stats-title">Participantes</h3>
           <p className="dashboard-stats-description">Total cadastrados</p>
-          <div className="dashboard-progress-bar">
-            <div 
-              className="dashboard-progress-fill primary"
-              style={{ width: `${((stats?.total_participants || 0) / 12) * 100}%` }}
-            ></div>
-          </div>
         </div>
 
         {/* Autoavaliações */}
