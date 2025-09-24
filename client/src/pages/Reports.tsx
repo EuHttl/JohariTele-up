@@ -590,69 +590,96 @@ const Reports: React.FC = () => {
               </p>
             </div>
           ) : (
-            <div className="reports-table-responsive">
-              <table className="reports-table">
-                <thead>
-                  <tr>
-                    <th>Participante</th>
-                    <th>Email</th>
-                    <th>Pontuação</th>
-                    <th>Data</th>
-                    <th>Ações</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {getFilteredParticipants().map((participant: any) => (
-                    <tr key={participant.id}>
-                      <td>
-                        <div className="report-info">
-                          <div className="report-avatar">
-                            {participant.name.charAt(0).toUpperCase()}
+            <div className="reports-insights-grid">
+              {/* Insights de Performance */}
+              <div className="reports-insight-card">
+                <div className="reports-insight-header">
+                  <Target className="w-6 h-6 text-blue-500" />
+                  <h3 className="reports-insight-title">Performance Geral</h3>
+                </div>
+                <div className="reports-insight-content">
+                  <div className="reports-insight-stat">
+                    <span className="reports-insight-label">Pontuação Média</span>
+                    <span className="reports-insight-value">
+                      {Math.round(getChartData().reduce((acc, p) => acc + p.score, 0) / getChartData().length)}%
+                    </span>
+                  </div>
+                  <div className="reports-insight-stat">
+                    <span className="reports-insight-label">Participantes com Alta Performance</span>
+                    <span className="reports-insight-value">
+                      {getChartData().filter(p => p.score >= 70).length} de {getChartData().length}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Insights de Consistência */}
+              <div className="reports-insight-card">
+                <div className="reports-insight-header">
+                  <TrendingUp className="w-6 h-6 text-green-500" />
+                  <h3 className="reports-insight-title">Consistência</h3>
+                </div>
+                <div className="reports-insight-content">
+                  <div className="reports-insight-stat">
+                    <span className="reports-insight-label">Auto vs Peer Perception</span>
+                    <span className="reports-insight-value">
+                      {Math.round(getChartData().reduce((acc, p) => acc + Math.abs(p.selfScore - p.peerScore), 0) / getChartData().length)}% diferença
+                    </span>
+                  </div>
+                  <div className="reports-insight-stat">
+                    <span className="reports-insight-label">Maior Consistência</span>
+                    <span className="reports-insight-value">
+                      {getChartData().reduce((min, p) => Math.abs(p.selfScore - p.peerScore) < Math.abs(min.selfScore - min.peerScore) ? p : min, getChartData()[0])?.fullName || 'N/A'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Insights de Características */}
+              {characteristicAnalysis && (
+                <div className="reports-insight-card">
+                  <div className="reports-insight-header">
+                    <Lightbulb className="w-6 h-6 text-yellow-500" />
+                    <h3 className="reports-insight-title">Características Populares</h3>
+                  </div>
+                  <div className="reports-insight-content">
+                    <div className="reports-insight-stat">
+                      <span className="reports-insight-label">Mais Selecionada</span>
+                      <span className="reports-insight-value">
+                        {characteristicAnalysis.most_selected[0]?.name || 'N/A'}
+                      </span>
+                    </div>
+                    <div className="reports-insight-stat">
+                      <span className="reports-insight-label">Menos Selecionada</span>
+                      <span className="reports-insight-value">
+                        {characteristicAnalysis.least_selected[0]?.name || 'N/A'}
+                      </span>
                           </div>
-                          <div className="report-details">
-                            <p className="report-name">{participant.name}</p>
-                            <p className="report-code">{participant.code}</p>
                           </div>
                         </div>
-                      </td>
-                      <td>{participant.email || 'N/A'}</td>
-                      <td>
-                        <div className="report-score">
-                          <span className="report-score-value">{Math.round((participant.self_awareness_score + participant.peer_perception_score) / 2)}</span>
-                          {getScoreBadge((participant.self_awareness_score + participant.peer_perception_score) / 2)}
+              )}
+
+              {/* Insights de Progresso */}
+              <div className="reports-insight-card">
+                <div className="reports-insight-header">
+                  <BarChart3 className="w-6 h-6 text-purple-500" />
+                  <h3 className="reports-insight-title">Progresso</h3>
+                </div>
+                <div className="reports-insight-content">
+                  <div className="reports-insight-stat">
+                    <span className="reports-insight-label">Avaliações Completas</span>
+                    <span className="reports-insight-value">
+                      {getChartData().filter(p => p.selfScore > 0 && p.peerScore > 0).length} de {getChartData().length}
+                    </span>
+                  </div>
+                  <div className="reports-insight-stat">
+                    <span className="reports-insight-label">Taxa de Conclusão</span>
+                    <span className="reports-insight-value">
+                      {Math.round((getChartData().filter(p => p.selfScore > 0 && p.peerScore > 0).length / getChartData().length) * 100)}%
+                    </span>
+                  </div>
                         </div>
-                      </td>
-                      <td className="report-date">
-                        {participant.completed_at ? formatDate(participant.completed_at) : '-'}
-                      </td>
-                      <td>
-                        <div className="reports-actions-cell">
-                          <Link
-                            to={`/assessment/${participant.code}`}
-                            className="reports-action-btn view"
-                            title="Visualizar avaliação"
-                          >
-                            <Eye className="w-4 h-4" />
-                          </Link>
-                          <Link
-                            to={`/report/${participant.code}`}
-                            className="reports-action-btn download"
-                            title="Baixar relatório"
-                          >
-                            <Download className="w-4 h-4" />
-                          </Link>
-                          <button
-                            className="reports-action-btn share"
-                            title="Compartilhar relatório"
-                          >
-                            <Share className="w-4 h-4" />
-                          </button>
                         </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
             </div>
           )}
         </div>

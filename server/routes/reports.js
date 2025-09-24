@@ -166,10 +166,14 @@ async function processReportData(row, res, code) {
     const peerNotSelectedNames = [...new Set(peerNotSelected.map(id => characteristics[id] || `Característica ${id}`))];
     
     // Calcular quadrantes e remover duplicatas
+    // Área Aberta: selecionada por si mesmo E pelos pares
     const openArea = [...new Set(selfSelectedNames.filter(char => peerSelectedNames.includes(char)))];
+    // Área Cega: selecionada pelos pares, mas NÃO por si mesmo
     const blindArea = [...new Set(peerSelectedNames.filter(char => !selfSelectedNames.includes(char)))];
+    // Área Oculta: selecionada por si mesmo, mas NÃO pelos pares
     const hiddenArea = [...new Set(selfSelectedNames.filter(char => !peerSelectedNames.includes(char)))];
-    const unknownArea = [...new Set(selfNotSelectedNames.filter(char => !peerSelectedNames.includes(char)))];
+    // Área Desconhecida: NÃO selecionada por ninguém (nem por si mesmo, nem pelos pares)
+    const unknownArea = [...new Set(selfNotSelectedNames.filter(char => peerNotSelectedNames.includes(char)))];
     
     const report = {
     participant: {
