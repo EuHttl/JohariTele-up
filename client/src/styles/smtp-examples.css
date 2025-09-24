@@ -1,0 +1,325 @@
+/* SMTP Examples Styles */
+
+.smtp-examples {
+  background: linear-gradient(135deg, #1e1e3f 0%, #2d1b69 100%);
+  border-radius: 12px;
+  border: 1px solid #4c1d95;
+  padding: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+.smtp-examples-header {
+  margin-bottom: 1.5rem;
+}
+
+.smtp-examples-header h3 {
+  color: #e2e8f0;
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin: 0 0 0.5rem 0;
+}
+
+.smtp-examples-header p {
+  color: #a78bfa;
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+.smtp-examples-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.smtp-example-card {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid #4c1d95;
+  border-radius: 12px;
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+}
+
+.smtp-example-card:hover {
+  border-color: #a855f7;
+  box-shadow: 0 4px 12px rgba(168, 85, 247, 0.1);
+  transform: translateY(-2px);
+}
+
+.smtp-example-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.smtp-example-icon {
+  font-size: 2rem;
+  width: 3rem;
+  height: 3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(168, 85, 247, 0.1);
+  border-radius: 8px;
+  border: 1px solid rgba(168, 85, 247, 0.2);
+}
+
+.smtp-example-info h4 {
+  color: #e2e8f0;
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0 0 0.25rem 0;
+}
+
+.smtp-example-info p {
+  color: #a78bfa;
+  font-size: 0.75rem;
+  margin: 0;
+}
+
+.smtp-example-config {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.config-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.config-item label {
+  color: #a78bfa;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.config-value {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid #4c1d95;
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+}
+
+.config-value code {
+  flex: 1;
+  color: #e2e8f0;
+  font-size: 0.8125rem;
+  font-family: 'Courier New', monospace;
+  background: none;
+  border: none;
+  padding: 0;
+}
+
+.copy-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  background: rgba(168, 85, 247, 0.1);
+  border: 1px solid rgba(168, 85, 247, 0.2);
+  border-radius: 4px;
+  color: #a78bfa;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.copy-btn:hover {
+  background: rgba(168, 85, 247, 0.2);
+  border-color: #a855f7;
+  color: #e2e8f0;
+}
+
+.smtp-example-notes {
+  background: rgba(168, 85, 247, 0.05);
+  border: 1px solid rgba(168, 85, 247, 0.2);
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.smtp-example-notes h5 {
+  color: #e2e8f0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin: 0 0 0.5rem 0;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.smtp-example-notes ul {
+  margin: 0;
+  padding-left: 1rem;
+  color: #a78bfa;
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+
+.smtp-example-notes li {
+  margin-bottom: 0.25rem;
+}
+
+.smtp-example-links {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.example-link {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.5rem 0.75rem;
+  background: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  border-radius: 6px;
+  color: #3b82f6;
+  text-decoration: none;
+  font-size: 0.75rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.example-link:hover {
+  background: rgba(59, 130, 246, 0.2);
+  border-color: #3b82f6;
+  color: #60a5fa;
+  transform: translateY(-1px);
+}
+
+.smtp-examples-footer {
+  border-top: 1px solid #4c1d95;
+  padding-top: 1.5rem;
+}
+
+.smtp-examples-tip {
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.smtp-examples-tip h4 {
+  color: #10b981;
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin: 0 0 0.5rem 0;
+}
+
+.smtp-examples-tip p {
+  color: #34d399;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .smtp-examples {
+    padding: 1rem;
+  }
+  
+  .smtp-examples-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .smtp-example-card {
+    padding: 1rem;
+  }
+  
+  .smtp-example-header {
+    flex-direction: column;
+    text-align: center;
+    gap: 0.75rem;
+  }
+  
+  .smtp-example-icon {
+    width: 2.5rem;
+    height: 2.5rem;
+    font-size: 1.5rem;
+  }
+  
+  .config-value {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.5rem;
+  }
+  
+  .copy-btn {
+    align-self: flex-end;
+  }
+}
+
+@media (max-width: 480px) {
+  .smtp-examples-header h3 {
+    font-size: 1rem;
+  }
+  
+  .smtp-examples-header p {
+    font-size: 0.8125rem;
+  }
+  
+  .smtp-example-card {
+    padding: 0.75rem;
+  }
+  
+  .smtp-example-config {
+    gap: 0.5rem;
+  }
+  
+  .config-value {
+    padding: 0.375rem 0.5rem;
+  }
+  
+  .config-value code {
+    font-size: 0.75rem;
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .smtp-examples {
+    background: linear-gradient(135deg, #000000 0%, #1a1a1a 100%);
+  }
+  
+  .smtp-example-card {
+    background: rgba(0, 0, 0, 0.3);
+  }
+  
+  .smtp-example-notes {
+    background: rgba(168, 85, 247, 0.1);
+  }
+  
+  .smtp-examples-tip {
+    background: rgba(16, 185, 129, 0.15);
+  }
+}
+
+/* Print styles */
+@media print {
+  .smtp-examples {
+    background: white;
+    border: 1px solid #ccc;
+    color: black;
+  }
+  
+  .copy-btn,
+  .example-link {
+    display: none;
+  }
+  
+  .smtp-example-card {
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+  }
+}

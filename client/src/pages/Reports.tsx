@@ -17,7 +17,11 @@ import {
   Target
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import PDFExportButton, { ComparativeReportPDFButton, ElementPDFButton } from '../components/PDFExportButton';
+import AdvancedFilters, { FilterOptions } from '../components/AdvancedFilters';
 import '../styles/reports.css';
+import '../styles/pdf-export.css';
+import '../styles/advanced-filters.css';
 
 const Reports: React.FC = () => {
   const [comparativeReport, setComparativeReport] = useState<ComparativeReport | null>(null);
@@ -26,10 +30,15 @@ const Reports: React.FC = () => {
   const [error, setError] = useState('');
   const [chartType, setChartType] = useState<'bar' | 'pie'>('bar');
   const [showFilters, setShowFilters] = useState(false);
-  const [filters, setFilters] = useState({
+  const [filters, setFilters] = useState<FilterOptions>({
+    dateRange: { start: '', end: '' },
     scoreRange: { min: 0, max: 100 },
+    status: 'all',
     name: '',
-    status: 'all' // all, completed, incomplete
+    sortBy: 'name',
+    sortOrder: 'asc',
+    showOnlyHighPerformers: false,
+    showOnlyIncomplete: false
   });
 
   useEffect(() => {
@@ -72,20 +81,67 @@ const Reports: React.FC = () => {
   const getFilteredParticipants = () => {
     if (!comparativeReport?.participants) return [];
     
-    return comparativeReport.participants.filter((participant: any) => {
+    let filtered = comparativeReport.participants.filter((participant: any) => {
       const score = Math.round((participant.self_awareness_score + participant.peer_perception_score) / 2);
-      const nameMatch = participant.name.toLowerCase().includes(filters.name.toLowerCase());
+      const isCompleted = participant.self_awareness_score > 0 && participant.peer_perception_score > 0;
+      
+      // Filter by name
+      const nameMatch = !filters.name || participant.name.toLowerCase().includes(filters.name.toLowerCase());
+      
+      // Filter by score range
       const scoreMatch = score >= filters.scoreRange.min && score <= filters.scoreRange.max;
       
-      // Verificar se o participante completou as avaliações baseado nos scores
-      // Considera completado se tem pelo menos uma avaliação (score >= 0)
-      const hasCompletedAssessments = participant.self_awareness_score >= 0 && participant.peer_perception_score >= 0;
+      // Filter by status
       const statusMatch = filters.status === 'all' || 
-        (filters.status === 'completed' && hasCompletedAssessments) ||
-        (filters.status === 'incomplete' && !hasCompletedAssessments);
+        (filters.status === 'completed' && isCompleted) ||
+        (filters.status === 'incomplete' && !isCompleted);
       
-      return nameMatch && scoreMatch && statusMatch;
+      // Filter by date range
+      let dateMatch = true;
+      if (filters.dateRange.start || filters.dateRange.end) {
+        const participantDate = new Date(participant.created_at);
+        if (filters.dateRange.start && participantDate < new Date(filters.dateRange.start)) {
+          dateMatch = false;
+        }
+        if (filters.dateRange.end && participantDate > new Date(filters.dateRange.end)) {
+          dateMatch = false;
+        }
+      }
+      
+      // Special filters
+      const highPerformerMatch = !filters.showOnlyHighPerformers || score >= 80;
+      const incompleteMatch = !filters.showOnlyIncomplete || !isCompleted;
+      
+      return nameMatch && scoreMatch && statusMatch && dateMatch && highPerformerMatch && incompleteMatch;
     });
+    
+    // Sort participants
+    filtered.sort((a: any, b: any) => {
+      let comparison = 0;
+      
+      switch (filters.sortBy) {
+        case 'name':
+          comparison = a.name.localeCompare(b.name);
+          break;
+        case 'score':
+          const scoreA = (a.self_awareness_score + a.peer_perception_score) / 2;
+          const scoreB = (b.self_awareness_score + b.peer_perception_score) / 2;
+          comparison = scoreA - scoreB;
+          break;
+        case 'date':
+          comparison = new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+          break;
+        case 'status':
+          const statusA = (a.self_awareness_score > 0 && a.peer_perception_score > 0) ? 1 : 0;
+          const statusB = (b.self_awareness_score > 0 && b.peer_perception_score > 0) ? 1 : 0;
+          comparison = statusA - statusB;
+          break;
+      }
+      
+      return filters.sortOrder === 'desc' ? -comparison : comparison;
+    });
+    
+    return filtered;
   };
 
   // Função separada para dados do gráfico - sem filtros restritivos
@@ -102,13 +158,6 @@ const Reports: React.FC = () => {
     }));
   };
 
-  const clearFilters = () => {
-    setFilters({
-      scoreRange: { min: 0, max: 100 },
-      name: '',
-      status: 'all'
-    });
-  };
 
   const handleExportAllReports = () => {
     if (!comparativeReport) return;
@@ -235,6 +284,58 @@ const Reports: React.FC = () => {
     window.URL.revokeObjectURL(url);
   };
 
+  const generateReportContent = () => {
+    if (!comparativeReport) return 'Relatório não disponível';
+    
+    const participants = comparativeReport.participants || [];
+    const totalParticipants = participants.length;
+    const completedAssessments = participants.filter((p: any) => p.self_awareness_score > 0 && p.peer_perception_score > 0).length;
+    const averageScore = participants.reduce((acc: number, p: any) => acc + (p.self_awareness_score + p.peer_perception_score) / 2, 0) / totalParticipants;
+    
+    // Calcular distribuição de pontuações
+    const scoreDistribution = {
+      high: participants.filter((p: any) => ((p.self_awareness_score + p.peer_perception_score) / 2) >= 80).length,
+      medium: participants.filter((p: any) => {
+        const score = (p.self_awareness_score + p.peer_perception_score) / 2;
+        return score >= 60 && score < 80;
+      }).length,
+      low: participants.filter((p: any) => {
+        const score = (p.self_awareness_score + p.peer_perception_score) / 2;
+        return score >= 40 && score < 60;
+      }).length,
+      veryLow: participants.filter((p: any) => ((p.self_awareness_score + p.peer_perception_score) / 2) < 40).length
+    };
+    
+    return `
+      RELATÓRIO COMPARATIVO - JANELA DE JOHARI
+      
+      Total de Participantes: ${totalParticipants}
+      Avaliações Completas: ${completedAssessments}
+      Taxa de Conclusão: ${Math.round((completedAssessments / totalParticipants) * 100)}%
+      
+      PONTUAÇÃO MÉDIA GERAL: ${Math.round(averageScore)}%
+      
+      DISTRIBUIÇÃO DE PONTUAÇÕES:
+      - Alta Performance (80-100%): ${scoreDistribution.high} participantes
+      - Boa Performance (60-79%): ${scoreDistribution.medium} participantes
+      - Desenvolvimento (40-59%): ${scoreDistribution.low} participantes
+      - Iniciante (0-39%): ${scoreDistribution.veryLow} participantes
+      
+      INSIGHTS PRINCIPAIS:
+      • Análise de autoconsciência individual e em grupo
+      • Identificação de padrões de desenvolvimento
+      • Recomendações para crescimento pessoal e profissional
+      
+      Este relatório foi gerado automaticamente pelo sistema Johari Tele-up.
+      Os dados apresentados são confidenciais e destinados exclusivamente ao desenvolvimento pessoal e profissional.
+    `;
+  };
+
+  const handleApplyFilters = (newFilters: FilterOptions) => {
+    setFilters(newFilters);
+    setShowFilters(false);
+  };
+
   if (loading) {
     return (
       <div className="reports-loading">
@@ -288,87 +389,34 @@ const Reports: React.FC = () => {
             <Filter className="w-5 h-5 mr-2" />
             Filtrar
           </button>
+          <ComparativeReportPDFButton
+            reportContent={generateReportContent()}
+            className="reports-export-pdf-btn"
+          />
+          <ElementPDFButton
+            elementId="reports-container"
+            label="Exportar Tudo"
+            className="reports-export-all-btn"
+          />
           <button 
             className="reports-export-btn"
             onClick={handleExportAllReports}
           >
             <Download className="w-5 h-5 mr-2" />
-            Exportar
+            HTML
           </button>
         </div>
       </div>
 
-      {/* Filters Panel */}
-      {showFilters && (
-        <div className="reports-filters-panel">
-          <div className="reports-filters-header">
-            <h3 className="reports-filters-title">Filtros</h3>
-            <button 
-              className="reports-clear-filters-btn"
-              onClick={clearFilters}
-            >
-              Limpar Filtros
-            </button>
-          </div>
-          
-          <div className="reports-filters-content">
-            <div className="reports-filter-group">
-              <label className="reports-filter-label">Nome do Participante</label>
-              <input
-                type="text"
-                className="reports-filter-input"
-                placeholder="Digite o nome..."
-                value={filters.name}
-                onChange={(e) => setFilters({...filters, name: e.target.value})}
-              />
-            </div>
-
-            <div className="reports-filter-group">
-              <label className="reports-filter-label">Faixa de Pontuação</label>
-              <div className="reports-range-inputs">
-                <input
-                  type="number"
-                  className="reports-filter-input"
-                  placeholder="Mín"
-                  min="0"
-                  max="100"
-                  value={filters.scoreRange.min}
-                  onChange={(e) => setFilters({
-                    ...filters, 
-                    scoreRange: {...filters.scoreRange, min: parseInt(e.target.value) || 0}
-                  })}
-                />
-                <span className="reports-range-separator">-</span>
-                <input
-                  type="number"
-                  className="reports-filter-input"
-                  placeholder="Máx"
-                  min="0"
-                  max="100"
-                  value={filters.scoreRange.max}
-                  onChange={(e) => setFilters({
-                    ...filters, 
-                    scoreRange: {...filters.scoreRange, max: parseInt(e.target.value) || 100}
-                  })}
-                />
-              </div>
-            </div>
-
-            <div className="reports-filter-group">
-              <label className="reports-filter-label">Status da Avaliação</label>
-              <select
-                className="reports-filter-select"
-                value={filters.status}
-                onChange={(e) => setFilters({...filters, status: e.target.value})}
-              >
-                <option value="all">Todos</option>
-                <option value="completed">Concluídas</option>
-                <option value="incomplete">Incompletas</option>
-              </select>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Advanced Filters */}
+      <AdvancedFilters
+        isOpen={showFilters}
+        onClose={() => setShowFilters(false)}
+        onApplyFilters={handleApplyFilters}
+        currentFilters={filters}
+        totalParticipants={comparativeReport?.participants?.length || 0}
+        filteredCount={getFilteredParticipants().length}
+      />
 
       {/* Stats */}
       <div className="reports-stats">
@@ -706,12 +754,20 @@ const Reports: React.FC = () => {
                             >
                               <FileText className="w-4 h-4" />
                             </Link>
-                            <button
+                            <PDFExportButton
+                              type="individual"
+                              data={{
+                                title: `Relatório Individual - ${participant.name}`,
+                                subtitle: 'Análise de Autoconsciência e Desenvolvimento',
+                                participantName: participant.name,
+                                participantCode: participant.code,
+                                generatedAt: new Date(),
+                                content: `Relatório individual de ${participant.name} (${participant.code})\n\nPontuação Geral: ${Math.round((participant.self_awareness_score + participant.peer_perception_score) / 2)}%\nAutoavaliação: ${Math.round(participant.self_awareness_score)}%\nPercepção dos Pares: ${Math.round(participant.peer_perception_score)}%\n\nStatus: ${participant.self_awareness_score > 0 && participant.peer_perception_score > 0 ? 'Completo' : 'Incompleto'}`
+                              }}
                               className="participant-action-btn download"
-                              title="Baixar relatório PDF"
                           >
                             <Download className="w-4 h-4" />
-                            </button>
+                            </PDFExportButton>
                           <button
                               className="participant-action-btn share"
                             title="Compartilhar relatório"

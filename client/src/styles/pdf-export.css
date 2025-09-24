@@ -1,0 +1,248 @@
+/* PDF Export Button Styles */
+
+.pdf-export-container {
+  position: relative;
+  display: inline-block;
+}
+
+.pdf-export-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(139, 92, 246, 0.3);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.pdf-export-btn:hover:not(.disabled):not(.exporting) {
+  background: linear-gradient(135deg, #7c3aed 0%, #5b21b6 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(139, 92, 246, 0.4);
+}
+
+.pdf-export-btn:active:not(.disabled):not(.exporting) {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(139, 92, 246, 0.3);
+}
+
+.pdf-export-btn.exporting {
+  background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+  cursor: not-allowed;
+  opacity: 0.8;
+}
+
+.pdf-export-btn.disabled {
+  background: linear-gradient(135deg, #9ca3af 0%, #6b7280 100%);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.pdf-export-btn svg {
+  flex-shrink: 0;
+}
+
+/* Variantes de botão */
+.pdf-export-btn.individual-report-btn {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3);
+}
+
+.pdf-export-btn.individual-report-btn:hover:not(.disabled):not(.exporting) {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  box-shadow: 0 4px 8px rgba(16, 185, 129, 0.4);
+}
+
+.pdf-export-btn.comparative-report-btn {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
+}
+
+.pdf-export-btn.comparative-report-btn:hover:not(.disabled):not(.exporting) {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  box-shadow: 0 4px 8px rgba(59, 130, 246, 0.4);
+}
+
+.pdf-export-btn.element-export-btn {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  box-shadow: 0 2px 4px rgba(245, 158, 11, 0.3);
+}
+
+.pdf-export-btn.element-export-btn:hover:not(.disabled):not(.exporting) {
+  background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+  box-shadow: 0 4px 8px rgba(245, 158, 11, 0.4);
+}
+
+/* Tamanhos */
+.pdf-export-btn.sm {
+  padding: 0.5rem 1rem;
+  font-size: 0.75rem;
+}
+
+.pdf-export-btn.lg {
+  padding: 1rem 2rem;
+  font-size: 1rem;
+}
+
+/* Botão apenas com ícone */
+.pdf-export-btn.icon-only {
+  padding: 0.75rem;
+  border-radius: 50%;
+  width: 44px;
+  height: 44px;
+  justify-content: center;
+}
+
+.pdf-export-btn.icon-only span {
+  display: none;
+}
+
+/* Estados de loading */
+.pdf-export-btn .animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Mensagem de erro */
+.pdf-export-error {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin-top: 0.5rem;
+  padding: 0.75rem;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 6px;
+  color: #991b1b;
+  font-size: 0.75rem;
+  z-index: 1000;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.pdf-export-error p {
+  margin: 0;
+  line-height: 1.4;
+}
+
+.error-dismiss {
+  position: absolute;
+  top: 0.25rem;
+  right: 0.25rem;
+  background: none;
+  border: none;
+  color: #991b1b;
+  cursor: pointer;
+  font-size: 0.75rem;
+  padding: 0.25rem;
+  border-radius: 3px;
+  transition: background-color 0.2s;
+}
+
+.error-dismiss:hover {
+  background: rgba(153, 27, 27, 0.1);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .pdf-export-btn {
+    padding: 0.625rem 1.25rem;
+    font-size: 0.8125rem;
+  }
+  
+  .pdf-export-btn.sm {
+    padding: 0.5rem 0.875rem;
+    font-size: 0.75rem;
+  }
+  
+  .pdf-export-btn.lg {
+    padding: 0.875rem 1.75rem;
+    font-size: 0.9375rem;
+  }
+  
+  .pdf-export-btn.icon-only {
+    width: 40px;
+    height: 40px;
+    padding: 0.625rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .pdf-export-btn {
+    padding: 0.5rem 1rem;
+    font-size: 0.75rem;
+  }
+  
+  .pdf-export-btn span {
+    display: none;
+  }
+  
+  .pdf-export-btn.icon-only {
+    width: 36px;
+    height: 36px;
+    padding: 0.5rem;
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .pdf-export-error {
+    background: #1f2937;
+    border-color: #374151;
+    color: #fca5a5;
+  }
+  
+  .error-dismiss {
+    color: #fca5a5;
+  }
+  
+  .error-dismiss:hover {
+    background: rgba(252, 165, 165, 0.1);
+  }
+}
+
+/* Print styles */
+@media print {
+  .pdf-export-container {
+    display: none;
+  }
+}
+
+/* Acessibilidade */
+.pdf-export-btn:focus {
+  outline: 2px solid #8b5cf6;
+  outline-offset: 2px;
+}
+
+.pdf-export-btn:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Touch device optimizations */
+@media (hover: none) and (pointer: coarse) {
+  .pdf-export-btn {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  .pdf-export-btn:hover {
+    transform: none;
+    box-shadow: 0 2px 4px rgba(139, 92, 246, 0.3);
+  }
+}
