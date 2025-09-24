@@ -165,6 +165,13 @@ async function processReportData(row, res, code) {
     const selfNotSelectedNames = [...new Set(selfNotSelected.map(id => characteristics[id] || `Característica ${id}`))];
     const peerNotSelectedNames = [...new Set(peerNotSelected.map(id => characteristics[id] || `Característica ${id}`))];
     
+    // Debug: Log dos dados recebidos
+    console.log('🔍 Debug - Dados recebidos:');
+    console.log('selfSelected:', selfSelected);
+    console.log('peerSelected:', peerSelected);
+    console.log('selfSelectedNames:', selfSelectedNames);
+    console.log('peerSelectedNames:', peerSelectedNames);
+    
     // Calcular quadrantes e remover duplicatas
     // Área Aberta: selecionada por si mesmo E pelos pares
     const openArea = [...new Set(selfSelectedNames.filter(char => peerSelectedNames.includes(char)))];
@@ -174,6 +181,13 @@ async function processReportData(row, res, code) {
     const hiddenArea = [...new Set(selfSelectedNames.filter(char => !peerSelectedNames.includes(char)))];
     // Área Desconhecida: NÃO selecionada por ninguém (nem por si mesmo, nem pelos pares)
     const unknownArea = [...new Set(selfNotSelectedNames.filter(char => peerNotSelectedNames.includes(char)))];
+    
+    // Debug: Log dos quadrantes calculados
+    console.log('🔍 Debug - Quadrantes calculados:');
+    console.log('openArea:', openArea);
+    console.log('blindArea:', blindArea);
+    console.log('hiddenArea:', hiddenArea);
+    console.log('unknownArea:', unknownArea);
     
     const report = {
     participant: {

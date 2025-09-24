@@ -570,10 +570,10 @@ const Reports: React.FC = () => {
       {/* Reports List */}
       <div className="reports-list-card">
         <div className="reports-list-header">
-          <h2 className="reports-list-title">Relatórios Individuais</h2>
+          <h2 className="reports-list-title">Análise de Performance</h2>
           <div className="reports-list-info">
             <span className="text-sm text-gray-600">
-              Clique em "Visualizar" para ver o relatório completo ou "Baixar" para exportar
+              Insights e métricas sobre o desempenho dos participantes
             </span>
           </div>
         </div>
