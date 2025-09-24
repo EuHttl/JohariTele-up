@@ -395,9 +395,9 @@ const Report: React.FC = () => {
             </div>
 
             {/* Área Oculta */}
-            <div className="individual-johari-quadrant hidden">
+            <div className="individual-johari-quadrant hidden-area">
               <div className="individual-johari-quadrant-header">
-                <div className="individual-johari-quadrant-icon hidden">
+                <div className="individual-johari-quadrant-icon hidden-area">
                   <Eye className="h-5 w-5" />
                 </div>
                 <h4 className="individual-johari-quadrant-title">Área Oculta</h4>
