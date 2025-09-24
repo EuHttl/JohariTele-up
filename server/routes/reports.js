@@ -62,13 +62,13 @@ router.get('/johari/:code', async (req, res) => {
           STRING_AGG(
             CASE WHEN pa.selected = true THEN pa.characteristic_id::text END, '|'
           ) as peer_selected,
-          -- Características não selecionadas na autoavaliação
+          -- Características não selecionadas na autoavaliação (apenas as explicitamente não selecionadas)
           STRING_AGG(
-            CASE WHEN sa.selected = false OR sa.selected IS NULL THEN sa.characteristic_id::text END, '|'
+            CASE WHEN sa.selected = false THEN sa.characteristic_id::text END, '|'
           ) as self_not_selected,
-          -- Características não selecionadas pelos pares
+          -- Características não selecionadas pelos pares (apenas as explicitamente não selecionadas)
           STRING_AGG(
-            CASE WHEN pa.selected = false OR pa.selected IS NULL THEN pa.characteristic_id::text END, '|'
+            CASE WHEN pa.selected = false THEN pa.characteristic_id::text END, '|'
           ) as peer_not_selected
         FROM participants p
         LEFT JOIN self_assessments sa ON sa.participant_id = p.id
@@ -101,13 +101,13 @@ router.get('/johari/:code', async (req, res) => {
           GROUP_CONCAT(
             CASE WHEN pa.selected = 1 THEN pa.characteristic_id END, '|'
           ) as peer_selected,
-          -- Características não selecionadas na autoavaliação
+          -- Características não selecionadas na autoavaliação (apenas as explicitamente não selecionadas)
           GROUP_CONCAT(
-            CASE WHEN sa.selected = 0 OR sa.selected IS NULL THEN sa.characteristic_id END, '|'
+            CASE WHEN sa.selected = 0 THEN sa.characteristic_id END, '|'
           ) as self_not_selected,
-          -- Características não selecionadas pelos pares
+          -- Características não selecionadas pelos pares (apenas as explicitamente não selecionadas)
           GROUP_CONCAT(
-            CASE WHEN pa.selected = 0 OR pa.selected IS NULL THEN pa.characteristic_id END, '|'
+            CASE WHEN pa.selected = 0 THEN pa.characteristic_id END, '|'
           ) as peer_not_selected
         FROM participants p
         LEFT JOIN self_assessments sa ON sa.participant_id = p.id
@@ -153,24 +153,17 @@ async function processReportData(row, res, code) {
       characteristics = {};
     }
     
-    // Processar dados para calcular os 4 quadrantes
-    const selfSelected = row.self_selected ? row.self_selected.split('|').filter(Boolean) : [];
-    const peerSelected = row.peer_selected ? row.peer_selected.split('|').filter(Boolean) : [];
-    const selfNotSelected = row.self_not_selected ? row.self_not_selected.split('|').filter(Boolean) : [];
-    const peerNotSelected = row.peer_not_selected ? row.peer_not_selected.split('|').filter(Boolean) : [];
-    
+  // Processar dados para calcular os 4 quadrantes
+  const selfSelected = row.self_selected ? row.self_selected.split('|').filter(Boolean) : [];
+  const peerSelected = row.peer_selected ? row.peer_selected.split('|').filter(Boolean) : [];
+  const selfNotSelected = row.self_not_selected ? row.self_not_selected.split('|').filter(Boolean) : [];
+  const peerNotSelected = row.peer_not_selected ? row.peer_not_selected.split('|').filter(Boolean) : [];
+  
     // Converter IDs para nomes e remover duplicatas
     const selfSelectedNames = [...new Set(selfSelected.map(id => characteristics[id] || `Característica ${id}`))];
     const peerSelectedNames = [...new Set(peerSelected.map(id => characteristics[id] || `Característica ${id}`))];
     const selfNotSelectedNames = [...new Set(selfNotSelected.map(id => characteristics[id] || `Característica ${id}`))];
     const peerNotSelectedNames = [...new Set(peerNotSelected.map(id => characteristics[id] || `Característica ${id}`))];
-    
-    // Debug: Log dos dados recebidos
-    console.log('🔍 Debug - Dados recebidos:');
-    console.log('selfSelected:', selfSelected);
-    console.log('peerSelected:', peerSelected);
-    console.log('selfSelectedNames:', selfSelectedNames);
-    console.log('peerSelectedNames:', peerSelectedNames);
     
     // Calcular quadrantes e remover duplicatas
     // Área Aberta: selecionada por si mesmo E pelos pares
@@ -181,15 +174,8 @@ async function processReportData(row, res, code) {
     const hiddenArea = [...new Set(selfSelectedNames.filter(char => !peerSelectedNames.includes(char)))];
     // Área Desconhecida: NÃO selecionada por ninguém (nem por si mesmo, nem pelos pares)
     const unknownArea = [...new Set(selfNotSelectedNames.filter(char => peerNotSelectedNames.includes(char)))];
-    
-    // Debug: Log dos quadrantes calculados
-    console.log('🔍 Debug - Quadrantes calculados:');
-    console.log('openArea:', openArea);
-    console.log('blindArea:', blindArea);
-    console.log('hiddenArea:', hiddenArea);
-    console.log('unknownArea:', unknownArea);
-    
-    const report = {
+  
+  const report = {
     participant: {
       id: row.id,
       name: row.name,
@@ -231,7 +217,7 @@ async function processReportData(row, res, code) {
     generated_at: new Date().toISOString()
   };
   
-    res.json(report);
+  res.json(report);
   } catch (error) {
     console.error('Erro ao processar dados do relatório:', error);
     res.status(500).json({ error: 'Erro interno do servidor' });

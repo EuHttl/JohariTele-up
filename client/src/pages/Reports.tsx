@@ -665,6 +665,89 @@ const Reports: React.FC = () => {
             </div>
           )}
 
+          {/* Tabela de Participantes */}
+          {getFilteredParticipants().length > 0 && (
+            <div className="participants-table-section">
+              <div className="participants-table-header">
+                <h3 className="participants-table-title">Participantes</h3>
+                <p className="participants-table-description">
+                  Lista de todos os participantes e suas pontuações
+                </p>
+              </div>
+              
+              <div className="participants-table-responsive">
+                <table className="participants-table">
+                  <thead>
+                    <tr>
+                      <th>Participante</th>
+                      <th>Email</th>
+                      <th>Pontuação</th>
+                      <th>Auto</th>
+                      <th>Pares</th>
+                      <th>Status</th>
+                      <th>Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {getFilteredParticipants().map((participant: any) => (
+                      <tr key={participant.id}>
+                        <td>
+                          <div className="participant-info">
+                            <div className="participant-avatar">
+                              {participant.name.charAt(0).toUpperCase()}
+                            </div>
+                            <div className="participant-details">
+                              <p className="participant-name">{participant.name}</p>
+                              <p className="participant-code">{participant.code}</p>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="participant-email">{participant.email || 'N/A'}</td>
+                        <td>
+                          <div className="participant-score">
+                            <span className="participant-score-value">
+                              {Math.round((participant.self_awareness_score + participant.peer_perception_score) / 2)}
+                            </span>
+                            {getScoreBadge((participant.self_awareness_score + participant.peer_perception_score) / 2)}
+                          </div>
+                        </td>
+                        <td className="participant-self-score">
+                          {Math.round(participant.self_awareness_score)}%
+                        </td>
+                        <td className="participant-peer-score">
+                          {Math.round(participant.peer_perception_score)}%
+                        </td>
+                        <td>
+                          <span className={`participant-status ${participant.self_awareness_score > 0 && participant.peer_perception_score > 0 ? 'completed' : 'incomplete'}`}>
+                            {participant.self_awareness_score > 0 && participant.peer_perception_score > 0 ? 'Completo' : 'Incompleto'}
+                          </span>
+                        </td>
+                        <td>
+                          <div className="participant-actions">
+                            <Link
+                              to={`/assessment/${participant.code}`}
+                              className="participant-action-btn view"
+                              title="Visualizar avaliação"
+                            >
+                              <Eye className="w-4 h-4" />
+                            </Link>
+                            <Link
+                              to={`/report/${participant.code}`}
+                              className="participant-action-btn download"
+                              title="Baixar relatório"
+                            >
+                              <Download className="w-4 h-4" />
+                            </Link>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
           {/* Características Mais e Menos Selecionadas */}
           {characteristicAnalysis && (
             <div className="characteristics-analysis-section">
