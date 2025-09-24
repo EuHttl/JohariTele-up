@@ -82,6 +82,18 @@ const Reports: React.FC = () => {
   const getFilteredParticipants = () => {
     if (!comparativeReport?.participants) return [];
     
+    // Se não há filtros aplicados, retorna todos os participantes
+    const hasActiveFilters = filters.name || 
+      filters.status !== 'all' || 
+      filters.dateRange.start || 
+      filters.dateRange.end ||
+      filters.showOnlyHighPerformers ||
+      filters.showOnlyIncomplete;
+    
+    if (!hasActiveFilters) {
+      return comparativeReport.participants;
+    }
+    
     let filtered = comparativeReport.participants.filter((participant: any) => {
       const score = Math.round((participant.self_awareness_score + participant.peer_perception_score) / 2);
       const isCompleted = participant.self_awareness_score > 0 && participant.peer_perception_score > 0;
@@ -684,13 +696,13 @@ const Reports: React.FC = () => {
                       {Math.round((getChartData().filter(p => p.selfScore > 0 && p.peerScore > 0).length / getChartData().length) * 100)}%
                     </span>
                   </div>
-                        </div>
-                        </div>
             </div>
-          )}
+          </div>
+        </div>
+      )}
 
           {/* Tabela de Participantes */}
-          {getFilteredParticipants().length > 0 && (
+          {comparativeReport?.participants && (
             <div className="participants-table-section">
               <div className="participants-table-header">
                 <h3 className="participants-table-title">Participantes</h3>
@@ -813,31 +825,31 @@ const Reports: React.FC = () => {
             </div>
           )}
 
-          {/* Score Legend */}
-          <div className="reports-score-legend">
-            <h3 className="reports-legend-title">Legenda de Pontuações</h3>
-            <div className="reports-legend-grid">
-              <div className="reports-legend-badge">
-                <span className="report-score-badge excellent">Excelente</span>
-                <span className="reports-legend-range">80-100%</span>
-              </div>
-              <div className="reports-legend-badge">
-                <span className="report-score-badge good">Bom</span>
-                <span className="reports-legend-range">60-79%</span>
-              </div>
-              <div className="reports-legend-badge">
-                <span className="report-score-badge average">Regular</span>
-                <span className="reports-legend-range">40-59%</span>
-              </div>
-              <div className="reports-legend-badge">
-                <span className="report-score-badge poor">Baixo</span>
-                <span className="reports-legend-range">0-39%</span>
-              </div>
-            </div>
-            <p className="reports-legend-description">
-              Pontuação baseada na Área Aberta da Janela de Johari: consenso entre autopercepção e percepção dos pares
-            </p>
+      {/* Score Legend */}
+      <div className="reports-score-legend">
+        <h3 className="reports-legend-title">Legenda de Pontuações</h3>
+        <div className="reports-legend-grid">
+          <div className="reports-legend-badge">
+            <span className="report-score-badge excellent">Excelente</span>
+            <span className="reports-legend-range">80-100%</span>
           </div>
+          <div className="reports-legend-badge">
+            <span className="report-score-badge good">Bom</span>
+            <span className="reports-legend-range">60-79%</span>
+          </div>
+          <div className="reports-legend-badge">
+            <span className="report-score-badge average">Regular</span>
+            <span className="reports-legend-range">40-59%</span>
+          </div>
+          <div className="reports-legend-badge">
+            <span className="report-score-badge poor">Baixo</span>
+            <span className="reports-legend-range">0-39%</span>
+          </div>
+        </div>
+        <p className="reports-legend-description">
+          Pontuação baseada na Área Aberta da Janela de Johari: consenso entre autopercepção e percepção dos pares
+        </p>
+      </div>
 
           {/* Características Mais e Menos Selecionadas */}
           {characteristicAnalysis && (
@@ -857,18 +869,18 @@ const Reports: React.FC = () => {
                     <span className="characteristics-table-count">
                       {characteristicAnalysis.most_selected.length} características
                     </span>
-                  </div>
+            </div>
                   <div className="characteristics-table-content">
                     <table className="characteristics-table">
-                      <thead>
-                        <tr>
+                <thead>
+                  <tr>
                           <th>Característica</th>
                           <th>Auto</th>
                           <th>Pares</th>
                           <th>Consenso</th>
-                        </tr>
-                      </thead>
-                      <tbody>
+                  </tr>
+                </thead>
+                <tbody>
                         {characteristicAnalysis.most_selected.map((char, index) => (
                           <tr key={index}>
                             <td className="characteristic-name">{char.name}</td>
@@ -882,8 +894,8 @@ const Reports: React.FC = () => {
                         ))}
                       </tbody>
                     </table>
-                  </div>
-                </div>
+                          </div>
+                        </div>
 
                 {/* Características Menos Selecionadas */}
                 <div className="characteristics-table-card">
