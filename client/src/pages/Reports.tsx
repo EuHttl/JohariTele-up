@@ -523,31 +523,6 @@ const Reports: React.FC = () => {
         </div>
       </div>
 
-      {/* Score Legend */}
-      <div className="reports-score-legend">
-        <h3 className="reports-legend-title">Legenda de Pontuações</h3>
-        <div className="reports-legend-grid">
-          <div className="reports-legend-badge">
-            <span className="report-score-badge excellent">Excelente</span>
-            <span className="reports-legend-range">80-100%</span>
-          </div>
-          <div className="reports-legend-badge">
-            <span className="report-score-badge good">Bom</span>
-            <span className="reports-legend-range">60-79%</span>
-          </div>
-          <div className="reports-legend-badge">
-            <span className="report-score-badge average">Regular</span>
-            <span className="reports-legend-range">40-59%</span>
-          </div>
-          <div className="reports-legend-badge">
-            <span className="report-score-badge poor">Baixo</span>
-            <span className="reports-legend-range">0-39%</span>
-          </div>
-        </div>
-        <p className="reports-legend-description">
-          Pontuação baseada na Área Aberta da Janela de Johari: consenso entre autopercepção e percepção dos pares
-        </p>
-      </div>
 
       {/* Reports List */}
       <div className="reports-list-card">
@@ -677,40 +652,40 @@ const Reports: React.FC = () => {
               
               <div className="participants-table-responsive">
                 <table className="participants-table">
-                  <thead>
-                    <tr>
-                      <th>Participante</th>
-                      <th>Email</th>
-                      <th>Pontuação</th>
+                <thead>
+                  <tr>
+                    <th>Participante</th>
+                    <th>Email</th>
+                    <th>Pontuação</th>
                       <th>Auto</th>
                       <th>Pares</th>
                       <th>Status</th>
-                      <th>Ações</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {getFilteredParticipants().map((participant: any) => (
-                      <tr key={participant.id}>
-                        <td>
+                    <th>Ações</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {getFilteredParticipants().map((participant: any) => (
+                    <tr key={participant.id}>
+                      <td>
                           <div className="participant-info">
                             <div className="participant-avatar">
-                              {participant.name.charAt(0).toUpperCase()}
-                            </div>
+                            {participant.name.charAt(0).toUpperCase()}
+                          </div>
                             <div className="participant-details">
                               <p className="participant-name">{participant.name}</p>
                               <p className="participant-code">{participant.code}</p>
-                            </div>
                           </div>
-                        </td>
+                        </div>
+                      </td>
                         <td className="participant-email">{participant.email || 'N/A'}</td>
                         <td>
                           <div className="participant-score">
                             <span className="participant-score-value">
                               {Math.round((participant.self_awareness_score + participant.peer_perception_score) / 2)}
                             </span>
-                            {getScoreBadge((participant.self_awareness_score + participant.peer_perception_score) / 2)}
-                          </div>
-                        </td>
+                          {getScoreBadge((participant.self_awareness_score + participant.peer_perception_score) / 2)}
+                        </div>
+                      </td>
                         <td className="participant-self-score">
                           {Math.round(participant.self_awareness_score)}%
                         </td>
@@ -721,32 +696,63 @@ const Reports: React.FC = () => {
                           <span className={`participant-status ${participant.self_awareness_score > 0 && participant.peer_perception_score > 0 ? 'completed' : 'incomplete'}`}>
                             {participant.self_awareness_score > 0 && participant.peer_perception_score > 0 ? 'Completo' : 'Incompleto'}
                           </span>
-                        </td>
-                        <td>
+                      </td>
+                      <td>
                           <div className="participant-actions">
-                            <Link
-                              to={`/assessment/${participant.code}`}
-                              className="participant-action-btn view"
-                              title="Visualizar avaliação"
+                          <Link
+                            to={`/report/${participant.code}`}
+                              className="participant-action-btn report"
+                              title="Ver relatório individual"
                             >
-                              <Eye className="w-4 h-4" />
+                              <FileText className="w-4 h-4" />
                             </Link>
-                            <Link
-                              to={`/report/${participant.code}`}
+                            <button
                               className="participant-action-btn download"
-                              title="Baixar relatório"
-                            >
-                              <Download className="w-4 h-4" />
-                            </Link>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                              title="Baixar relatório PDF"
+                          >
+                            <Download className="w-4 h-4" />
+                            </button>
+                          <button
+                              className="participant-action-btn share"
+                            title="Compartilhar relatório"
+                          >
+                            <Share className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
               </div>
             </div>
           )}
+
+          {/* Score Legend */}
+          <div className="reports-score-legend">
+            <h3 className="reports-legend-title">Legenda de Pontuações</h3>
+            <div className="reports-legend-grid">
+              <div className="reports-legend-badge">
+                <span className="report-score-badge excellent">Excelente</span>
+                <span className="reports-legend-range">80-100%</span>
+              </div>
+              <div className="reports-legend-badge">
+                <span className="report-score-badge good">Bom</span>
+                <span className="reports-legend-range">60-79%</span>
+              </div>
+              <div className="reports-legend-badge">
+                <span className="report-score-badge average">Regular</span>
+                <span className="reports-legend-range">40-59%</span>
+              </div>
+              <div className="reports-legend-badge">
+                <span className="report-score-badge poor">Baixo</span>
+                <span className="reports-legend-range">0-39%</span>
+              </div>
+            </div>
+            <p className="reports-legend-description">
+              Pontuação baseada na Área Aberta da Janela de Johari: consenso entre autopercepção e percepção dos pares
+            </p>
+          </div>
 
           {/* Características Mais e Menos Selecionadas */}
           {characteristicAnalysis && (
@@ -801,7 +807,7 @@ const Reports: React.FC = () => {
                     <span className="characteristics-table-count">
                       {characteristicAnalysis.least_selected.length} características
                     </span>
-                  </div>
+                        </div>
                   <div className="characteristics-table-content">
                     <table className="characteristics-table">
                       <thead>

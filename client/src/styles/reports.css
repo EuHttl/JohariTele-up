@@ -608,7 +608,7 @@
 }
 
 .reports-insight-value {
-  color: #ffffff;
+  color: #0000;
   font-size: 1rem;
   font-weight: 700;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
@@ -898,14 +898,14 @@
   transition: all 0.2s ease;
 }
 
-.participant-action-btn.view {
-  background: rgba(59, 130, 246, 0.1);
-  color: #3b82f6;
-  border: 1px solid rgba(59, 130, 246, 0.2);
+.participant-action-btn.report {
+  background: rgba(34, 197, 94, 0.1);
+  color: #22c55e;
+  border: 1px solid rgba(34, 197, 94, 0.2);
 }
 
-.participant-action-btn.view:hover {
-  background: rgba(59, 130, 246, 0.2);
+.participant-action-btn.report:hover {
+  background: rgba(34, 197, 94, 0.2);
   transform: translateY(-1px);
 }
 
@@ -917,6 +917,17 @@
 
 .participant-action-btn.download:hover {
   background: rgba(168, 85, 247, 0.2);
+  transform: translateY(-1px);
+}
+
+.participant-action-btn.share {
+  background: rgba(59, 130, 246, 0.1);
+  color: #3b82f6;
+  border: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+.participant-action-btn.share:hover {
+  background: rgba(59, 130, 246, 0.2);
   transform: translateY(-1px);
 }
 

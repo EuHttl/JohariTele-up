@@ -314,29 +314,18 @@ const Participants: React.FC = () => {
                             <Copy className="w-4 h-4" />
                           </button>
                           <a
-                            href={`/assessment/${participant.code}`}
+                            href={`/report/${participant.code}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="participants-action-btn view"
-                            title="Visualizar avaliação"
+                            className="participants-action-btn report"
+                            title="Visualizar relatório individual"
                           >
-                            <Eye className="w-4 h-4" />
+                            <FileText className="w-4 h-4" />
                           </a>
-                          {participant.has_completed_self_assessment && participant.has_completed_peer_assessments && (
-                            <a
-                              href={`/report/${participant.code}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="participants-action-btn report"
-                              title="Ver relatório"
-                            >
-                              <FileText className="w-4 h-4" />
-                            </a>
-                          )}
                           <button
                             onClick={() => handleEdit(participant)}
                             className="participants-action-btn edit"
-                            title="Editar participante"
+                            title="Editar usuário"
                           >
                             <Edit className="w-4 h-4" />
                           </button>
