@@ -2327,3 +2327,11 @@
     padding: 0.25rem;
   }
 }
+
+/* Development Insights Section */
+.development-insights-section {
+  margin: 3rem 0;
+  padding: 2rem 0;
+  border-top: 2px solid rgba(139, 92, 246, 0.2);
+  border-bottom: 2px solid rgba(139, 92, 246, 0.2);
+}

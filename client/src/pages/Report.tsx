@@ -2,6 +2,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { reportsAPI, participantsAPI } from '../services/api';
 import { JohariReport, Participant } from '../types';
+import { analyzeParticipantDevelopment, generateDevelopmentPlan } from '../services/developmentAnalysis';
+import DevelopmentInsights from '../components/DevelopmentInsights';
 import { 
   ArrowLeft, 
   Download, 
@@ -16,11 +18,13 @@ import {
   Info
 } from 'lucide-react';
 import '../styles/reports.css';
+import '../styles/development-insights.css';
 
 const Report: React.FC = () => {
   const { code } = useParams<{ code: string }>();
   const [participant, setParticipant] = useState<Participant | null>(null);
   const [report, setReport] = useState<JohariReport | null>(null);
+  const [developmentInsights, setDevelopmentInsights] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -33,6 +37,14 @@ const Report: React.FC = () => {
 
       setParticipant(participantData);
       setReport(reportData);
+
+      // Gerar insights de desenvolvimento baseados nos dados do relatório
+      if (reportData) {
+        console.log('🔍 Gerando insights de desenvolvimento...');
+        const insights = analyzeParticipantDevelopment(reportData);
+        setDevelopmentInsights(insights);
+        console.log('✅ Insights gerados:', insights.length);
+      }
     } catch (err: any) {
       setError(err.response?.data?.error || 'Erro ao carregar relatório');
     } finally {
@@ -428,6 +440,21 @@ const Report: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Development Insights */}
+      {developmentInsights.length > 0 && (
+        <div className="development-insights-section">
+          <DevelopmentInsights 
+            insights={developmentInsights}
+            participantName={participant.name}
+            onGeneratePlan={(insights) => {
+              const plan = generateDevelopmentPlan(insights);
+              console.log('📋 Plano de desenvolvimento gerado:', plan);
+              // Aqui você pode implementar a lógica para salvar ou exportar o plano
+            }}
+          />
+        </div>
+      )}
 
       {/* Footer */}
       <div className="individual-report-footer">
