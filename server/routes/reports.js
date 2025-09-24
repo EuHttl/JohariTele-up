@@ -159,17 +159,17 @@ async function processReportData(row, res, code) {
     const selfNotSelected = row.self_not_selected ? row.self_not_selected.split('|').filter(Boolean) : [];
     const peerNotSelected = row.peer_not_selected ? row.peer_not_selected.split('|').filter(Boolean) : [];
     
-    // Converter IDs para nomes
-    const selfSelectedNames = selfSelected.map(id => characteristics[id] || `Característica ${id}`);
-    const peerSelectedNames = peerSelected.map(id => characteristics[id] || `Característica ${id}`);
-    const selfNotSelectedNames = selfNotSelected.map(id => characteristics[id] || `Característica ${id}`);
-    const peerNotSelectedNames = peerNotSelected.map(id => characteristics[id] || `Característica ${id}`);
+    // Converter IDs para nomes e remover duplicatas
+    const selfSelectedNames = [...new Set(selfSelected.map(id => characteristics[id] || `Característica ${id}`))];
+    const peerSelectedNames = [...new Set(peerSelected.map(id => characteristics[id] || `Característica ${id}`))];
+    const selfNotSelectedNames = [...new Set(selfNotSelected.map(id => characteristics[id] || `Característica ${id}`))];
+    const peerNotSelectedNames = [...new Set(peerNotSelected.map(id => characteristics[id] || `Característica ${id}`))];
     
-    // Calcular quadrantes
-    const openArea = selfSelectedNames.filter(char => peerSelectedNames.includes(char));
-    const blindArea = peerSelectedNames.filter(char => !selfSelectedNames.includes(char));
-    const hiddenArea = selfSelectedNames.filter(char => !peerSelectedNames.includes(char));
-    const unknownArea = selfNotSelectedNames.filter(char => !peerSelectedNames.includes(char));
+    // Calcular quadrantes e remover duplicatas
+    const openArea = [...new Set(selfSelectedNames.filter(char => peerSelectedNames.includes(char)))];
+    const blindArea = [...new Set(peerSelectedNames.filter(char => !selfSelectedNames.includes(char)))];
+    const hiddenArea = [...new Set(selfSelectedNames.filter(char => !peerSelectedNames.includes(char)))];
+    const unknownArea = [...new Set(selfNotSelectedNames.filter(char => !peerSelectedNames.includes(char)))];
     
     const report = {
     participant: {
