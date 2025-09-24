@@ -545,6 +545,7 @@ export const useEmailService = () => {
     getSettings: () => emailService.getSettings(),
     updateSettings: (settings: Partial<EmailSettings>) => emailService.updateSettings(settings),
     getNotifications: () => emailService.getNotifications(),
+    getNotificationsByStatus: (status: EmailNotification['status']) => emailService.getNotificationsByStatus(status),
     addNotification: (notification: Omit<EmailNotification, 'id' | 'status'>) => emailService.addNotification(notification),
     sendWelcomeEmail: (name: string, code: string, link: string) => emailService.sendWelcomeEmail(name, code, link),
     sendReminderEmail: (name: string, code: string, link: string) => emailService.sendReminderEmail(name, code, link),
