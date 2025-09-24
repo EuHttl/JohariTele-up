@@ -297,7 +297,8 @@ class PDFExportService {
    * Adiciona rodapé ao PDF
    */
   private addFooter(pdf: jsPDF, data: ReportData): void {
-    const pageCount = pdf.getNumberOfPages();
+    // Obter número de páginas usando a propriedade interna
+    const pageCount = (pdf as any).internal.getNumberOfPages();
     
     for (let i = 1; i <= pageCount; i++) {
       pdf.setPage(i);

@@ -66,7 +66,7 @@ const ResponsiveLayout: React.FC<ResponsiveLayoutProps> = ({
   const gap = getSpacing();
   const pad = getPadding();
 
-  const getLayoutStyles = () => {
+  const getLayoutStyles = (): React.CSSProperties => {
     const baseStyles: React.CSSProperties = {
       padding: pad,
       gap: gap,
@@ -77,7 +77,7 @@ const ResponsiveLayout: React.FC<ResponsiveLayoutProps> = ({
         return {
           ...baseStyles,
           display: 'flex',
-          flexDirection: 'column',
+          flexDirection: 'column' as const,
         };
       case 'grid':
         return {
@@ -307,7 +307,6 @@ export const ResponsiveImage: React.FC<ResponsiveImageProps> = ({
         width: getWidth(),
         height: getHeight(),
         maxWidth: '100%',
-        height: 'auto',
       }}
     />
   );
