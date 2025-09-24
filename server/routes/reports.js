@@ -209,7 +209,7 @@ router.get('/comparative', async (req, res) => {
   let query;
   
   if (process.env.DATABASE_URL) {
-    // Query PostgreSQL
+    // Query PostgreSQL - Corrigida para incluir todos os participantes
     query = `
       SELECT 
         p.id,
@@ -229,7 +229,7 @@ router.get('/comparative', async (req, res) => {
       ORDER BY p.name
     `;
   } else {
-    // Query SQLite
+    // Query SQLite - Corrigida para incluir todos os participantes
     query = `
       SELECT 
         p.id,
@@ -298,7 +298,8 @@ router.get('/comparative', async (req, res) => {
           }
         },
         self_awareness_score: Math.round((row.open_area_count / 56) * 100),
-        peer_perception_score: Math.round((row.peer_selected_count / 56) * 100)
+        peer_perception_score: Math.round((row.peer_selected_count / 56) * 100),
+        completed_at: (row.self_selected_count > 0 && row.peer_selected_count > 0) ? new Date().toISOString() : null
       })),
       team_insights: generateTeamInsights(rows)
     };

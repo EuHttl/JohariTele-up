@@ -76,9 +76,12 @@ const Reports: React.FC = () => {
       const score = Math.round((participant.self_awareness_score + participant.peer_perception_score) / 2);
       const nameMatch = participant.name.toLowerCase().includes(filters.name.toLowerCase());
       const scoreMatch = score >= filters.scoreRange.min && score <= filters.scoreRange.max;
+      
+      // Verificar se o participante completou as avaliações baseado nos scores
+      const hasCompletedAssessments = participant.self_awareness_score > 0 && participant.peer_perception_score > 0;
       const statusMatch = filters.status === 'all' || 
-        (filters.status === 'completed' && participant.completed_at) ||
-        (filters.status === 'incomplete' && !participant.completed_at);
+        (filters.status === 'completed' && hasCompletedAssessments) ||
+        (filters.status === 'incomplete' && !hasCompletedAssessments);
       
       return nameMatch && scoreMatch && statusMatch;
     });
