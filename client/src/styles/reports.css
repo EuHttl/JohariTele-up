@@ -363,23 +363,24 @@
 
 /* Reports List */
 .reports-list-card {
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  border: 1px solid #e5e7eb;
+  background: linear-gradient(135deg, #1e1e3f 0%, #2d1b69 100%);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  border: 1px solid #4c1d95;
   overflow: hidden;
+  backdrop-filter: blur(10px);
 }
 
 .reports-list-header {
   padding: 1.5rem;
-  border-bottom: 1px solid #e5e7eb;
-  background: #f9fafb;
+  border-bottom: 1px solid #4c1d95;
+  background: rgba(168, 85, 247, 0.05);
 }
 
 .reports-list-title {
   font-size: 1.125rem;
   font-weight: 600;
-  color: #1f2937;
+  color: #e2e8f0;
   margin: 0;
 }
 
@@ -396,24 +397,24 @@
 .reports-empty-icon {
   width: 80px;
   height: 80px;
-  background: #f3f4f6;
+  background: rgba(168, 85, 247, 0.1);
   border-radius: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
   margin: 0 auto 1.5rem;
-  color: #9ca3af;
+  color: #a78bfa;
 }
 
 .reports-empty-title {
   font-size: 1.25rem;
   font-weight: 600;
-  color: #1f2937;
+  color: #e2e8f0;
   margin-bottom: 0.5rem;
 }
 
 .reports-empty-description {
-  color: #6b7280;
+  color: #a78bfa;
   margin-bottom: 2rem;
   max-width: 400px;
   margin-left: auto;
@@ -424,22 +425,22 @@
 .reports-table-responsive {
   overflow-x: auto;
   border-radius: 8px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #4c1d95;
 }
 
 .reports-table {
   width: 100%;
   border-collapse: collapse;
-  background: white;
+  background: linear-gradient(135deg, #1e1e3f 0%, #2d1b69 100%);
 }
 
 .reports-table th {
   text-align: left;
   padding: 1rem;
   font-weight: 600;
-  color: #374151;
-  background: #f9fafb;
-  border-bottom: 1px solid #e5e7eb;
+  color: #e2e8f0;
+  background: rgba(168, 85, 247, 0.1);
+  border-bottom: 1px solid #4c1d95;
   font-size: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -447,11 +448,12 @@
 
 .reports-table td {
   padding: 1rem;
-  border-bottom: 1px solid #f3f4f6;
+  border-bottom: 1px solid rgba(76, 29, 149, 0.3);
+  color: #e2e8f0;
 }
 
 .reports-table tbody tr:hover {
-  background: #f9fafb;
+  background: rgba(168, 85, 247, 0.05);
 }
 
 .reports-table tbody tr:last-child td {
@@ -485,12 +487,12 @@
 
 .report-name {
   font-weight: 600;
-  color: #1f2937;
+  color: #e2e8f0;
   margin: 0;
 }
 
 .report-email {
-  color: #6b7280;
+  color: #a78bfa;
   font-size: 0.875rem;
   margin: 0;
 }
@@ -498,11 +500,12 @@
 .report-code {
   font-family: monospace;
   font-size: 0.875rem;
-  background-color: #f3f4f6;
-  color: #374151;
+  background-color: rgba(168, 85, 247, 0.1);
+  color: #a78bfa;
   padding: 0.25rem 0.5rem;
   border-radius: 4px;
   display: inline-block;
+  border: 1px solid rgba(168, 85, 247, 0.2);
 }
 
 /* Score Display */
@@ -515,7 +518,7 @@
 .report-score-value {
   font-size: 1.25rem;
   font-weight: 700;
-  color: #1f2937;
+  color: #e2e8f0;
 }
 
 .report-score-badge {
@@ -547,7 +550,7 @@
 
 /* Date */
 .report-date {
-  color: #6b7280;
+  color: #a78bfa;
   font-size: 0.875rem;
 }
 
