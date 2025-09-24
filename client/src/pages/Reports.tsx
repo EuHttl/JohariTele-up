@@ -682,6 +682,90 @@ const Reports: React.FC = () => {
                         </div>
             </div>
           )}
+
+          {/* Características Mais e Menos Selecionadas */}
+          {characteristicAnalysis && (
+            <div className="characteristics-analysis-section">
+              <div className="characteristics-analysis-header">
+                <h3 className="characteristics-analysis-title">Análise de Características</h3>
+                <p className="characteristics-analysis-description">
+                  Características mais e menos selecionadas pelos participantes
+                </p>
+              </div>
+              
+              <div className="characteristics-tables-grid">
+                {/* Características Mais Selecionadas */}
+                <div className="characteristics-table-card">
+                  <div className="characteristics-table-header">
+                    <h4 className="characteristics-table-title">Mais Selecionadas</h4>
+                    <span className="characteristics-table-count">
+                      {characteristicAnalysis.most_selected.length} características
+                    </span>
+                  </div>
+                  <div className="characteristics-table-content">
+                    <table className="characteristics-table">
+                      <thead>
+                        <tr>
+                          <th>Característica</th>
+                          <th>Auto</th>
+                          <th>Pares</th>
+                          <th>Consenso</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {characteristicAnalysis.most_selected.map((char, index) => (
+                          <tr key={index}>
+                            <td className="characteristic-name">{char.name}</td>
+                            <td className="characteristic-value">{char.self_selections}</td>
+                            <td className="characteristic-value">{char.peer_selections}</td>
+                            <td className="characteristic-consensus">
+                              <span className="consensus-value">{char.consensus_selections}</span>
+                              <span className="consensus-percentage">({char.consensus_percentage}%)</span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                {/* Características Menos Selecionadas */}
+                <div className="characteristics-table-card">
+                  <div className="characteristics-table-header">
+                    <h4 className="characteristics-table-title">Menos Selecionadas</h4>
+                    <span className="characteristics-table-count">
+                      {characteristicAnalysis.least_selected.length} características
+                    </span>
+                  </div>
+                  <div className="characteristics-table-content">
+                    <table className="characteristics-table">
+                      <thead>
+                        <tr>
+                          <th>Característica</th>
+                          <th>Auto</th>
+                          <th>Pares</th>
+                          <th>Consenso</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {characteristicAnalysis.least_selected.map((char, index) => (
+                          <tr key={index}>
+                            <td className="characteristic-name">{char.name}</td>
+                            <td className="characteristic-value">{char.self_selections}</td>
+                            <td className="characteristic-value">{char.peer_selections}</td>
+                            <td className="characteristic-consensus">
+                              <span className="consensus-value">{char.consensus_selections}</span>
+                              <span className="consensus-percentage">({char.consensus_percentage}%)</span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

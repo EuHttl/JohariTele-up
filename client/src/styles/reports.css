@@ -614,6 +614,139 @@
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
+/* Characteristics Analysis Section */
+.characteristics-analysis-section {
+  margin-top: 2rem;
+  background: linear-gradient(135deg, #1e1e3f 0%, #2d1b69 100%);
+  border-radius: 16px;
+  padding: 2rem;
+  border: 1px solid #4c1d95;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.characteristics-analysis-header {
+  margin-bottom: 2rem;
+}
+
+.characteristics-analysis-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #e2e8f0;
+  margin: 0 0 0.5rem 0;
+}
+
+.characteristics-analysis-description {
+  color: #a78bfa;
+  font-size: 1rem;
+  margin: 0;
+}
+
+.characteristics-tables-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+}
+
+.characteristics-table-card {
+  background: rgba(168, 85, 247, 0.05);
+  border-radius: 12px;
+  border: 1px solid rgba(168, 85, 247, 0.2);
+  overflow: hidden;
+}
+
+.characteristics-table-header {
+  padding: 1.5rem;
+  border-bottom: 1px solid rgba(168, 85, 247, 0.2);
+  background: rgba(168, 85, 247, 0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.characteristics-table-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #e2e8f0;
+  margin: 0;
+}
+
+.characteristics-table-count {
+  color: #a78bfa;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.characteristics-table-content {
+  overflow-x: auto;
+}
+
+.characteristics-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.characteristics-table th {
+  padding: 1rem;
+  text-align: left;
+  font-weight: 600;
+  color: #e2e8f0;
+  background: rgba(168, 85, 247, 0.1);
+  border-bottom: 1px solid rgba(168, 85, 247, 0.2);
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.characteristics-table td {
+  padding: 1rem;
+  border-bottom: 1px solid rgba(168, 85, 247, 0.1);
+}
+
+.characteristics-table tbody tr:hover {
+  background: rgba(168, 85, 247, 0.05);
+}
+
+.characteristic-name {
+  color: #e2e8f0;
+  font-weight: 500;
+}
+
+.characteristic-value {
+  color: #a78bfa;
+  font-weight: 600;
+  text-align: center;
+}
+
+.characteristic-consensus {
+  text-align: center;
+}
+
+.consensus-value {
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 1.125rem;
+}
+
+.consensus-percentage {
+  color: #a78bfa;
+  font-size: 0.875rem;
+  margin-left: 0.25rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .characteristics-tables-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  
+  .characteristics-table-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+}
+
 /* Actions */
 .reports-actions-cell {
   display: flex;
