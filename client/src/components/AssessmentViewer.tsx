@@ -23,7 +23,6 @@ const AssessmentViewer: React.FC<AssessmentViewerProps> = ({
   onClose
 }) => {
   const [selfAssessment, setSelfAssessment] = useState<AssessmentData[]>([]);
-  const [peerAssessments, setPeerAssessments] = useState<AssessmentData[]>([]);
   const [peerAssessors, setPeerAssessors] = useState<any[]>([]);
   const [selectedAssessor, setSelectedAssessor] = useState<any>(null);
   const [assessorEvaluations, setAssessorEvaluations] = useState<AssessmentData[]>([]);
@@ -57,20 +56,6 @@ const AssessmentViewer: React.FC<AssessmentViewerProps> = ({
       
       setSelfAssessment(processedSelfData);
 
-      // Buscar avaliações de pares usando a API configurada
-      console.log('📊 Buscando avaliações de pares...');
-      const peerData = await assessmentsAPI.getPeerCharacteristics(participantCode);
-      console.log('✅ Dados avaliações pares:', peerData);
-      
-      // Processar dados das avaliações de pares
-      const processedPeerData = Array.isArray(peerData) ? peerData.map((item: any, index: number) => ({
-        id: item.id || index + 1,
-        name: item.name || 'Característica sem nome',
-        selected: item.selected === true || item.selected === 1
-      })) : [];
-      
-      console.log('✅ Dados processados dos pares:', processedPeerData);
-      setPeerAssessments(processedPeerData);
 
       // Buscar pares que avaliaram este participante
       console.log('📊 Buscando pares que avaliaram...');
@@ -206,65 +191,6 @@ const AssessmentViewer: React.FC<AssessmentViewerProps> = ({
                 </div>
               </div>
 
-              {/* Avaliações de Pares */}
-              <div className="assessment-viewer-section">
-                <div className="assessment-viewer-section-header">
-                  <Users className="w-5 h-5 text-green-400" />
-                  <h3>Avaliações dos Pares</h3>
-                  <span className="assessment-viewer-count">
-                    {getSelectedCount(peerAssessments)} selecionadas
-                  </span>
-                </div>
-                
-                <div className="assessment-viewer-stats">
-                  <div className="assessment-viewer-stat">
-                    <span className="assessment-viewer-stat-label">Total de características:</span>
-                    <span className="assessment-viewer-stat-value">{peerAssessments.length}</span>
-                  </div>
-                  <div className="assessment-viewer-stat">
-                    <span className="assessment-viewer-stat-label">Selecionadas:</span>
-                    <span className="assessment-viewer-stat-value selected">
-                      {getSelectedCount(peerAssessments)}
-                    </span>
-                  </div>
-                  <div className="assessment-viewer-stat">
-                    <span className="assessment-viewer-stat-label">Não selecionadas:</span>
-                    <span className="assessment-viewer-stat-value not-selected">
-                      {peerAssessments.length - getSelectedCount(peerAssessments)}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="assessment-viewer-characteristics">
-                  <div className="assessment-viewer-characteristics-group">
-                    <h4 className="assessment-viewer-group-title selected">
-                      <CheckCircle className="w-4 h-4" />
-                      Características Selecionadas ({getSelectedCount(peerAssessments)})
-                    </h4>
-                    <div className="assessment-viewer-tags">
-                      {getSelectedCharacteristics(peerAssessments).map((char, index) => (
-                        <span key={index} className="assessment-viewer-tag selected">
-                          {char}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="assessment-viewer-characteristics-group">
-                    <h4 className="assessment-viewer-group-title not-selected">
-                      <AlertCircle className="w-4 h-4" />
-                      Características Não Selecionadas ({peerAssessments.length - getSelectedCount(peerAssessments)})
-                    </h4>
-                    <div className="assessment-viewer-tags">
-                      {getNotSelectedCharacteristics(peerAssessments).map((char, index) => (
-                        <span key={index} className="assessment-viewer-tag not-selected">
-                          {char}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
 
               {/* Avaliações Individuais dos Pares */}
               <div className="assessment-viewer-section">
