@@ -1517,7 +1517,7 @@
   --quadrant-color-light: #fbbf24;
 }
 
-.individual-quadrant-card.hidden {
+.individual-quadrant-card.hidden-quadrant {
   --quadrant-color: #3b82f6;
   --quadrant-color-light: #60a5fa;
 }
@@ -1603,7 +1603,7 @@
   color: #f59e0b;
 }
 
-.individual-characteristic-tag.hidden {
+.individual-characteristic-tag.hidden-quadrant {
   background: rgba(59, 130, 246, 0.1);
   border-color: rgba(59, 130, 246, 0.3);
   color: #3b82f6;

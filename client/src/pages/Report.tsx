@@ -273,7 +273,7 @@ const Report: React.FC = () => {
           // Mapear as chaves para nomes de classe seguros
           const getQuadrantClass = (key: string) => {
             switch (key) {
-              case 'hidden': return 'hidden-area';
+              case 'hidden': return 'hidden-quadrant';
               case 'open': return 'open';
               case 'blind': return 'blind';
               case 'unknown': return 'unknown';
