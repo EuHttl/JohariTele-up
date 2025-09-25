@@ -393,6 +393,73 @@ router.get('/completed-peers/:code', async (req, res) => {
   }
 });
 
+// GET /api/assessments/peer-assessors/:code - Buscar todos os pares que avaliaram um participante
+router.get('/peer-assessors/:code', async (req, res) => {
+  console.log('🔍 GET /api/assessments/peer-assessors/:code - Iniciando busca...');
+  
+  // Garantir que o Content-Type seja JSON
+  res.setHeader('Content-Type', 'application/json');
+  
+  if (!postgresInit) {
+    console.log('❌ PostgreSQL não configurado');
+    return res.status(500).json({ error: 'PostgreSQL não configurado' });
+  }
+  
+  if (!postgresInit.pool) {
+    console.log('❌ PostgreSQL pool não disponível');
+    return res.status(500).json({ error: 'PostgreSQL pool não disponível' });
+  }
+  
+  try {
+    const { code } = req.params;
+    console.log('🔍 Buscando pares que avaliaram:', code);
+    
+    // Buscar o ID do participante
+    const participantResult = await postgresInit.pool.query(
+      'SELECT id FROM participants WHERE code = $1',
+      [code]
+    );
+    
+    if (participantResult.rows.length === 0) {
+      console.log('❌ Participante não encontrado:', code);
+      return res.status(404).json({ error: 'Participante não encontrado' });
+    }
+    
+    const participantId = participantResult.rows[0].id;
+    console.log('📋 ID do participante:', participantId);
+    
+    // Buscar todos os pares que avaliaram este participante
+    const query = `
+      SELECT DISTINCT 
+        p.id,
+        p.name,
+        p.code,
+        COUNT(pa.characteristic_id) as characteristics_evaluated,
+        MAX(pa.created_at) as last_evaluation_date
+      FROM participants p
+      INNER JOIN peer_assessments pa ON pa.assessor_id = p.id
+      WHERE pa.assessed_id = $1
+      GROUP BY p.id, p.name, p.code
+      ORDER BY p.name
+    `;
+    
+    console.log('🔍 Executando query:', query, 'com parâmetro:', participantId);
+    const result = await postgresInit.pool.query(query, [participantId]);
+    console.log('✅ Pares que avaliaram encontrados:', result.rows.length);
+    
+    res.json(result.rows);
+    
+  } catch (error) {
+    console.error('❌ Erro ao buscar pares que avaliaram:', error);
+    console.error('Stack:', error.stack);
+    res.status(500).json({ 
+      error: 'Erro interno do servidor',
+      details: error.message,
+      code: error.code
+    });
+  }
+});
+
 // GET /api/assessments/peer-characteristics/:code - Buscar características selecionadas pelos pares
 router.get('/peer-characteristics/:code', async (req, res) => {
   console.log('🔍 GET /api/assessments/peer-characteristics/:code - Iniciando busca...');

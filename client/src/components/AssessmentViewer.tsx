@@ -24,6 +24,9 @@ const AssessmentViewer: React.FC<AssessmentViewerProps> = ({
 }) => {
   const [selfAssessment, setSelfAssessment] = useState<AssessmentData[]>([]);
   const [peerAssessments, setPeerAssessments] = useState<AssessmentData[]>([]);
+  const [peerAssessors, setPeerAssessors] = useState<any[]>([]);
+  const [selectedAssessor, setSelectedAssessor] = useState<any>(null);
+  const [assessorEvaluations, setAssessorEvaluations] = useState<AssessmentData[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -69,11 +72,37 @@ const AssessmentViewer: React.FC<AssessmentViewerProps> = ({
       console.log('✅ Dados processados dos pares:', processedPeerData);
       setPeerAssessments(processedPeerData);
 
+      // Buscar pares que avaliaram este participante
+      console.log('📊 Buscando pares que avaliaram...');
+      const assessorsData = await assessmentsAPI.getPeerAssessors(participantCode);
+      console.log('✅ Pares que avaliaram:', assessorsData);
+      setPeerAssessors(assessorsData);
+
     } catch (err: any) {
       console.error('❌ Erro ao buscar avaliações:', err);
       setError(`Erro ao carregar avaliações: ${err.message}`);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchAssessorEvaluations = async (assessor: any) => {
+    try {
+      console.log('🔍 Buscando avaliações do par:', assessor.name);
+      const evaluations = await assessmentsAPI.getPeerAssessment(assessor.code, participantCode);
+      console.log('✅ Avaliações do par:', evaluations);
+      
+      const processedEvaluations = Array.isArray(evaluations) ? evaluations.map((item: any, index: number) => ({
+        id: item.id || index + 1,
+        name: item.name || 'Característica sem nome',
+        selected: item.selected === true || item.selected === 1
+      })) : [];
+      
+      setAssessorEvaluations(processedEvaluations);
+      setSelectedAssessor(assessor);
+    } catch (error: any) {
+      console.error('❌ Erro ao carregar avaliações do par:', error);
+      setError(`Erro ao carregar avaliações de ${assessor.name}: ${error.message}`);
     }
   };
 
@@ -235,6 +264,104 @@ const AssessmentViewer: React.FC<AssessmentViewerProps> = ({
                     </div>
                   </div>
                 </div>
+              </div>
+
+              {/* Avaliações Individuais dos Pares */}
+              <div className="assessment-viewer-section">
+                <div className="assessment-viewer-section-header">
+                  <Users className="w-5 h-5 text-purple-400" />
+                  <h3>Avaliações Individuais dos Pares</h3>
+                  <span className="assessment-viewer-count">
+                    {peerAssessors.length} pares avaliaram
+                  </span>
+                </div>
+
+                {peerAssessors.length > 0 ? (
+                  <div className="assessment-viewer-assessors">
+                    <div className="assessment-viewer-assessors-list">
+                      {peerAssessors.map((assessor, index) => (
+                        <button
+                          key={index}
+                          onClick={() => fetchAssessorEvaluations(assessor)}
+                          className={`assessment-viewer-assessor-btn ${
+                            selectedAssessor?.id === assessor.id ? 'active' : ''
+                          }`}
+                        >
+                          <div className="assessment-viewer-assessor-info">
+                            <span className="assessment-viewer-assessor-name">{assessor.name}</span>
+                            <span className="assessment-viewer-assessor-stats">
+                              {assessor.characteristics_evaluated} características avaliadas
+                            </span>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+
+                    {selectedAssessor && (
+                      <div className="assessment-viewer-assessor-details">
+                        <div className="assessment-viewer-assessor-header">
+                          <h4>Avaliação de {selectedAssessor.name}</h4>
+                          <span className="assessment-viewer-count">
+                            {getSelectedCount(assessorEvaluations)} selecionadas
+                          </span>
+                        </div>
+
+                        <div className="assessment-viewer-stats">
+                          <div className="assessment-viewer-stat">
+                            <span className="assessment-viewer-stat-label">Total de características:</span>
+                            <span className="assessment-viewer-stat-value">{assessorEvaluations.length}</span>
+                          </div>
+                          <div className="assessment-viewer-stat">
+                            <span className="assessment-viewer-stat-label">Selecionadas:</span>
+                            <span className="assessment-viewer-stat-value selected">
+                              {getSelectedCount(assessorEvaluations)}
+                            </span>
+                          </div>
+                          <div className="assessment-viewer-stat">
+                            <span className="assessment-viewer-stat-label">Não selecionadas:</span>
+                            <span className="assessment-viewer-stat-value not-selected">
+                              {assessorEvaluations.length - getSelectedCount(assessorEvaluations)}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="assessment-viewer-characteristics">
+                          <div className="assessment-viewer-characteristics-group">
+                            <h4 className="assessment-viewer-group-title selected">
+                              <CheckCircle className="w-4 h-4" />
+                              Características Selecionadas ({getSelectedCount(assessorEvaluations)})
+                            </h4>
+                            <div className="assessment-viewer-tags">
+                              {getSelectedCharacteristics(assessorEvaluations).map((char, index) => (
+                                <span key={index} className="assessment-viewer-tag selected">
+                                  {char}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+
+                          <div className="assessment-viewer-characteristics-group">
+                            <h4 className="assessment-viewer-group-title not-selected">
+                              <AlertCircle className="w-4 h-4" />
+                              Características Não Selecionadas ({assessorEvaluations.length - getSelectedCount(assessorEvaluations)})
+                            </h4>
+                            <div className="assessment-viewer-tags">
+                              {getNotSelectedCharacteristics(assessorEvaluations).map((char, index) => (
+                                <span key={index} className="assessment-viewer-tag not-selected">
+                                  {char}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="assessment-viewer-empty">
+                    <p>Nenhum par avaliou este participante ainda.</p>
+                  </div>
+                )}
               </div>
             </div>
           )}

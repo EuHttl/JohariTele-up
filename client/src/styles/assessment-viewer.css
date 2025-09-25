@@ -334,3 +334,103 @@
 .assessment-viewer-content::-webkit-scrollbar-thumb:hover {
   background: rgba(168, 85, 247, 0.5);
 }
+
+/* Avaliações Individuais dos Pares */
+.assessment-viewer-assessors {
+  margin-top: 1rem;
+}
+
+.assessment-viewer-assessors-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.assessment-viewer-assessor-btn {
+  background: rgba(168, 85, 247, 0.1);
+  border: 1px solid rgba(168, 85, 247, 0.3);
+  border-radius: 8px;
+  padding: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+  width: 100%;
+}
+
+.assessment-viewer-assessor-btn:hover {
+  background: rgba(168, 85, 247, 0.2);
+  border-color: rgba(168, 85, 247, 0.5);
+  transform: translateY(-1px);
+}
+
+.assessment-viewer-assessor-btn.active {
+  background: rgba(168, 85, 247, 0.3);
+  border-color: #a855f7;
+  box-shadow: 0 0 0 2px rgba(168, 85, 247, 0.3);
+}
+
+.assessment-viewer-assessor-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.assessment-viewer-assessor-name {
+  color: #e2e8f0;
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.assessment-viewer-assessor-stats {
+  color: #94a3b8;
+  font-size: 0.875rem;
+}
+
+.assessment-viewer-assessor-details {
+  background: rgba(168, 85, 247, 0.05);
+  border: 1px solid rgba(168, 85, 247, 0.2);
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-top: 1rem;
+}
+
+.assessment-viewer-assessor-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid rgba(168, 85, 247, 0.2);
+}
+
+.assessment-viewer-assessor-header h4 {
+  color: #e2e8f0;
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.assessment-viewer-empty {
+  text-align: center;
+  padding: 2rem;
+  color: #94a3b8;
+  font-style: italic;
+}
+
+/* Responsive para avaliações individuais */
+@media (max-width: 768px) {
+  .assessment-viewer-assessor-btn {
+    padding: 0.75rem;
+  }
+  
+  .assessment-viewer-assessor-details {
+    padding: 1rem;
+  }
+  
+  .assessment-viewer-assessor-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+}
