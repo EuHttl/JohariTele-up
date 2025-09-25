@@ -297,8 +297,20 @@ const Report: React.FC = () => {
 
       {/* Johari Window Quadrants */}
       <div className="individual-quadrants-grid">
-        {Object.entries(report.quadrants).map(([key, quadrant]) => (
-          <div key={key} className={`individual-quadrant-card ${key}`}>
+        {Object.entries(report.quadrants).map(([key, quadrant]) => {
+          // Mapear as chaves para nomes de classe seguros
+          const getQuadrantClass = (key: string) => {
+            switch (key) {
+              case 'hidden': return 'hidden-area';
+              case 'open': return 'open';
+              case 'blind': return 'blind';
+              case 'unknown': return 'unknown';
+              default: return key;
+            }
+          };
+          
+          return (
+          <div key={key} className={`individual-quadrant-card ${getQuadrantClass(key)}`}>
             <div className="individual-quadrant-header">
               <div className="individual-quadrant-stats">
                 <div>
@@ -330,7 +342,8 @@ const Report: React.FC = () => {
               )}
             </div>
           </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* Insights */}
