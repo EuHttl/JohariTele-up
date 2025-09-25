@@ -3,6 +3,7 @@ import { participantsAPI } from '../services/api';
 import { Participant } from '../types';
 import Modal from '../components/Modal';
 import ResponsiveTable from '../components/ResponsiveTable';
+import AssessmentViewer from '../components/AssessmentViewer';
 import { 
   Plus, 
   Edit, 
@@ -27,6 +28,8 @@ const Participants: React.FC = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
+  const [showAssessmentViewer, setShowAssessmentViewer] = useState(false);
+  const [selectedParticipant, setSelectedParticipant] = useState<Participant | null>(null);
 
   useEffect(() => {
     fetchParticipants();
@@ -88,6 +91,11 @@ const Participants: React.FC = () => {
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
     setSuccess('Código copiado para a área de transferência!');
+  };
+
+  const handleViewAssessment = (participant: Participant) => {
+    setSelectedParticipant(participant);
+    setShowAssessmentViewer(true);
   };
 
   const getStatusBadge = (participant: Participant) => {
@@ -317,8 +325,15 @@ const Participants: React.FC = () => {
                   render: (value, participant) => (
                     <div className="participants-actions-cell">
                       <button
-                        onClick={() => copyToClipboard(participant.code)}
+                        onClick={() => handleViewAssessment(participant)}
                         className="participants-action-btn view"
+                        title="Visualizar autoavaliação e avaliação em pares"
+                      >
+                        <Eye className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => copyToClipboard(participant.code)}
+                        className="participants-action-btn copy"
                         title="Copiar código"
                       >
                         <Copy className="w-4 h-4" />
@@ -405,6 +420,19 @@ const Participants: React.FC = () => {
           </div>
         </form>
       </Modal>
+
+      {/* Assessment Viewer */}
+      {selectedParticipant && (
+        <AssessmentViewer
+          participantCode={selectedParticipant.code}
+          participantName={selectedParticipant.name}
+          isOpen={showAssessmentViewer}
+          onClose={() => {
+            setShowAssessmentViewer(false);
+            setSelectedParticipant(null);
+          }}
+        />
+      )}
     </div>
   );
 };
