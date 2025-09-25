@@ -393,4 +393,69 @@ router.get('/completed-peers/:code', async (req, res) => {
   }
 });
 
+// GET /api/assessments/peer-characteristics/:code - Buscar características selecionadas pelos pares
+router.get('/peer-characteristics/:code', async (req, res) => {
+  console.log('🔍 GET /api/assessments/peer-characteristics/:code - Iniciando busca...');
+  
+  if (!postgresInit) {
+    console.log('❌ PostgreSQL não configurado');
+    return res.status(500).json({ error: 'PostgreSQL não configurado' });
+  }
+  
+  if (!postgresInit.pool) {
+    console.log('❌ PostgreSQL pool não disponível');
+    return res.status(500).json({ error: 'PostgreSQL pool não disponível' });
+  }
+  
+  try {
+    const { code } = req.params;
+    console.log('🔍 Buscando características selecionadas pelos pares para:', code);
+    
+    // Buscar o ID do participante
+    const participantResult = await postgresInit.pool.query(
+      'SELECT id FROM participants WHERE code = $1',
+      [code]
+    );
+    
+    if (participantResult.rows.length === 0) {
+      console.log('❌ Participante não encontrado:', code);
+      return res.status(404).json({ error: 'Participante não encontrado' });
+    }
+    
+    const participantId = participantResult.rows[0].id;
+    console.log('📋 ID do participante:', participantId);
+    
+    // Buscar características selecionadas pelos pares
+    const query = `
+      SELECT 
+        c.id,
+        c.name,
+        COUNT(CASE WHEN pa.selected = true THEN 1 END) as selected_count,
+        COUNT(pa.assessor_id) as total_assessors,
+        CASE 
+          WHEN COUNT(CASE WHEN pa.selected = true THEN 1 END) > 0 THEN true
+          ELSE false
+        END as selected
+      FROM characteristics c
+      LEFT JOIN peer_assessments pa ON c.id = pa.characteristic_id AND pa.assessed_id = $1
+      GROUP BY c.id, c.name
+      ORDER BY c.name
+    `;
+    
+    const result = await postgresInit.pool.query(query, [participantId]);
+    console.log('✅ Características dos pares encontradas:', result.rows.length);
+    
+    res.json(result.rows);
+    
+  } catch (error) {
+    console.error('❌ Erro ao buscar características dos pares:', error);
+    console.error('Stack:', error.stack);
+    res.status(500).json({ 
+      error: 'Erro interno do servidor',
+      details: error.message,
+      code: error.code
+    });
+  }
+});
+
 module.exports = router;

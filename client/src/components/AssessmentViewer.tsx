@@ -76,8 +76,8 @@ const AssessmentViewer: React.FC<AssessmentViewerProps> = ({
       
       setSelfAssessment(processedSelfData);
 
-      // Buscar avaliações de pares
-      const peerResponse = await fetch(`/api/reports/johari/${participantCode}`, {
+      // Buscar avaliações de pares usando a nova API
+      const peerResponse = await fetch(`/api/assessments/peer-characteristics/${participantCode}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -101,33 +101,18 @@ const AssessmentViewer: React.FC<AssessmentViewerProps> = ({
         throw new Error('Resposta do servidor não é JSON válido');
       }
       
-      const reportData = await peerResponse.json();
-      console.log('✅ Dados avaliações pares:', reportData);
+      const peerData = await peerResponse.json();
+      console.log('✅ Dados avaliações pares:', peerData);
       
-      // Extrair características selecionadas pelos pares
-      if (reportData.quadrants && reportData.quadrants.open) {
-        const peerSelected = reportData.quadrants.open.characteristics || [];
-        const peerNotSelected = reportData.quadrants.blind?.characteristics || [];
-        
-        console.log('📋 Características selecionadas pelos pares:', peerSelected);
-        console.log('📋 Características não selecionadas pelos pares:', peerNotSelected);
-        
-        // Combinar todas as características avaliadas pelos pares
-        const allPeerCharacteristics = Array.from(new Set([...peerSelected, ...peerNotSelected]));
-        
-        // Criar dados estruturados para exibição
-        const peerData = allPeerCharacteristics.map((char, index) => ({
-          id: index + 1,
-          name: char,
-          selected: peerSelected.includes(char)
-        }));
-        
-        console.log('✅ Dados processados dos pares:', peerData);
-        setPeerAssessments(peerData);
-      } else {
-        console.log('⚠️ Nenhum dado de quadrantes encontrado');
-        setPeerAssessments([]);
-      }
+      // Processar dados das avaliações de pares
+      const processedPeerData = Array.isArray(peerData) ? peerData.map((item: any, index: number) => ({
+        id: item.id || index + 1,
+        name: item.name || 'Característica sem nome',
+        selected: item.selected === true || item.selected === 1
+      })) : [];
+      
+      console.log('✅ Dados processados dos pares:', processedPeerData);
+      setPeerAssessments(processedPeerData);
 
     } catch (err: any) {
       console.error('❌ Erro ao buscar avaliações:', err);
