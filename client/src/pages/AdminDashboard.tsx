@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { adminAPI } from '../services/api';
-import { useAuth } from '../contexts/AuthContext';
 import { 
   Users, 
   CheckCircle, 
@@ -9,7 +8,6 @@ import {
   TrendingUp,
   BarChart3,
   Grid3X3,
-  Eye,
   RefreshCw,
   Settings,
   Database,
@@ -68,9 +66,8 @@ interface BackupFile {
 }
 
 const AdminDashboard: React.FC = () => {
-  const { user } = useAuth();
   const [tracking, setTracking] = useState<AssessmentTracking | null>(null);
-  const [systemStatus, setSystemStatus] = useState<SystemStatus>({
+  const [systemStatus] = useState<SystemStatus>({
     database: 'online',
     api: 'online',
     storage: 'online'
@@ -80,7 +77,6 @@ const AdminDashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const [activeTab, setActiveTab] = useState('overview');
 
   useEffect(() => {
     fetchData();

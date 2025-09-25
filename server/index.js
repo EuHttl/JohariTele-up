@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const path = require('path');
+const rateLimit = require('express-rate-limit');
 require('dotenv').config();
 
 // Usar PostgreSQL se DATABASE_URL estiver disponível, senão SQLite
@@ -54,6 +55,31 @@ app.use(cors({
   credentials: false,
   optionsSuccessStatus: 200 // Para suporte a navegadores legados
 }));
+
+// Rate limiting para segurança
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutos
+  max: 100, // máximo 100 requests por IP por janela
+  message: {
+    error: 'Muitas tentativas. Tente novamente em 15 minutos.',
+    retryAfter: 15 * 60
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Rate limiting mais restritivo para login
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutos
+  max: 5, // máximo 5 tentativas de login por IP
+  message: {
+    error: 'Muitas tentativas de login. Tente novamente em 15 minutos.',
+    retryAfter: 15 * 60
+  },
+  skipSuccessfulRequests: true,
+});
+
+app.use(limiter);
 
 // Middleware adicional para garantir CORS
 app.use((req, res, next) => {
@@ -221,8 +247,8 @@ app.use('/api/participants', participantsRoutes);
 app.use('/api/assessments', assessmentsRoutes);
 app.use('/api/reports', reportsRoutes);
 app.use('/api/admin', adminRoutes);
-app.use('/api/auth', authRoutes);
-app.use('/auth', authRoutes); // Rota adicional para compatibilidade
+app.use('/api/auth', loginLimiter, authRoutes);
+app.use('/auth', loginLimiter, authRoutes); // Rota adicional para compatibilidade
 
 // Log de todas as rotas registradas
 console.log('🔗 Rotas registradas:');

@@ -58,20 +58,6 @@ const Report: React.FC = () => {
     }
   }, [code, fetchData]);
 
-  const getQuadrantColor = (quadrantName: string) => {
-    switch (quadrantName.toLowerCase()) {
-      case 'área aberta':
-        return 'bg-green-100 text-green-800 border-green-200';
-      case 'área cega':
-        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'área oculta':
-        return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'área desconhecida':
-        return 'bg-purple-100 text-purple-800 border-purple-200';
-      default:
-        return 'bg-gray-100 text-gray-800 border-gray-200';
-    }
-  };
 
   const getInsightIcon = (type: string) => {
     switch (type) {
@@ -88,20 +74,6 @@ const Report: React.FC = () => {
     }
   };
 
-  const getInsightColor = (type: string) => {
-    switch (type) {
-      case 'positive':
-        return 'border-green-200 bg-green-50';
-      case 'attention':
-        return 'border-yellow-200 bg-yellow-50';
-      case 'opportunity':
-        return 'border-blue-200 bg-blue-50';
-      case 'growth':
-        return 'border-purple-200 bg-purple-50';
-      default:
-        return 'border-gray-200 bg-gray-50';
-    }
-  };
 
   const handleDownloadPDF = () => {
     if (!participant || !report) return;

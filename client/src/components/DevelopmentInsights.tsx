@@ -7,7 +7,6 @@ import {
   CheckCircle,
   ArrowRight,
   BookOpen,
-  Users,
   Calendar,
   Star
 } from 'lucide-react';

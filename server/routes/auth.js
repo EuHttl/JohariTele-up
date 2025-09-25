@@ -13,23 +13,35 @@ if (process.env.DATABASE_URL) {
   db = sqliteInit.db;
 }
 
+// Pool de conexões PostgreSQL reutilizável
+let postgresPool = null;
+
+function getPostgresPool() {
+  if (!postgresPool) {
+    const { Pool } = require('pg');
+    postgresPool = new Pool({
+      connectionString: process.env.DATABASE_URL,
+      ssl: { rejectUnauthorized: false },
+      max: 20,
+      idleTimeoutMillis: 30000,
+      connectionTimeoutMillis: 2000,
+    });
+  }
+  return postgresPool;
+}
+
 // Função para executar query PostgreSQL diretamente
 async function queryPostgres(sql, params = []) {
   if (!process.env.DATABASE_URL) {
     throw new Error('PostgreSQL não configurado');
   }
   
-  const { Pool } = require('pg');
-  const pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
-    ssl: { rejectUnauthorized: false }
-  });
+  const pool = getPostgresPool();
   
   try {
     const client = await pool.connect();
     const result = await client.query(sql, params);
     client.release();
-    await pool.end();
     return result; // Retorna o resultado completo com rows
   } catch (error) {
     console.error('Erro na query PostgreSQL:', error);
@@ -37,7 +49,11 @@ async function queryPostgres(sql, params = []) {
   }
 }
 
-const JWT_SECRET = process.env.JWT_SECRET || 'johari_secret_key_2024';
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+  console.error('❌ JWT_SECRET não configurado! Configure a variável de ambiente JWT_SECRET');
+  process.exit(1);
+}
 
 // POST /api/auth/login - Login unificado para admin e participantes
 router.post('/login', async (req, res) => {
@@ -46,10 +62,28 @@ router.post('/login', async (req, res) => {
     console.log('🔐 Login attempt started:', { email: req.body.email, timestamp: new Date().toISOString() });
     const { email, password } = req.body;
     
+    // Validação de entrada
     if (!email || !password) {
       console.log('❌ Login failed: missing credentials');
       return res.status(400).json({ error: 'Email e senha são obrigatórios' });
     }
+    
+    // Validação de formato de email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      console.log('❌ Login failed: invalid email format');
+      return res.status(400).json({ error: 'Formato de email inválido' });
+    }
+    
+    // Validação de tamanho da senha
+    if (password.length < 6) {
+      console.log('❌ Login failed: password too short');
+      return res.status(400).json({ error: 'Senha deve ter pelo menos 6 caracteres' });
+    }
+    
+    // Sanitização básica
+    const sanitizedEmail = email.toLowerCase().trim();
+    const sanitizedPassword = password.trim();
     
     // Usar PostgreSQL diretamente se disponível
     if (process.env.DATABASE_URL) {
@@ -57,12 +91,12 @@ router.post('/login', async (req, res) => {
       
       try {
         // Buscar admin
-        const adminResult = await queryPostgres('SELECT id, username, email, password, name FROM admins WHERE email = $1', [email]);
+        const adminResult = await queryPostgres('SELECT id, username, email, password, name FROM admins WHERE email = $1', [sanitizedEmail]);
         
       if (adminResult && adminResult.rows && adminResult.rows.length > 0) {
           const admin = adminResult.rows[0];
           console.log('✅ Admin encontrado, verificando senha...');
-        const isMatch = bcrypt.compareSync(password, admin.password);
+        const isMatch = bcrypt.compareSync(sanitizedPassword, admin.password);
         
         if (!isMatch) {
           return res.status(401).json({ error: 'Credenciais inválidas' });
@@ -97,7 +131,7 @@ router.post('/login', async (req, res) => {
       
       // Se não é admin, tenta como participante
         console.log('🔍 Admin não encontrado, verificando participante...');
-        const participantResult = await queryPostgres('SELECT id, name, email, code, password FROM participants WHERE email = $1', [email]);
+        const participantResult = await queryPostgres('SELECT id, name, email, code, password FROM participants WHERE email = $1', [sanitizedEmail]);
         
         if (!participantResult || !participantResult.rows || participantResult.rows.length === 0) {
           console.log('❌ Participante não encontrado ou erro na query');
@@ -208,7 +242,7 @@ router.post('/login', async (req, res) => {
       
       // Se encontrou como admin, verifica a senha
       if (admin) {
-        const isMatch = bcrypt.compareSync(password, admin.password);
+        const isMatch = bcrypt.compareSync(sanitizedPassword, admin.password);
         
         if (!isMatch) {
           return res.status(401).json({ error: 'Credenciais inválidas' });

@@ -5,7 +5,6 @@ import { ComparativeReport, CharacteristicAnalysis } from '../types';
 import { 
   TrendingUp, 
   Users, 
-  Eye,
   Download,
   AlertCircle,
   CheckCircle,
@@ -75,9 +74,6 @@ const Reports: React.FC = () => {
     }
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('pt-BR');
-  };
 
   const getFilteredParticipants = () => {
     if (!comparativeReport?.participants) return [];

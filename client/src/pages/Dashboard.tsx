@@ -5,7 +5,6 @@ import {
   Users, 
   CheckCircle, 
   Clock, 
-  FileText, 
   BarChart3, 
   Plus,
   UserCheck,
@@ -18,7 +17,6 @@ import {
   Star,
   Heart,
   Brain,
-  Copy,
   Lightbulb,
   TrendingUp,
 } from 'lucide-react';
