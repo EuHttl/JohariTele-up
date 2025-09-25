@@ -37,25 +37,44 @@ const AssessmentViewer: React.FC<AssessmentViewerProps> = ({
     setError('');
 
     try {
+      console.log('🔍 Buscando avaliações para:', participantCode);
+      
       // Buscar autoavaliação
       const selfResponse = await fetch(`/api/assessments/self/${participantCode}`);
+      console.log('📊 Resposta autoavaliação:', selfResponse.status);
+      
       if (!selfResponse.ok) {
-        throw new Error('Erro ao buscar autoavaliação');
+        throw new Error(`Erro ao buscar autoavaliação: ${selfResponse.status}`);
       }
       const selfData = await selfResponse.json();
-      setSelfAssessment(selfData);
+      console.log('✅ Dados autoavaliação:', selfData);
+      
+      // Processar dados da autoavaliação
+      const processedSelfData = selfData.map((item: any, index: number) => ({
+        id: index + 1,
+        name: item.name,
+        selected: item.selected === true || item.selected === 1
+      }));
+      
+      setSelfAssessment(processedSelfData);
 
       // Buscar avaliações de pares (agregadas)
       const peerResponse = await fetch(`/api/reports/johari/${participantCode}`);
+      console.log('📊 Resposta avaliações pares:', peerResponse.status);
+      
       if (!peerResponse.ok) {
-        throw new Error('Erro ao buscar avaliações de pares');
+        throw new Error(`Erro ao buscar avaliações de pares: ${peerResponse.status}`);
       }
       const reportData = await peerResponse.json();
+      console.log('✅ Dados avaliações pares:', reportData);
       
       // Extrair características selecionadas pelos pares
       if (reportData.quadrants && reportData.quadrants.open) {
         const peerSelected = reportData.quadrants.open.characteristics || [];
         const peerNotSelected = reportData.quadrants.blind?.characteristics || [];
+        
+        console.log('📋 Características selecionadas pelos pares:', peerSelected);
+        console.log('📋 Características não selecionadas pelos pares:', peerNotSelected);
         
         // Combinar todas as características avaliadas pelos pares
         const allPeerCharacteristics = Array.from(new Set([...peerSelected, ...peerNotSelected]));
@@ -67,11 +86,15 @@ const AssessmentViewer: React.FC<AssessmentViewerProps> = ({
           selected: peerSelected.includes(char)
         }));
         
+        console.log('✅ Dados processados dos pares:', peerData);
         setPeerAssessments(peerData);
+      } else {
+        console.log('⚠️ Nenhum dado de quadrantes encontrado');
+        setPeerAssessments([]);
       }
 
     } catch (err: any) {
-      console.error('Erro ao buscar avaliações:', err);
+      console.error('❌ Erro ao buscar avaliações:', err);
       setError(err.message || 'Erro ao carregar avaliações');
     } finally {
       setLoading(false);
