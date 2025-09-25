@@ -39,94 +39,99 @@ const AssessmentViewer: React.FC<AssessmentViewerProps> = ({
     try {
       console.log('🔍 Buscando avaliações para:', participantCode);
       
-      // Tentar buscar autoavaliação
-      try {
-        const selfResponse = await fetch(`/api/assessments/self/${participantCode}`);
-        console.log('📊 Resposta autoavaliação:', selfResponse.status);
-        
-        if (selfResponse.ok) {
-          const contentType = selfResponse.headers.get('content-type');
-          if (contentType && contentType.includes('application/json')) {
-            const selfData = await selfResponse.json();
-            console.log('✅ Dados autoavaliação:', selfData);
-            
-            // Processar dados da autoavaliação
-            const processedSelfData = Array.isArray(selfData) ? selfData.map((item: any, index: number) => ({
-              id: index + 1,
-              name: item.name || 'Característica sem nome',
-              selected: item.selected === true || item.selected === 1
-            })) : [];
-            
-            setSelfAssessment(processedSelfData);
-          } else {
-            console.log('⚠️ Resposta autoavaliação não é JSON, usando dados mock');
-            setSelfAssessment([]);
-          }
-        } else {
-          console.log('⚠️ Erro na autoavaliação, usando dados mock');
-          setSelfAssessment([]);
+      // Buscar autoavaliação
+      const selfResponse = await fetch(`/api/assessments/self/${participantCode}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
         }
-      } catch (selfErr) {
-        console.log('⚠️ Erro ao buscar autoavaliação, usando dados mock:', selfErr);
-        setSelfAssessment([]);
+      });
+      
+      console.log('📊 Resposta autoavaliação:', selfResponse.status, selfResponse.statusText);
+      
+      if (!selfResponse.ok) {
+        const errorText = await selfResponse.text();
+        console.error('❌ Erro na autoavaliação:', selfResponse.status, errorText);
+        throw new Error(`Erro ${selfResponse.status}: ${errorText.substring(0, 100)}...`);
       }
+      
+      // Verificar se a resposta é JSON válido
+      const contentType = selfResponse.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        const responseText = await selfResponse.text();
+        console.error('❌ Resposta não é JSON:', responseText.substring(0, 200));
+        throw new Error('Resposta do servidor não é JSON válido');
+      }
+      
+      const selfData = await selfResponse.json();
+      console.log('✅ Dados autoavaliação:', selfData);
+      
+      // Processar dados da autoavaliação
+      const processedSelfData = Array.isArray(selfData) ? selfData.map((item: any, index: number) => ({
+        id: index + 1,
+        name: item.name || 'Característica sem nome',
+        selected: item.selected === true || item.selected === 1
+      })) : [];
+      
+      setSelfAssessment(processedSelfData);
 
-      // Tentar buscar avaliações de pares
-      try {
-        const peerResponse = await fetch(`/api/reports/johari/${participantCode}`);
-        console.log('📊 Resposta avaliações pares:', peerResponse.status);
-        
-        if (peerResponse.ok) {
-          const contentType = peerResponse.headers.get('content-type');
-          if (contentType && contentType.includes('application/json')) {
-            const reportData = await peerResponse.json();
-            console.log('✅ Dados avaliações pares:', reportData);
-            
-            // Extrair características selecionadas pelos pares
-            if (reportData.quadrants && reportData.quadrants.open) {
-              const peerSelected = reportData.quadrants.open.characteristics || [];
-              const peerNotSelected = reportData.quadrants.blind?.characteristics || [];
-              
-              console.log('📋 Características selecionadas pelos pares:', peerSelected);
-              console.log('📋 Características não selecionadas pelos pares:', peerNotSelected);
-              
-              // Combinar todas as características avaliadas pelos pares
-              const allPeerCharacteristics = Array.from(new Set([...peerSelected, ...peerNotSelected]));
-              
-              // Criar dados estruturados para exibição
-              const peerData = allPeerCharacteristics.map((char, index) => ({
-                id: index + 1,
-                name: char,
-                selected: peerSelected.includes(char)
-              }));
-              
-              console.log('✅ Dados processados dos pares:', peerData);
-              setPeerAssessments(peerData);
-            } else {
-              console.log('⚠️ Nenhum dado de quadrantes encontrado');
-              setPeerAssessments([]);
-            }
-          } else {
-            console.log('⚠️ Resposta avaliações pares não é JSON, usando dados mock');
-            setPeerAssessments([]);
-          }
-        } else {
-          console.log('⚠️ Erro nas avaliações de pares, usando dados mock');
-          setPeerAssessments([]);
+      // Buscar avaliações de pares
+      const peerResponse = await fetch(`/api/reports/johari/${participantCode}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
         }
-      } catch (peerErr) {
-        console.log('⚠️ Erro ao buscar avaliações de pares, usando dados mock:', peerErr);
+      });
+      
+      console.log('📊 Resposta avaliações pares:', peerResponse.status, peerResponse.statusText);
+      
+      if (!peerResponse.ok) {
+        const errorText = await peerResponse.text();
+        console.error('❌ Erro nas avaliações de pares:', peerResponse.status, errorText);
+        throw new Error(`Erro ${peerResponse.status}: ${errorText.substring(0, 100)}...`);
+      }
+      
+      // Verificar se a resposta é JSON válido
+      const peerContentType = peerResponse.headers.get('content-type');
+      if (!peerContentType || !peerContentType.includes('application/json')) {
+        const responseText = await peerResponse.text();
+        console.error('❌ Resposta não é JSON:', responseText.substring(0, 200));
+        throw new Error('Resposta do servidor não é JSON válido');
+      }
+      
+      const reportData = await peerResponse.json();
+      console.log('✅ Dados avaliações pares:', reportData);
+      
+      // Extrair características selecionadas pelos pares
+      if (reportData.quadrants && reportData.quadrants.open) {
+        const peerSelected = reportData.quadrants.open.characteristics || [];
+        const peerNotSelected = reportData.quadrants.blind?.characteristics || [];
+        
+        console.log('📋 Características selecionadas pelos pares:', peerSelected);
+        console.log('📋 Características não selecionadas pelos pares:', peerNotSelected);
+        
+        // Combinar todas as características avaliadas pelos pares
+        const allPeerCharacteristics = Array.from(new Set([...peerSelected, ...peerNotSelected]));
+        
+        // Criar dados estruturados para exibição
+        const peerData = allPeerCharacteristics.map((char, index) => ({
+          id: index + 1,
+          name: char,
+          selected: peerSelected.includes(char)
+        }));
+        
+        console.log('✅ Dados processados dos pares:', peerData);
+        setPeerAssessments(peerData);
+      } else {
+        console.log('⚠️ Nenhum dado de quadrantes encontrado');
         setPeerAssessments([]);
       }
 
-      // Se chegou até aqui sem erro, mostrar mensagem de sucesso
-      if (selfAssessment.length === 0 && peerAssessments.length === 0) {
-        setError('Nenhum dado de avaliação encontrado. Verifique se o participante completou as avaliações.');
-      }
-
     } catch (err: any) {
-      console.error('❌ Erro geral ao buscar avaliações:', err);
-      setError('Erro ao carregar avaliações. Verifique se o servidor está rodando.');
+      console.error('❌ Erro ao buscar avaliações:', err);
+      setError(`Erro ao carregar avaliações: ${err.message}`);
     } finally {
       setLoading(false);
     }
