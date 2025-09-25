@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Eye, X, User, Users, CheckCircle, AlertCircle } from 'lucide-react';
+import { assessmentsAPI } from '../services/api';
 import '../styles/assessment-viewer.css';
 
 interface AssessmentData {
@@ -39,32 +40,9 @@ const AssessmentViewer: React.FC<AssessmentViewerProps> = ({
     try {
       console.log('🔍 Buscando avaliações para:', participantCode);
       
-      // Buscar autoavaliação
-      const selfResponse = await fetch(`/api/assessments/self/${participantCode}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        }
-      });
-      
-      console.log('📊 Resposta autoavaliação:', selfResponse.status, selfResponse.statusText);
-      
-      if (!selfResponse.ok) {
-        const errorText = await selfResponse.text();
-        console.error('❌ Erro na autoavaliação:', selfResponse.status, errorText);
-        throw new Error(`Erro ${selfResponse.status}: ${errorText.substring(0, 100)}...`);
-      }
-      
-      // Verificar se a resposta é JSON válido
-      const contentType = selfResponse.headers.get('content-type');
-      if (!contentType || !contentType.includes('application/json')) {
-        const responseText = await selfResponse.text();
-        console.error('❌ Resposta não é JSON:', responseText.substring(0, 200));
-        throw new Error('Resposta do servidor não é JSON válido');
-      }
-      
-      const selfData = await selfResponse.json();
+      // Buscar autoavaliação usando a API configurada
+      console.log('📊 Buscando autoavaliação...');
+      const selfData = await assessmentsAPI.getSelfAssessment(participantCode);
       console.log('✅ Dados autoavaliação:', selfData);
       
       // Processar dados da autoavaliação
@@ -76,32 +54,9 @@ const AssessmentViewer: React.FC<AssessmentViewerProps> = ({
       
       setSelfAssessment(processedSelfData);
 
-      // Buscar avaliações de pares usando a nova API
-      const peerResponse = await fetch(`/api/assessments/peer-characteristics/${participantCode}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        }
-      });
-      
-      console.log('📊 Resposta avaliações pares:', peerResponse.status, peerResponse.statusText);
-      
-      if (!peerResponse.ok) {
-        const errorText = await peerResponse.text();
-        console.error('❌ Erro nas avaliações de pares:', peerResponse.status, errorText);
-        throw new Error(`Erro ${peerResponse.status}: ${errorText.substring(0, 100)}...`);
-      }
-      
-      // Verificar se a resposta é JSON válido
-      const peerContentType = peerResponse.headers.get('content-type');
-      if (!peerContentType || !peerContentType.includes('application/json')) {
-        const responseText = await peerResponse.text();
-        console.error('❌ Resposta não é JSON:', responseText.substring(0, 200));
-        throw new Error('Resposta do servidor não é JSON válido');
-      }
-      
-      const peerData = await peerResponse.json();
+      // Buscar avaliações de pares usando a API configurada
+      console.log('📊 Buscando avaliações de pares...');
+      const peerData = await assessmentsAPI.getPeerCharacteristics(participantCode);
       console.log('✅ Dados avaliações pares:', peerData);
       
       // Processar dados das avaliações de pares

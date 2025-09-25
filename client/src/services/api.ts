@@ -179,6 +179,11 @@ export const assessmentsAPI = {
     const response = await api.get(`/assessments/completed-peers/${code}`);
     return response.data;
   },
+
+  getPeerCharacteristics: async (code: string): Promise<any[]> => {
+    const response = await api.get(`/assessments/peer-characteristics/${code}`);
+    return response.data;
+  },
 };
 
 // Reports API
