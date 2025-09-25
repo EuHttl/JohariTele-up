@@ -237,7 +237,7 @@ router.get('/comparative', async (req, res) => {
   let query;
   
   if (process.env.DATABASE_URL) {
-    // Query PostgreSQL - Corrigida para incluir todos os participantes
+    // Query PostgreSQL - Corrigida para calcular quadrantes corretamente
     query = `
       SELECT 
         p.id,
@@ -248,9 +248,13 @@ router.get('/comparative', async (req, res) => {
         p.has_completed_peer_assessments,
         COALESCE(COUNT(DISTINCT CASE WHEN sa.selected = true THEN sa.characteristic_id END), 0) as self_selected_count,
         COALESCE(COUNT(DISTINCT CASE WHEN pa.selected = true THEN pa.characteristic_id END), 0) as peer_selected_count,
+        -- Área Aberta: selecionada por si mesmo E pelos pares
         COALESCE(COUNT(DISTINCT CASE WHEN sa.selected = true AND pa.selected = true THEN sa.characteristic_id END), 0) as open_area_count,
+        -- Área Cega: selecionada pelos pares, mas NÃO por si mesmo
         COALESCE(COUNT(DISTINCT CASE WHEN (sa.selected = false OR sa.selected IS NULL) AND pa.selected = true THEN pa.characteristic_id END), 0) as blind_area_count,
+        -- Área Oculta: selecionada por si mesmo, mas NÃO pelos pares
         COALESCE(COUNT(DISTINCT CASE WHEN sa.selected = true AND (pa.selected = false OR pa.selected IS NULL) THEN sa.characteristic_id END), 0) as hidden_area_count,
+        -- Área Desconhecida: NÃO selecionada por ninguém
         COALESCE(COUNT(DISTINCT CASE WHEN (sa.selected = false OR sa.selected IS NULL) AND (pa.selected = false OR pa.selected IS NULL) THEN sa.characteristic_id END), 0) as unknown_area_count
       FROM participants p
       LEFT JOIN self_assessments sa ON sa.participant_id = p.id
@@ -259,7 +263,7 @@ router.get('/comparative', async (req, res) => {
       ORDER BY p.name
     `;
   } else {
-    // Query SQLite - Simplificada para garantir que todos os participantes sejam incluídos
+    // Query SQLite - Corrigida para calcular quadrantes corretamente
     query = `
       SELECT 
         p.id,
@@ -270,9 +274,13 @@ router.get('/comparative', async (req, res) => {
         p.has_completed_peer_assessments,
         COALESCE(COUNT(DISTINCT CASE WHEN sa.selected = 1 THEN sa.characteristic_id END), 0) as self_selected_count,
         COALESCE(COUNT(DISTINCT CASE WHEN pa.selected = 1 THEN pa.characteristic_id END), 0) as peer_selected_count,
+        -- Área Aberta: selecionada por si mesmo E pelos pares
         COALESCE(COUNT(DISTINCT CASE WHEN sa.selected = 1 AND pa.selected = 1 THEN sa.characteristic_id END), 0) as open_area_count,
+        -- Área Cega: selecionada pelos pares, mas NÃO por si mesmo
         COALESCE(COUNT(DISTINCT CASE WHEN (sa.selected = 0 OR sa.selected IS NULL) AND pa.selected = 1 THEN pa.characteristic_id END), 0) as blind_area_count,
+        -- Área Oculta: selecionada por si mesmo, mas NÃO pelos pares
         COALESCE(COUNT(DISTINCT CASE WHEN sa.selected = 1 AND (pa.selected = 0 OR pa.selected IS NULL) THEN sa.characteristic_id END), 0) as hidden_area_count,
+        -- Área Desconhecida: NÃO selecionada por ninguém
         COALESCE(COUNT(DISTINCT CASE WHEN (sa.selected = 0 OR sa.selected IS NULL) AND (pa.selected = 0 OR pa.selected IS NULL) THEN sa.characteristic_id END), 0) as unknown_area_count
       FROM participants p
       LEFT JOIN self_assessments sa ON sa.participant_id = p.id
@@ -310,6 +318,10 @@ router.get('/comparative', async (req, res) => {
         console.log(`     - Pares: ${row.has_completed_peer_assessments ? 'Completa' : 'Pendente'}`);
         console.log(`     - Self selecionadas: ${row.self_selected_count}`);
         console.log(`     - Pares selecionadas: ${row.peer_selected_count}`);
+        console.log(`     - Área Aberta: ${row.open_area_count} (${Math.round((row.open_area_count / 56) * 100)}%)`);
+        console.log(`     - Área Cega: ${row.blind_area_count} (${Math.round((row.blind_area_count / 56) * 100)}%)`);
+        console.log(`     - Área Oculta: ${row.hidden_area_count} (${Math.round((row.hidden_area_count / 56) * 100)}%)`);
+        console.log(`     - Área Desconhecida: ${row.unknown_area_count} (${Math.round((row.unknown_area_count / 56) * 100)}%)`);
       });
     }
     
