@@ -148,9 +148,22 @@ async function processReportData(row, res, code) {
         return acc;
       }, {});
     } else {
-      // Para SQLite, precisamos buscar as características de forma diferente
-      // Por enquanto, vamos usar IDs como nomes
-      characteristics = {};
+      // Para SQLite, buscar características da tabela de forma síncrona
+      const charQuery = 'SELECT id, name FROM characteristics';
+      const rows = await new Promise((resolve, reject) => {
+        db.all(charQuery, [], (err, rows) => {
+          if (err) {
+            console.error('Erro ao buscar características:', err);
+            reject(err);
+          } else {
+            resolve(rows);
+          }
+        });
+      });
+      characteristics = rows.reduce((acc, char) => {
+        acc[char.id] = char.name;
+        return acc;
+      }, {});
     }
     
   // Processar dados para calcular os 4 quadrantes
@@ -165,6 +178,7 @@ async function processReportData(row, res, code) {
     const selfNotSelectedNames = [...new Set(selfNotSelected.map(id => characteristics[id] || `Característica ${id}`))];
     const peerNotSelectedNames = [...new Set(peerNotSelected.map(id => characteristics[id] || `Característica ${id}`))];
     
+    
     // Calcular quadrantes e remover duplicatas
     // Área Aberta: selecionada por si mesmo E pelos pares
     const openArea = [...new Set(selfSelectedNames.filter(char => peerSelectedNames.includes(char)))];
@@ -174,6 +188,7 @@ async function processReportData(row, res, code) {
     const hiddenArea = [...new Set(selfSelectedNames.filter(char => !peerSelectedNames.includes(char)))];
     // Área Desconhecida: NÃO selecionada por ninguém (nem por si mesmo, nem pelos pares)
     const unknownArea = [...new Set(selfNotSelectedNames.filter(char => peerNotSelectedNames.includes(char)))];
+    
   
   const report = {
     participant: {
