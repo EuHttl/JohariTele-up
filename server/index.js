@@ -22,6 +22,10 @@ if (process.env.DATABASE_URL) {
 const app = express();
 const PORT = process.env.PORT || 8080;
 
+// Configurar trust proxy para rate limiting funcionar corretamente em produção
+// Necessário para que o express-rate-limit identifique corretamente os IPs dos usuários
+app.set('trust proxy', 1);
+
 // Configuração CORS para produção
 const allowedOrigins = [
   'https://johari-tele-up.vercel.app',
