@@ -136,6 +136,7 @@ const Participants: React.FC = () => {
     pending: participants.filter(p => !p.has_completed_self_assessment).length
   };
 
+
   if (loading) {
     return (
       <div className="participants-loading">
@@ -206,7 +207,7 @@ const Participants: React.FC = () => {
             <div className="participants-stat-number">{stats.completed}</div>
           </div>
           <h3 className="participants-stat-label">Completos</h3>
-          <p className="participants-stat-description">Avaliações finalizadas</p>
+          <p className="participants-stat-description">Autoavaliação + Avaliação entre pares</p>
         </div>
 
         <div className="participants-stat-card">
@@ -217,7 +218,7 @@ const Participants: React.FC = () => {
             <div className="participants-stat-number">{stats.inProgress}</div>
           </div>
           <h3 className="participants-stat-label">Em Progresso</h3>
-          <p className="participants-stat-description">Autoavaliação concluída</p>
+          <p className="participants-stat-description">Apenas autoavaliação concluída</p>
         </div>
 
         <div className="participants-stat-card">
@@ -231,6 +232,7 @@ const Participants: React.FC = () => {
           <p className="participants-stat-description">Aguardando início</p>
         </div>
       </div>
+
 
       {/* Messages */}
       {error && (
