@@ -268,8 +268,16 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 // Servir arquivos estáticos do React em produção (APENAS para rotas não-API)
+// IMPORTANTE: Este middleware DEVE vir DEPOIS das rotas da API
 if (process.env.NODE_ENV === 'production') {
-  app.use(express.static(path.join(__dirname, '../client/build')));
+  // Servir arquivos estáticos apenas para rotas que não começam com /api
+  app.use((req, res, next) => {
+    if (!req.path.startsWith('/api')) {
+      express.static(path.join(__dirname, '../client/build'))(req, res, next);
+    } else {
+      next();
+    }
+  });
   
   // Catch-all handler: send back React's index.html file for non-API routes
   app.get('*', (req, res) => {
