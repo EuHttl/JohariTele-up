@@ -301,6 +301,8 @@ router.post('/peer/:assessorCode/:assessedCode', async (req, res) => {
 // Função auxiliar para verificar se completou todas as avaliações entre pares
 async function checkPeerAssessmentCompletion(participantId, client) {
   try {
+    console.log('🔍 Verificando completude das avaliações para participante:', participantId);
+    
     const query = `
       SELECT COUNT(DISTINCT assessed_id) as assessed_count
       FROM peer_assessments 
@@ -315,16 +317,24 @@ async function checkPeerAssessmentCompletion(participantId, client) {
     const assessedResult = await client.query(query, [participantId]);
     const totalResult = await client.query(totalPeersQuery);
     
-    const hasCompleted = parseInt(assessedResult.rows[0].assessed_count) >= parseInt(totalResult.rows[0].total_peers);
+    const assessedCount = parseInt(assessedResult.rows[0].assessed_count);
+    const totalPeers = parseInt(totalResult.rows[0].total_peers);
+    
+    console.log(`📊 Participante ${participantId}: avaliou ${assessedCount} de ${totalPeers} pares`);
+    
+    const hasCompleted = assessedCount >= totalPeers;
     
     if (hasCompleted) {
+      console.log(`✅ Participante ${participantId} completou todas as avaliações de pares`);
       await client.query(
         'UPDATE participants SET has_completed_peer_assessments = true WHERE id = $1',
         [participantId]
       );
+    } else {
+      console.log(`⏳ Participante ${participantId} ainda não completou todas as avaliações`);
     }
   } catch (error) {
-    console.error('Erro ao verificar avaliações:', error);
+    console.error('❌ Erro ao verificar avaliações:', error);
   }
 }
 

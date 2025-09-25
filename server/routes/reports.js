@@ -237,7 +237,7 @@ router.get('/comparative', async (req, res) => {
   let query;
   
   if (process.env.DATABASE_URL) {
-    // Query PostgreSQL - Simplificada para garantir que todos os participantes sejam incluídos
+    // Query PostgreSQL - Corrigida para incluir todos os participantes
     query = `
       SELECT 
         p.id,
@@ -300,6 +300,18 @@ router.get('/comparative', async (req, res) => {
     }
     
     console.log('✅ Relatório comparativo: encontrados', rows?.length || 0, 'participantes');
+    
+    // Debug: mostrar detalhes dos participantes
+    if (rows && rows.length > 0) {
+      console.log('📊 Detalhes dos participantes:');
+      rows.forEach((row, index) => {
+        console.log(`  ${index + 1}. ${row.name} (${row.code})`);
+        console.log(`     - Autoavaliação: ${row.has_completed_self_assessment ? 'Completa' : 'Pendente'}`);
+        console.log(`     - Pares: ${row.has_completed_peer_assessments ? 'Completa' : 'Pendente'}`);
+        console.log(`     - Self selecionadas: ${row.self_selected_count}`);
+        console.log(`     - Pares selecionadas: ${row.peer_selected_count}`);
+      });
+    }
     
     const comparativeReport = {
       summary: {

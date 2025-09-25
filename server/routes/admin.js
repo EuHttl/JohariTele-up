@@ -87,6 +87,16 @@ router.get('/assessment-tracking', async (req, res) => {
     
     console.log('✅ Assessment-tracking: encontrados', rows?.length || 0, 'registros');
     
+    // Debug: mostrar detalhes das avaliações
+    if (rows && rows.length > 0) {
+      console.log('📊 Detalhes das avaliações:');
+      rows.slice(0, 5).forEach((row, index) => {
+        console.log(`  ${index + 1}. ${row.assessor_name} -> ${row.assessed_name}`);
+        console.log(`     - Características: ${row.characteristics_evaluated}/56`);
+        console.log(`     - Status: ${row.evaluation_status}`);
+      });
+    }
+    
     // Agrupar por avaliador
     const groupedData = rows.reduce((acc, row) => {
       const assessorKey = `${row.assessor_id}-${row.assessor_name}`;
@@ -115,13 +125,17 @@ router.get('/assessment-tracking', async (req, res) => {
       return acc;
     }, {});
     
+    const summary = {
+      total_possible_evaluations: rows.length,
+      completed_evaluations: rows.filter(r => r.characteristics_evaluated === 56).length,
+      partial_evaluations: rows.filter(r => r.characteristics_evaluated > 0 && r.characteristics_evaluated < 56).length,
+      not_started: rows.filter(r => r.characteristics_evaluated === 0).length
+    };
+    
+    console.log('📊 Resumo das avaliações:', summary);
+    
     res.json({
-      summary: {
-        total_possible_evaluations: rows.length,
-        completed_evaluations: rows.filter(r => r.characteristics_evaluated === 56).length,
-        partial_evaluations: rows.filter(r => r.characteristics_evaluated > 0 && r.characteristics_evaluated < 56).length,
-        not_started: rows.filter(r => r.characteristics_evaluated === 0).length
-      },
+      summary,
       evaluations: Object.values(groupedData)
     });
   } catch (error) {
@@ -286,15 +300,22 @@ router.post('/backup', async (req, res) => {
     
     // Criar diretório de backups se não existir
     const backupDir = path.join(__dirname, '../backups');
+    console.log('📁 Diretório de backup:', backupDir);
+    
     try {
       await fs.access(backupDir);
+      console.log('✅ Diretório de backup já existe');
     } catch {
+      console.log('📁 Criando diretório de backup...');
       await fs.mkdir(backupDir, { recursive: true });
+      console.log('✅ Diretório de backup criado');
     }
     
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
     const backupFileName = `johari-backup-${timestamp}.json`;
     const backupPath = path.join(backupDir, backupFileName);
+    
+    console.log('📄 Arquivo de backup:', backupPath);
     
     let backupData = {};
     
@@ -306,8 +327,10 @@ router.post('/backup', async (req, res) => {
       const tables = ['participants', 'characteristics', 'self_assessments', 'peer_assessments'];
       
       for (const table of tables) {
+        console.log(`📊 Backup da tabela: ${table}`);
         const result = await queryPostgres(`SELECT * FROM ${table}`);
         backupData[table] = result.rows;
+        console.log(`✅ ${table}: ${result.rows.length} registros`);
       }
       
       backupData.metadata = {
@@ -323,6 +346,7 @@ router.post('/backup', async (req, res) => {
       const tables = ['participants', 'characteristics', 'self_assessments', 'peer_assessments'];
       
       for (const table of tables) {
+        console.log(`📊 Backup da tabela: ${table}`);
         const rows = await new Promise((resolve, reject) => {
           db.all(`SELECT * FROM ${table}`, [], (err, result) => {
             if (err) reject(err);
@@ -330,6 +354,7 @@ router.post('/backup', async (req, res) => {
           });
         });
         backupData[table] = rows;
+        console.log(`✅ ${table}: ${rows.length} registros`);
       }
       
       backupData.metadata = {
@@ -341,16 +366,19 @@ router.post('/backup', async (req, res) => {
     }
     
     // Salvar backup em arquivo
+    console.log('💾 Salvando arquivo de backup...');
     await fs.writeFile(backupPath, JSON.stringify(backupData, null, 2));
     
-    console.log('✅ Backup criado:', backupFileName);
+    // Verificar se arquivo foi criado
+    const stats = await fs.stat(backupPath);
+    console.log('✅ Backup criado:', backupFileName, 'Tamanho:', stats.size, 'bytes');
     
     res.json({
       success: true,
       message: 'Backup criado com sucesso',
       filename: backupFileName,
       path: backupPath,
-      size: (await fs.stat(backupPath)).size,
+      size: stats.size,
       timestamp: new Date().toISOString()
     });
     
