@@ -98,30 +98,6 @@ const Participants: React.FC = () => {
     setShowAssessmentViewer(true);
   };
 
-  const getStatusBadge = (participant: Participant) => {
-    if (participant.has_completed_self_assessment && participant.has_completed_peer_assessments) {
-      return (
-        <span className="participant-status-badge complete">
-          <CheckCircle className="w-3 h-3 mr-1" />
-          Completo
-        </span>
-      );
-    } else if (participant.has_completed_self_assessment) {
-      return (
-        <span className="participant-status-badge in-progress">
-          <AlertCircle className="w-3 h-3 mr-1" />
-          Em Progresso
-        </span>
-      );
-    } else {
-      return (
-        <span className="participant-status-badge pending">
-          <User className="w-3 h-3 mr-1" />
-          Pendente
-        </span>
-      );
-    }
-  };
 
   const filteredParticipants = participants.filter(participant =>
     participant.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -311,14 +287,9 @@ const Participants: React.FC = () => {
                 },
                 {
                   key: 'code',
-                  label: 'Código',
+                  label: 'Senha',
                   sortable: true,
                   render: (value) => <span className="participant-code">{value}</span>
-                },
-                {
-                  key: 'status',
-                  label: 'Status',
-                  render: (value, participant) => getStatusBadge(participant)
                 },
                 {
                   key: 'actions',

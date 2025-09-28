@@ -6,6 +6,7 @@ interface AuthContextType {
   user: User | null;
   token: string | null;
   login: (email: string, password: string) => Promise<{ token: string; user: User; message: string }>;
+  register: (name: string, email: string, password: string, confirmPassword: string) => Promise<{ token: string; user: User; message: string }>;
   logout: () => void;
   loading: boolean;
 }
@@ -74,6 +75,24 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  const register = async (name: string, email: string, password: string, confirmPassword: string) => {
+    try {
+      console.log('🔐 AuthContext: Iniciando registro...');
+      const response = await authAPI.register(name, email, password, confirmPassword);
+      console.log('🔐 AuthContext: Registro bem-sucedido, resposta:', response);
+      
+      localStorage.setItem('authToken', response.token);
+      setToken(response.token);
+      setUser(response.user);
+      
+      console.log('🔐 AuthContext: Estado atualizado - User:', response.user);
+      return response; // Retornar a resposta para usar nos componentes
+    } catch (error) {
+      console.error('🔐 AuthContext: Erro no registro:', error);
+      throw error;
+    }
+  };
+
   const logout = () => {
     localStorage.removeItem('authToken');
     setToken(null);
@@ -84,6 +103,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     user,
     token,
     login,
+    register,
     logout,
     loading,
   };

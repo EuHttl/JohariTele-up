@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { v4: uuidv4 } = require('uuid');
+const { requireAdminAuth, getAdminIdFromToken } = require('../middleware/adminAuth');
 
 // Usar apenas PostgreSQL
 const postgresInit = require('../database/postgres-init');
@@ -30,9 +31,9 @@ async function queryPostgres(sql, params = []) {
   }
 }
 
-// GET /api/participants - Listar todos os participantes
-router.get('/', async (req, res) => {
-  console.log('📊 GET /api/participants - Buscando todos os participantes');
+// GET /api/participants - Listar participantes do admin logado
+router.get('/', requireAdminAuth, async (req, res) => {
+  console.log('📊 GET /api/participants - Buscando participantes do admin:', req.admin.id);
   
   try {
     if (process.env.DATABASE_URL && process.env.NODE_ENV === 'production') {
@@ -44,8 +45,9 @@ router.get('/', async (req, res) => {
           has_completed_peer_assessments,
           created_at
         FROM participants 
+        WHERE admin_id = $1
         ORDER BY name
-      `);
+      `, [req.admin.id]);
       
       console.log('📊 Participantes encontrados:', result.rows?.length || 0);
       console.log('📊 Primeiro participante:', result.rows?.[0] || 'Nenhum');
@@ -59,10 +61,11 @@ router.get('/', async (req, res) => {
           has_completed_peer_assessments,
           created_at
         FROM participants 
+        WHERE admin_id = ?
         ORDER BY name
       `;
 
-      db.all(query, [], (err, rows) => {
+      db.all(query, [req.admin.id], (err, rows) => {
         if (err) {
           console.error('Erro ao buscar participantes:', err);
           return res.status(500).json({ error: 'Erro interno do servidor' });
@@ -140,8 +143,8 @@ router.get('/:code', async (req, res) => {
 });
 
 // POST /api/participants - Criar novo participante
-router.post('/', async (req, res) => {
-  console.log('📝 POST /api/participants - Criando participante');
+router.post('/', requireAdminAuth, async (req, res) => {
+  console.log('📝 POST /api/participants - Criando participante para admin:', req.admin.id);
   console.log('📝 Dados recebidos:', req.body);
   
   const { name, email } = req.body;
@@ -155,11 +158,11 @@ router.post('/', async (req, res) => {
     if (process.env.DATABASE_URL && process.env.NODE_ENV === 'production') {
       // Usar PostgreSQL diretamente apenas em produção
       
-      // Verificar se já existe participante com esse email
-      const existingUser = await queryPostgres('SELECT id FROM participants WHERE email = $1', [email]);
+      // Verificar se já existe participante com esse email para este admin
+      const existingUser = await queryPostgres('SELECT id FROM participants WHERE email = $1 AND admin_id = $2', [email, req.admin.id]);
       
       if (existingUser.rows.length > 0) {
-        return res.status(400).json({ error: 'Email já cadastrado' });
+        return res.status(400).json({ error: 'Email já cadastrado para sua organização' });
       }
 
       // Limite de participantes removido - sem restrições
@@ -174,10 +177,10 @@ router.post('/', async (req, res) => {
       
       // Criar participante
       const insertResult = await queryPostgres(`
-        INSERT INTO participants (name, email, code, password, has_completed_self_assessment, has_completed_peer_assessments)
-        VALUES ($1, $2, $3, $4, false, false)
+        INSERT INTO participants (admin_id, name, email, code, password, has_completed_self_assessment, has_completed_peer_assessments)
+        VALUES ($1, $2, $3, $4, $5, false, false)
         RETURNING id, created_at
-      `, [name, email, code, hashedPassword]);
+      `, [req.admin.id, name, email, code, hashedPassword]);
 
       const newParticipant = insertResult.rows[0];
       
@@ -217,11 +220,11 @@ router.post('/', async (req, res) => {
         const hashedPassword = bcrypt.hashSync(password, 10);
         
         const insertQuery = `
-          INSERT INTO participants (name, email, code, password)
-          VALUES (?, ?, ?, ?)
+          INSERT INTO participants (admin_id, name, email, code, password)
+          VALUES (?, ?, ?, ?, ?)
         `;
         
-        db.run(insertQuery, [name, email, code, hashedPassword], function(err) {
+        db.run(insertQuery, [req.admin.id, name, email, code, hashedPassword], function(err) {
           if (err) {
             console.error('Erro ao criar participante:', err);
             return res.status(500).json({ error: 'Erro interno do servidor' });
@@ -232,6 +235,7 @@ router.post('/', async (req, res) => {
             name,
             email,
             code,
+            password: code, // Senha igual ao código em maiúsculo
             message: 'Participante criado com sucesso'
           });
         });

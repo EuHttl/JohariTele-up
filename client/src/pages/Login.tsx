@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { User, Lock, AlertCircle } from 'lucide-react';
 
@@ -357,14 +357,21 @@ const Login: React.FC = () => {
           </button>
         </form>
 
-        {/* Credenciais padrão */}
-        <div style={{
-          textAlign: 'center',
-          padding: '1rem',
-          backgroundColor: 'rgba(17, 24, 39, 0.5)',
-          borderRadius: '12px',
-          border: '1px solid rgba(124, 58, 237, 0.2)'
-        }}>
+        {/* Link para registro */}
+        <div style={{ textAlign: 'center', marginTop: '1.5rem' }}>
+          <p style={{ color: '#9ca3af', fontSize: '0.875rem' }}>
+            Não tem uma conta?{' '}
+            <Link 
+              to="/register" 
+              style={{ 
+                color: '#8b5cf6', 
+                textDecoration: 'none',
+                fontWeight: '500'
+              }}
+            >
+              Registre-se como admin
+            </Link>
+          </p>
         </div>
 
         {/* Efeitos de partículas */}

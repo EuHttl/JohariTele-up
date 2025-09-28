@@ -103,13 +103,17 @@ async function initializeDatabase() {
       await client.query(`
         CREATE TABLE IF NOT EXISTS participants (
           id SERIAL PRIMARY KEY,
+          admin_id INTEGER NOT NULL,
           name VARCHAR(255) NOT NULL,
-          email VARCHAR(255) UNIQUE NOT NULL,
-          code VARCHAR(255) UNIQUE NOT NULL,
+          email VARCHAR(255) NOT NULL,
+          code VARCHAR(255) NOT NULL,
           password VARCHAR(255) NOT NULL,
           has_completed_self_assessment BOOLEAN DEFAULT FALSE,
           has_completed_peer_assessments BOOLEAN DEFAULT FALSE,
-          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (admin_id) REFERENCES admins (id) ON DELETE CASCADE,
+          UNIQUE(admin_id, email),
+          UNIQUE(admin_id, code)
         )
       `);
       console.log('✅ Tabela participants verificada/criada');
@@ -128,11 +132,13 @@ async function initializeDatabase() {
       await client.query(`
         CREATE TABLE IF NOT EXISTS self_assessments (
           id SERIAL PRIMARY KEY,
+          admin_id INTEGER NOT NULL,
           participant_id INTEGER NOT NULL,
           characteristic_id INTEGER NOT NULL,
           selected BOOLEAN NOT NULL,
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-          FOREIGN KEY (participant_id) REFERENCES participants (id),
+          FOREIGN KEY (admin_id) REFERENCES admins (id) ON DELETE CASCADE,
+          FOREIGN KEY (participant_id) REFERENCES participants (id) ON DELETE CASCADE,
           FOREIGN KEY (characteristic_id) REFERENCES characteristics (id),
           UNIQUE(participant_id, characteristic_id)
         )
@@ -143,13 +149,15 @@ async function initializeDatabase() {
       await client.query(`
         CREATE TABLE IF NOT EXISTS peer_assessments (
           id SERIAL PRIMARY KEY,
+          admin_id INTEGER NOT NULL,
           assessor_id INTEGER NOT NULL,
           assessed_id INTEGER NOT NULL,
           characteristic_id INTEGER NOT NULL,
           selected BOOLEAN NOT NULL,
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-          FOREIGN KEY (assessor_id) REFERENCES participants (id),
-          FOREIGN KEY (assessed_id) REFERENCES participants (id),
+          FOREIGN KEY (admin_id) REFERENCES admins (id) ON DELETE CASCADE,
+          FOREIGN KEY (assessor_id) REFERENCES participants (id) ON DELETE CASCADE,
+          FOREIGN KEY (assessed_id) REFERENCES participants (id) ON DELETE CASCADE,
           FOREIGN KEY (characteristic_id) REFERENCES characteristics (id),
           UNIQUE(assessor_id, assessed_id, characteristic_id)
         )

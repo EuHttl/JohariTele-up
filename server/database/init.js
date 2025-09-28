@@ -94,13 +94,17 @@ function initializeDatabase() {
     db.run(`
       CREATE TABLE IF NOT EXISTS participants (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
+        admin_id INTEGER NOT NULL,
         name TEXT NOT NULL,
-        email TEXT UNIQUE NOT NULL,
-        code TEXT UNIQUE NOT NULL,
+        email TEXT NOT NULL,
+        code TEXT NOT NULL,
         password TEXT NOT NULL,
         has_completed_self_assessment BOOLEAN DEFAULT FALSE,
         has_completed_peer_assessments BOOLEAN DEFAULT FALSE,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (admin_id) REFERENCES admins (id),
+        UNIQUE(admin_id, email),
+        UNIQUE(admin_id, code)
       )
     `);
 
@@ -117,10 +121,12 @@ function initializeDatabase() {
     db.run(`
       CREATE TABLE IF NOT EXISTS self_assessments (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
+        admin_id INTEGER NOT NULL,
         participant_id INTEGER NOT NULL,
         characteristic_id INTEGER NOT NULL,
         selected BOOLEAN NOT NULL,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (admin_id) REFERENCES admins (id),
         FOREIGN KEY (participant_id) REFERENCES participants (id),
         FOREIGN KEY (characteristic_id) REFERENCES characteristics (id),
         UNIQUE(participant_id, characteristic_id)
@@ -131,11 +137,13 @@ function initializeDatabase() {
     db.run(`
       CREATE TABLE IF NOT EXISTS peer_assessments (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
+        admin_id INTEGER NOT NULL,
         assessor_id INTEGER NOT NULL,
         assessed_id INTEGER NOT NULL,
         characteristic_id INTEGER NOT NULL,
         selected BOOLEAN NOT NULL,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (admin_id) REFERENCES admins (id),
         FOREIGN KEY (assessor_id) REFERENCES participants (id),
         FOREIGN KEY (assessed_id) REFERENCES participants (id),
         FOREIGN KEY (characteristic_id) REFERENCES characteristics (id),

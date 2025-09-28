@@ -5,6 +5,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import Layout from './components/Layout';
 import ParticipantLayout from './components/ParticipantLayout';
 import Login from './pages/Login';
+import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import Participants from './pages/Participants';
 import AssessmentPage from './pages/Assessment';
@@ -19,8 +20,9 @@ function App() {
       <Router>
         <div className="App">
           <Routes>
-            {/* Rotas de login */}
+            {/* Rotas de login e registro */}
             <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
             <Route path="/participant/login" element={<Navigate to="/login" replace />} />
             <Route path="/" element={<Navigate to="/login" replace />} />
             

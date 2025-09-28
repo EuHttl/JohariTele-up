@@ -374,6 +374,175 @@ router.post('/login', async (req, res) => {
   }
 });
 
+// POST /api/auth/register - Registro de novo administrador
+router.post('/register', async (req, res) => {
+  const startTime = Date.now();
+  try {
+    console.log('📝 Register attempt started:', { email: req.body.email, timestamp: new Date().toISOString() });
+    const { name, email, password, confirmPassword } = req.body;
+    
+    // Validação de entrada
+    if (!name || !email || !password || !confirmPassword) {
+      console.log('❌ Register failed: missing fields');
+      return res.status(400).json({ error: 'Todos os campos são obrigatórios' });
+    }
+    
+    // Validação de formato de email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      console.log('❌ Register failed: invalid email format');
+      return res.status(400).json({ error: 'Formato de email inválido' });
+    }
+    
+    // Validação de senha
+    if (password.length < 6) {
+      console.log('❌ Register failed: password too short');
+      return res.status(400).json({ error: 'Senha deve ter pelo menos 6 caracteres' });
+    }
+    
+    if (password !== confirmPassword) {
+      console.log('❌ Register failed: passwords do not match');
+      return res.status(400).json({ error: 'Senhas não coincidem' });
+    }
+    
+    // Sanitização básica
+    const sanitizedEmail = email.toLowerCase().trim();
+    const sanitizedName = name.trim();
+    const sanitizedPassword = password.trim();
+    
+    // Usar PostgreSQL diretamente se disponível
+    if (process.env.DATABASE_URL) {
+      console.log('🔍 Usando PostgreSQL para registro...');
+      
+      try {
+        // Verificar se email já existe
+        const existingAdmin = await queryPostgres('SELECT id FROM admins WHERE email = $1', [sanitizedEmail]);
+        
+        if (existingAdmin && existingAdmin.rows && existingAdmin.rows.length > 0) {
+          console.log('❌ Register failed: email already exists');
+          return res.status(400).json({ error: 'Email já está em uso' });
+        }
+        
+        // Hash da senha
+        const hashedPassword = bcrypt.hashSync(sanitizedPassword, 10);
+        
+        // Gerar username único baseado no email
+        const username = sanitizedEmail.split('@')[0] + '_' + Date.now().toString().slice(-4);
+        
+        // Criar admin
+        const insertResult = await queryPostgres(`
+          INSERT INTO admins (username, email, password, name)
+          VALUES ($1, $2, $3, $4)
+          RETURNING id, username, email, name, created_at
+        `, [username, sanitizedEmail, hashedPassword, sanitizedName]);
+        
+        const newAdmin = insertResult.rows[0];
+        
+        console.log('✅ Admin registrado com sucesso:', { id: newAdmin.id, email: newAdmin.email });
+        
+        // Gerar token JWT para o novo admin
+        const token = jwt.sign(
+          {
+            id: newAdmin.id,
+            username: newAdmin.username,
+            email: newAdmin.email,
+            name: newAdmin.name,
+            role: 'admin'
+          },
+          JWT_SECRET,
+          { expiresIn: '24h' }
+        );
+        
+        return res.status(201).json({
+          token,
+          user: {
+            id: newAdmin.id,
+            username: newAdmin.username,
+            email: newAdmin.email,
+            name: newAdmin.name,
+            role: 'admin'
+          },
+          message: 'Administrador registrado com sucesso'
+        });
+        
+      } catch (error) {
+        console.error('❌ Erro no registro PostgreSQL:', error);
+        return res.status(500).json({ error: 'Erro interno do servidor' });
+      }
+    }
+    
+    // Fallback para SQLite (desenvolvimento)
+    console.log('🔍 Usando SQLite para registro...');
+    
+    // Verificar se email já existe
+    db.get('SELECT id FROM admins WHERE email = ?', [sanitizedEmail], (err, existingAdmin) => {
+      if (err) {
+        console.error('❌ Erro ao verificar email existente:', err);
+        return res.status(500).json({ error: 'Erro interno do servidor' });
+      }
+      
+      if (existingAdmin) {
+        console.log('❌ Register failed: email already exists');
+        return res.status(400).json({ error: 'Email já está em uso' });
+      }
+      
+      // Hash da senha
+      const hashedPassword = bcrypt.hashSync(sanitizedPassword, 10);
+      
+      // Gerar username único baseado no email
+      const username = sanitizedEmail.split('@')[0] + '_' + Date.now().toString().slice(-4);
+      
+      // Criar admin
+      const insertQuery = `
+        INSERT INTO admins (username, email, password, name)
+        VALUES (?, ?, ?, ?)
+      `;
+      
+      db.run(insertQuery, [username, sanitizedEmail, hashedPassword, sanitizedName], function(err) {
+        if (err) {
+          console.error('❌ Erro ao criar admin:', err);
+          return res.status(500).json({ error: 'Erro interno do servidor' });
+        }
+        
+        const newAdminId = this.lastID;
+        
+        console.log('✅ Admin registrado com sucesso:', { id: newAdminId, email: sanitizedEmail });
+        
+        // Gerar token JWT para o novo admin
+        const token = jwt.sign(
+          {
+            id: newAdminId,
+            username: username,
+            email: sanitizedEmail,
+            name: sanitizedName,
+            role: 'admin'
+          },
+          JWT_SECRET,
+          { expiresIn: '24h' }
+        );
+        
+        return res.status(201).json({
+          token,
+          user: {
+            id: newAdminId,
+            username: username,
+            email: sanitizedEmail,
+            name: sanitizedName,
+            role: 'admin'
+          },
+          message: 'Administrador registrado com sucesso'
+        });
+      });
+    });
+    
+  } catch (error) {
+    const duration = Date.now() - startTime;
+    console.error('❌ Erro no registro:', error);
+    console.log(`⏱️ Registro falhou após ${duration}ms`);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
 // GET /api/auth/status - Status da API (para health check)
 router.get('/status', (req, res) => {
   res.status(200).json({ 
