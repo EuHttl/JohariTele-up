@@ -369,7 +369,7 @@ const Login: React.FC = () => {
                 fontWeight: '500'
               }}
             >
-              Registre-se como admin
+              Registre-se como administrador
             </Link>
           </p>
         </div>
