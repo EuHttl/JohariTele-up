@@ -83,6 +83,17 @@ const loginLimiter = rateLimit({
   skipSuccessfulRequests: true,
 });
 
+// Rate limiting para registro (menos restritivo)
+const registerLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutos
+  max: 10, // máximo 10 tentativas de registro por IP
+  message: {
+    error: 'Muitas tentativas de registro. Tente novamente em 15 minutos.',
+    retryAfter: 15 * 60
+  },
+  skipSuccessfulRequests: true,
+});
+
 app.use(limiter);
 
 // Middleware adicional para garantir CORS
@@ -251,7 +262,10 @@ app.use('/api/participants', participantsRoutes);
 app.use('/api/assessments', assessmentsRoutes);
 app.use('/api/reports', reportsRoutes);
 app.use('/api/admin', adminRoutes);
-app.use('/api/auth', loginLimiter, authRoutes);
+// Aplicar rate limiting específico para cada rota
+app.use('/api/auth/login', loginLimiter);
+app.use('/api/auth/register', registerLimiter);
+app.use('/api/auth', authRoutes);
 app.use('/auth', loginLimiter, authRoutes); // Rota adicional para compatibilidade
 
 // Log de todas as rotas registradas
