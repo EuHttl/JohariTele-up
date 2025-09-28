@@ -12,6 +12,7 @@ import AssessmentPage from './pages/Assessment';
 import Report from './pages/Report';
 import Reports from './pages/Reports';
 import AdminDashboard from './pages/AdminDashboard';
+import { Analytics } from "@vercel/analytics/react"
 import './styles/globals.css';
 
 function App() {
@@ -66,6 +67,7 @@ function App() {
             
             <Route path="*" element={<Navigate to="/login" replace />} />
           </Routes>
+          <Analytics />
         </div>
       </Router>
     </AuthProvider>
