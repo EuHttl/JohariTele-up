@@ -335,7 +335,7 @@ const Reports: React.FC = () => {
       • Identificação de padrões de desenvolvimento
       • Recomendações para crescimento pessoal e profissional
       
-      Este relatório foi gerado automaticamente pelo sistema Johari Tele-up.
+      Este relatório foi gerado automaticamente pelo sistema Janela de Johari.
       Os dados apresentados são confidenciais e destinados exclusivamente ao desenvolvimento pessoal e profissional.
     `;
   };

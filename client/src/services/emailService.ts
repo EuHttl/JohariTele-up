@@ -109,8 +109,8 @@ class EmailService {
         }
       },
       from: {
-        name: 'Johari Tele-up',
-        email: 'noreply@johari-teleup.com'
+        name: 'Janela de Johari',
+        email: 'noreply@johari.com'
       },
       templates: this.getDefaultTemplates()
     };
@@ -124,10 +124,10 @@ class EmailService {
       {
         id: 'welcome',
         name: 'Bem-vindo',
-        subject: 'Bem-vindo ao Johari Tele-up!',
+        subject: 'Bem-vindo ao Janela de Johari!',
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <h2 style="color: #8b5cf6;">Bem-vindo ao Johari Tele-up!</h2>
+            <h2 style="color: #8b5cf6;">Bem-vindo ao Janela de Johari!</h2>
             <p>Olá {{participantName}},</p>
             <p>Você foi convidado a participar da avaliação Johari Window. Esta ferramenta ajudará você a:</p>
             <ul>
@@ -139,11 +139,11 @@ class EmailService {
             <p>Clique no link abaixo para começar sua avaliação:</p>
             <a href="{{assessmentLink}}" style="background: #8b5cf6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">Iniciar Avaliação</a>
             <p>Se você tiver alguma dúvida, não hesite em entrar em contato conosco.</p>
-            <p>Atenciosamente,<br>Equipe Johari Tele-up</p>
+            <p>Atenciosamente,<br>Equipe Janela de Johari</p>
           </div>
         `,
         text: `
-          Bem-vindo ao Johari Tele-up!
+          Bem-vindo ao Janela de Johari!
           
           Olá {{participantName}},
           
@@ -159,7 +159,7 @@ class EmailService {
           Se você tiver alguma dúvida, não hesite em entrar em contato conosco.
           
           Atenciosamente,
-          Equipe Johari Tele-up
+          Equipe Janela de Johari
         `
       },
       {
@@ -180,7 +180,7 @@ class EmailService {
             <p>Complete sua avaliação agora:</p>
             <a href="{{assessmentLink}}" style="background: #f59e0b; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">Continuar Avaliação</a>
             <p>Obrigado por sua participação!</p>
-            <p>Atenciosamente,<br>Equipe Johari Tele-up</p>
+            <p>Atenciosamente,<br>Equipe Janela de Johari</p>
           </div>
         `,
         text: `
@@ -200,7 +200,7 @@ class EmailService {
           Obrigado por sua participação!
           
           Atenciosamente,
-          Equipe Johari Tele-up
+          Equipe Janela de Johari
         `
       },
       {
@@ -221,7 +221,7 @@ class EmailService {
             <p>Acesse seu relatório individual:</p>
             <a href="{{reportLink}}" style="background: #10b981; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">Ver Relatório</a>
             <p>Obrigado por participar desta jornada de autoconhecimento!</p>
-            <p>Atenciosamente,<br>Equipe Johari Tele-up</p>
+            <p>Atenciosamente,<br>Equipe Janela de Johari</p>
           </div>
         `,
         text: `
@@ -241,7 +241,7 @@ class EmailService {
           Obrigado por participar desta jornada de autoconhecimento!
           
           Atenciosamente,
-          Equipe Johari Tele-up
+          Equipe Janela de Johari
         `
       },
       {
@@ -262,7 +262,7 @@ class EmailService {
             <p>Acesse seu relatório:</p>
             <a href="{{reportLink}}" style="background: #3b82f6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">Ver Relatório</a>
             <p>Este relatório é confidencial e destinado apenas ao seu desenvolvimento pessoal.</p>
-            <p>Atenciosamente,<br>Equipe Johari Tele-up</p>
+            <p>Atenciosamente,<br>Equipe Janela de Johari</p>
           </div>
         `,
         text: `
@@ -282,7 +282,7 @@ class EmailService {
           Este relatório é confidencial e destinado apenas ao seu desenvolvimento pessoal.
           
           Atenciosamente,
-          Equipe Johari Tele-up
+          Equipe Janela de Johari
         `
       }
     ];

@@ -185,7 +185,7 @@ class PDFExportService {
     // Logo/Título
     pdf.setFontSize(20);
     pdf.setFont('helvetica', 'bold');
-    pdf.text('Johari Tele-up', 20, 20);
+    pdf.text('Janela de Johari', 20, 20);
     
     // Subtítulo
     pdf.setFontSize(14);
@@ -317,7 +317,7 @@ class PDFExportService {
       pdf.text(`Página ${i} de ${pageCount}`, 170, 285);
       
       // Copyright
-      pdf.text('© Johari Tele-up - Todos os direitos reservados', 20, 290);
+      pdf.text('© Janela de Johari - Todos os direitos reservados', 20, 290);
     }
   }
 

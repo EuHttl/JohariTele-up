@@ -21,7 +21,7 @@ const Settings: React.FC = () => {
           <h1>Configurações do Sistema</h1>
         </div>
         <p className="settings-subtitle">
-          Gerencie as configurações do sistema Johari Tele-up
+          Gerencie as configurações do sistema Janela de Johari
         </p>
       </div>
 

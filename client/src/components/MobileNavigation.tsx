@@ -66,7 +66,7 @@ const MobileNavigation: React.FC<MobileNavigationProps> = ({ isAuthenticated, on
         <div className="mobile-menu-header">
           <div className="mobile-menu-logo">
             <User className="w-8 h-8 text-purple-600" />
-            <span className="mobile-menu-title">Johari Tele-up</span>
+            <span className="mobile-menu-title">Janela de Johari</span>
           </div>
         </div>
 

@@ -213,7 +213,7 @@ const EmailSettingsComponent: React.FC = () => {
                     type="text"
                     value={settings.from.name}
                     onChange={(e) => handleFromChange('name', e.target.value)}
-                    placeholder="Johari Tele-up"
+                    placeholder="Janela de Johari"
                     className="email-input"
                   />
                 </div>
@@ -223,7 +223,7 @@ const EmailSettingsComponent: React.FC = () => {
                     type="email"
                     value={settings.from.email}
                     onChange={(e) => handleFromChange('email', e.target.value)}
-                    placeholder="noreply@johari-teleup.com"
+                    placeholder="noreply@johari.com"
                     className="email-input"
                   />
                 </div>
