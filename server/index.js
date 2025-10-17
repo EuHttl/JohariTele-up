@@ -131,6 +131,7 @@ const assessmentsRoutes = require('./routes/assessments');
 const reportsRoutes = require('./routes/reports');
 const adminRoutes = require('./routes/admin');
 const authRoutes = require('./routes/auth');
+const subscriptionsRoutes = require('./routes/subscriptions');
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
@@ -262,6 +263,7 @@ app.use('/api/participants', participantsRoutes);
 app.use('/api/assessments', assessmentsRoutes);
 app.use('/api/reports', reportsRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/subscriptions', subscriptionsRoutes);
 // Aplicar rate limiting específico para cada rota
 app.use('/api/auth/login', loginLimiter);
 app.use('/api/auth/register', registerLimiter);
@@ -274,6 +276,7 @@ console.log('  - /api/participants');
 console.log('  - /api/assessments');
 console.log('  - /api/reports');
 console.log('  - /api/admin');
+console.log('  - /api/subscriptions');
 console.log('  - /api/auth');
 console.log('  - /auth');
 

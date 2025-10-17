@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { v4: uuidv4 } = require('uuid');
 const { requireAdminAuth, getAdminIdFromToken } = require('../middleware/adminAuth');
+const { checkSubscriptionLimits, updateUsageTracking } = require('../middleware/subscriptionLimits');
 
 // Usar apenas PostgreSQL
 const postgresInit = require('../database/postgres-init');
@@ -143,7 +144,10 @@ router.get('/:code', async (req, res) => {
 });
 
 // POST /api/participants - Criar novo participante
-router.post('/', requireAdminAuth, async (req, res) => {
+router.post('/', 
+  requireAdminAuth, 
+  checkSubscriptionLimits('create_participant'),
+  async (req, res, next) => {
   console.log('📝 POST /api/participants - Criando participante para admin:', req.admin.id);
   console.log('📝 Dados recebidos:', req.body);
   
@@ -186,16 +190,20 @@ router.post('/', requireAdminAuth, async (req, res) => {
       
       console.log('✅ Participante criado com sucesso:', { id: newParticipant.id, name, email, code });
       
-      res.status(201).json({
-        id: newParticipant.id,
-        name,
-        email,
-        code,
-        password: code, // Senha igual ao código em maiúsculo
-        has_completed_self_assessment: false,
-        has_completed_peer_assessments: false,
-        created_at: newParticipant.created_at,
-        message: 'Participante criado com sucesso'
+      // Atualizar tracking de uso
+      const updateUsage = updateUsageTracking('participant_created');
+      updateUsage(req, res, () => {
+        res.status(201).json({
+          id: newParticipant.id,
+          name,
+          email,
+          code,
+          password: code, // Senha igual ao código em maiúsculo
+          has_completed_self_assessment: false,
+          has_completed_peer_assessments: false,
+          created_at: newParticipant.created_at,
+          message: 'Participante criado com sucesso'
+        });
       });
     } else {
       // Fallback para SQLite
