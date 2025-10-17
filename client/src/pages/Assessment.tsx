@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { assessmentsAPI, participantsAPI } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import { Participant, Characteristic, Assessment } from '../types';
+import SelfAssessmentSteps from '../components/SelfAssessmentSteps';
 import { 
   User, 
   CheckCircle, 
@@ -27,6 +28,7 @@ const AssessmentPage: React.FC = () => {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [useNewSelfAssessment, setUseNewSelfAssessment] = useState(false);
 
   const loadCompletedPeerAssessments = async (participantCode: string) => {
     try {
@@ -150,6 +152,37 @@ const AssessmentPage: React.FC = () => {
 
       // Limpar seleções para próxima avaliação
       setAssessments({});
+      
+    } catch (err: any) {
+      setError(err.response?.data?.error || 'Erro ao salvar avaliação');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleNewSelfAssessmentSave = async (selectedCharacteristics: number[]) => {
+    const participantCode = user?.role === 'participant' ? user.code : code;
+    if (!participantCode) return;
+
+    setSaving(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      const assessmentArray: Assessment[] = characteristics.map(char => ({
+        characteristic_id: char.id,
+        selected: selectedCharacteristics.includes(char.id)
+      }));
+
+      await assessmentsAPI.saveSelfAssessment(participantCode, assessmentArray);
+      setSuccess('Autoavaliação salva com sucesso!');
+      
+      // Atualizar dados do participante
+      const updatedParticipant = await participantsAPI.getByCode(participantCode);
+      setParticipant(updatedParticipant);
+      
+      // Desabilitar o novo fluxo após salvar
+      setUseNewSelfAssessment(false);
       
     } catch (err: any) {
       setError(err.response?.data?.error || 'Erro ao salvar avaliação');
@@ -423,8 +456,12 @@ const AssessmentPage: React.FC = () => {
                 setError('');
                 setSuccess('');
                 
-                // Carregar autoavaliação existente
-                if (participant.has_completed_self_assessment) {
+                // Verificar se deve usar o novo fluxo de autoavaliação
+                if (!participant.has_completed_self_assessment) {
+                  setUseNewSelfAssessment(true);
+                } else {
+                  setUseNewSelfAssessment(false);
+                  // Carregar autoavaliação existente
                   const participantCode = user?.role === 'participant' ? user.code : code;
                   try {
                     const selfAssessments = await assessmentsAPI.getSelfAssessment(participantCode!);
@@ -487,6 +524,29 @@ const AssessmentPage: React.FC = () => {
                   }}>
                     {participant.has_completed_self_assessment ? '✅ Completa' : '⏳ Pendente'}
                   </p>
+                  {participant.has_completed_self_assessment && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setUseNewSelfAssessment(!useNewSelfAssessment);
+                        setError('');
+                        setSuccess('');
+                      }}
+                      style={{
+                        marginTop: '0.5rem',
+                        padding: '0.5rem 1rem',
+                        backgroundColor: useNewSelfAssessment ? 'rgba(124, 58, 237, 0.2)' : 'rgba(55, 65, 81, 0.5)',
+                        color: useNewSelfAssessment ? '#c084fc' : '#9ca3af',
+                        border: `1px solid ${useNewSelfAssessment ? 'rgba(124, 58, 237, 0.3)' : 'rgba(55, 65, 81, 0.3)'}`,
+                        borderRadius: '6px',
+                        fontSize: '0.75rem',
+                        cursor: 'pointer',
+                        transition: 'all 0.3s ease'
+                      }}
+                    >
+                      {useNewSelfAssessment ? 'Usar fluxo original' : 'Refazer com novo fluxo'}
+                    </button>
+                  )}
                 </div>
               </div>
             </button>
@@ -658,8 +718,18 @@ const AssessmentPage: React.FC = () => {
           </div>
         )}
 
+        {/* New Self Assessment Steps */}
+        {currentAssessment === 'self' && useNewSelfAssessment && (
+          <SelfAssessmentSteps
+            characteristics={characteristics}
+            onSave={handleNewSelfAssessmentSave}
+            initialSelections={assessments}
+            isLoading={saving}
+          />
+        )}
+
         {/* Assessment Form */}
-        {(currentAssessment === 'self' || (currentAssessment === 'peer' && selectedPeer)) && (
+        {((currentAssessment === 'self' && !useNewSelfAssessment) || (currentAssessment === 'peer' && selectedPeer)) && (
           <div style={{
             backgroundColor: 'rgba(17, 24, 39, 0.95)',
             backdropFilter: 'blur(20px)',

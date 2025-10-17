@@ -82,11 +82,11 @@ router.get('/', requireAdminAuth, async (req, res) => {
   }
 });
 
-// GET /api/participants/:code - Buscar participante por código
-router.get('/:code', async (req, res) => {
+// GET /api/participants/:code - Buscar participante por código (apenas para admin logado)
+router.get('/:code', requireAdminAuth, async (req, res) => {
   const { code } = req.params;
   
-  console.log('🔍 GET /api/participants/:code - Buscando participante por código:', code);
+  console.log('🔍 GET /api/participants/:code - Buscando participante por código:', code, 'para admin:', req.admin.id);
   
   try {
     if (process.env.DATABASE_URL && process.env.NODE_ENV === 'production') {
@@ -97,13 +97,13 @@ router.get('/:code', async (req, res) => {
           has_completed_self_assessment,
           has_completed_peer_assessments
         FROM participants 
-        WHERE code = $1
-      `, [code]);
+        WHERE code = $1 AND admin_id = $2
+      `, [code, req.admin.id]);
       
       console.log('🔍 Resultado da busca PostgreSQL:', result.rows?.length || 0, 'participantes encontrados');
       
       if (!result.rows || result.rows.length === 0) {
-        console.log('❌ Participante não encontrado no PostgreSQL');
+        console.log('❌ Participante não encontrado no PostgreSQL para este admin');
         return res.status(404).json({ error: 'Participante não encontrado' });
       }
       
@@ -117,10 +117,10 @@ router.get('/:code', async (req, res) => {
           has_completed_self_assessment,
           has_completed_peer_assessments
         FROM participants 
-        WHERE code = ?
+        WHERE code = ? AND admin_id = ?
       `;
 
-      db.get(query, [code], (err, row) => {
+      db.get(query, [code, req.admin.id], (err, row) => {
         if (err) {
           console.error('Erro ao buscar participante:', err);
           return res.status(500).json({ error: 'Erro interno do servidor' });
@@ -129,7 +129,7 @@ router.get('/:code', async (req, res) => {
         console.log('🔍 Resultado da busca SQLite:', row ? 'encontrado' : 'não encontrado');
         
         if (!row) {
-          console.log('❌ Participante não encontrado no SQLite');
+          console.log('❌ Participante não encontrado no SQLite para este admin');
           return res.status(404).json({ error: 'Participante não encontrado' });
         }
         
@@ -255,8 +255,8 @@ router.post('/',
   }
 });
 
-// PUT /api/participants/:id - Atualizar participante
-router.put('/:id', async (req, res) => {
+// PUT /api/participants/:id - Atualizar participante (apenas para admin logado)
+router.put('/:id', requireAdminAuth, async (req, res) => {
   const { id } = req.params;
   const { name, email } = req.body;
   
@@ -270,8 +270,8 @@ router.put('/:id', async (req, res) => {
       const result = await queryPostgres(`
         UPDATE participants 
         SET name = $1, email = $2
-        WHERE id = $3
-      `, [name, email, id]);
+        WHERE id = $3 AND admin_id = $4
+      `, [name, email, id, req.admin.id]);
       
       if (result.rowCount === 0) {
         return res.status(404).json({ error: 'Participante não encontrado' });
@@ -283,10 +283,10 @@ router.put('/:id', async (req, res) => {
       const query = `
         UPDATE participants 
         SET name = ?, email = ?
-        WHERE id = ?
+        WHERE id = ? AND admin_id = ?
       `;
       
-      db.run(query, [name, email, id], function(err) {
+      db.run(query, [name, email, id, req.admin.id], function(err) {
         if (err) {
           console.error('Erro ao atualizar participante:', err);
           return res.status(500).json({ error: 'Erro interno do servidor' });
@@ -305,8 +305,8 @@ router.put('/:id', async (req, res) => {
   }
 });
 
-// DELETE /api/participants/:id - Deletar participante
-router.delete('/:id', (req, res) => {
+// DELETE /api/participants/:id - Deletar participante (apenas para admin logado)
+router.delete('/:id', requireAdminAuth, (req, res) => {
   const { id } = req.params;
   
   // Primeiro, deletar todas as avaliações relacionadas
@@ -321,10 +321,10 @@ router.delete('/:id', (req, res) => {
       return res.status(500).json({ error: 'Erro interno do servidor' });
     }
     
-    // Depois, deletar o participante
-    const deleteParticipant = 'DELETE FROM participants WHERE id = ?';
+    // Depois, deletar o participante (apenas se pertencer ao admin)
+    const deleteParticipant = 'DELETE FROM participants WHERE id = ? AND admin_id = ?';
     
-    db.run(deleteParticipant, [id], function(err) {
+    db.run(deleteParticipant, [id, req.admin.id], function(err) {
       if (err) {
         console.error('Erro ao deletar participante:', err);
         return res.status(500).json({ error: 'Erro interno do servidor' });
@@ -339,9 +339,9 @@ router.delete('/:id', (req, res) => {
   });
 });
 
-// GET /api/participants/stats/overview - Estatísticas gerais
-router.get('/stats/overview', async (req, res) => {
-  console.log('📊 GET /api/participants/stats/overview - Buscando estatísticas');
+// GET /api/participants/stats/overview - Estatísticas do admin logado
+router.get('/stats/overview', requireAdminAuth, async (req, res) => {
+  console.log('📊 GET /api/participants/stats/overview - Buscando estatísticas para admin:', req.admin.id);
   
   try {
     if (process.env.DATABASE_URL && process.env.NODE_ENV === 'production') {
@@ -352,9 +352,10 @@ router.get('/stats/overview', async (req, res) => {
           SUM(CASE WHEN has_completed_self_assessment = true THEN 1 ELSE 0 END) as completed_self,
           SUM(CASE WHEN has_completed_peer_assessments = true THEN 1 ELSE 0 END) as completed_peer
         FROM participants
-      `);
+        WHERE admin_id = $1
+      `, [req.admin.id]);
       
-      console.log('📊 Estatísticas encontradas:', result.rows[0]);
+      console.log('📊 Estatísticas encontradas para admin', req.admin.id, ':', result.rows[0]);
       res.json(result.rows[0]);
     } else {
       // Fallback para SQLite
@@ -364,15 +365,16 @@ router.get('/stats/overview', async (req, res) => {
           SUM(CASE WHEN has_completed_self_assessment = 1 THEN 1 ELSE 0 END) as completed_self,
           SUM(CASE WHEN has_completed_peer_assessments = 1 THEN 1 ELSE 0 END) as completed_peer
         FROM participants
+        WHERE admin_id = ?
       `;
       
-      db.get(query, [], (err, row) => {
+      db.get(query, [req.admin.id], (err, row) => {
         if (err) {
           console.error('Erro ao buscar estatísticas:', err);
           return res.status(500).json({ error: 'Erro interno do servidor' });
         }
         
-        console.log('📊 Estatísticas encontradas:', row);
+        console.log('📊 Estatísticas encontradas para admin', req.admin.id, ':', row);
         res.json(row);
       });
     }

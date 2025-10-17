@@ -1,0 +1,8 @@
+# Copie este conteúdo para client/.env
+
+# Configuração do Cliente React
+# URL da API do servidor
+REACT_APP_API_URL=http://localhost:8080/api
+
+# Chave pública do Stripe (para o frontend)
+REACT_APP_STRIPE_PUBLISHABLE_KEY=pk_test_SUA_CHAVE_PUBLICA_AQUI

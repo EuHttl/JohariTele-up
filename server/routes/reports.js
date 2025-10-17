@@ -41,8 +41,8 @@ async function queryPostgres(sql, params = []) {
   }
 }
 
-// GET /api/reports/johari/:code - Relatório individual da Janela de Johari
-router.get('/johari/:code', async (req, res) => {
+// GET /api/reports/johari/:code - Relatório individual da Janela de Johari (apenas para admin logado)
+router.get('/johari/:code', require('../middleware/adminAuth').requireAdminAuth, async (req, res) => {
   const { code } = req.params;
   
   try {
@@ -73,11 +73,11 @@ router.get('/johari/:code', async (req, res) => {
         FROM participants p
         LEFT JOIN self_assessments sa ON sa.participant_id = p.id
         LEFT JOIN peer_assessments pa ON pa.assessed_id = p.id
-        WHERE p.code = $1
+        WHERE p.code = $1 AND p.admin_id = $2
         GROUP BY p.id, p.name, p.has_completed_self_assessment, p.has_completed_peer_assessments
       `;
       
-      const result = await queryPostgres(query, [code]);
+      const result = await queryPostgres(query, [code, req.admin.id]);
       
       if (!result.rows || result.rows.length === 0) {
         return res.status(404).json({ error: 'Participante não encontrado' });
@@ -112,11 +112,11 @@ router.get('/johari/:code', async (req, res) => {
         FROM participants p
         LEFT JOIN self_assessments sa ON sa.participant_id = p.id
         LEFT JOIN peer_assessments pa ON pa.assessed_id = p.id
-        WHERE p.code = ?
+        WHERE p.code = ? AND p.admin_id = ?
         GROUP BY p.id, p.name, p.has_completed_self_assessment, p.has_completed_peer_assessments
       `;
       
-      db.get(query, [code], async (err, row) => {
+      db.get(query, [code, req.admin.id], async (err, row) => {
         if (err) {
           console.error('Erro ao gerar relatório:', err);
           return res.status(500).json({ error: 'Erro interno do servidor' });
@@ -239,8 +239,8 @@ async function processReportData(row, res, code) {
   }
 }
 
-// GET /api/reports/comparative - Relatório comparativo entre todos os participantes
-router.get('/comparative', async (req, res) => {
+// GET /api/reports/comparative - Relatório comparativo entre participantes do admin logado
+router.get('/comparative', require('../middleware/adminAuth').requireAdminAuth, async (req, res) => {
   console.log('🔍 GET /api/reports/comparative - Iniciando relatório comparativo...');
   
   if (!process.env.DATABASE_URL) {
@@ -252,7 +252,7 @@ router.get('/comparative', async (req, res) => {
   let query;
   
   if (process.env.DATABASE_URL) {
-    // Query PostgreSQL - Corrigida para calcular quadrantes corretamente
+    // Query PostgreSQL - Corrigida para calcular quadrantes corretamente e filtrar por admin
     query = `
       SELECT 
         p.id,
@@ -274,11 +274,12 @@ router.get('/comparative', async (req, res) => {
       FROM participants p
       LEFT JOIN self_assessments sa ON sa.participant_id = p.id
       LEFT JOIN peer_assessments pa ON pa.assessed_id = p.id
+      WHERE p.admin_id = $1
       GROUP BY p.id, p.name, p.code, p.created_at, p.has_completed_self_assessment, p.has_completed_peer_assessments
       ORDER BY p.name
     `;
   } else {
-    // Query SQLite - Corrigida para calcular quadrantes corretamente
+    // Query SQLite - Corrigida para calcular quadrantes corretamente e filtrar por admin
     query = `
       SELECT 
         p.id,
@@ -300,6 +301,7 @@ router.get('/comparative', async (req, res) => {
       FROM participants p
       LEFT JOIN self_assessments sa ON sa.participant_id = p.id
       LEFT JOIN peer_assessments pa ON pa.assessed_id = p.id
+      WHERE p.admin_id = ?
       GROUP BY p.id, p.name, p.code, p.created_at, p.has_completed_self_assessment, p.has_completed_peer_assessments
       ORDER BY p.name
     `;
@@ -310,12 +312,12 @@ router.get('/comparative', async (req, res) => {
     
     if (process.env.DATABASE_URL) {
       console.log('🗄️ Usando PostgreSQL para relatório comparativo...');
-      const result = await queryPostgres(query);
+      const result = await queryPostgres(query, [req.admin.id]);
       rows = result.rows;
     } else {
       console.log('🗄️ Usando SQLite para relatório comparativo...');
       rows = await new Promise((resolve, reject) => {
-        db.all(query, [], (err, result) => {
+        db.all(query, [req.admin.id], (err, result) => {
           if (err) reject(err);
           else resolve(result);
         });

@@ -41,8 +41,8 @@ async function queryPostgres(sql, params = []) {
   }
 }
 
-// GET /api/admin/assessment-tracking - Rastreamento de avaliações entre pares
-router.get('/assessment-tracking', async (req, res) => {
+// GET /api/admin/assessment-tracking - Rastreamento de avaliações entre pares (apenas para admin logado)
+router.get('/assessment-tracking', require('../middleware/adminAuth').requireAdminAuth, async (req, res) => {
   console.log('🔍 GET /api/admin/assessment-tracking - Iniciando rastreamento...');
   
   const query = `
@@ -63,7 +63,7 @@ router.get('/assessment-tracking', async (req, res) => {
     FROM participants p1
     CROSS JOIN participants p2
     LEFT JOIN peer_assessments pa ON pa.assessor_id = p1.id AND pa.assessed_id = p2.id
-    WHERE p1.id != p2.id
+    WHERE p1.id != p2.id AND p1.admin_id = $1 AND p2.admin_id = $1
     GROUP BY p1.id, p1.name, p1.code, p2.id, p2.name, p2.code, pa.created_at
     ORDER BY p1.name, p2.name
   `;
@@ -73,12 +73,12 @@ router.get('/assessment-tracking', async (req, res) => {
     
     if (process.env.DATABASE_URL) {
       console.log('🗄️ Usando PostgreSQL para assessment-tracking...');
-      const result = await queryPostgres(query);
+      const result = await queryPostgres(query, [req.admin.id]);
       rows = result.rows;
     } else {
       console.log('🗄️ Usando SQLite para assessment-tracking...');
       rows = await new Promise((resolve, reject) => {
-        db.all(query, [], (err, result) => {
+        db.all(query, [req.admin.id], (err, result) => {
           if (err) reject(err);
           else resolve(result);
         });
@@ -191,8 +191,8 @@ router.get('/assessment-matrix', (req, res) => {
   });
 });
 
-// GET /api/admin/participant-progress - Progresso detalhado por participante
-router.get('/participant-progress', (req, res) => {
+// GET /api/admin/participant-progress - Progresso detalhado por participante (apenas para admin logado)
+router.get('/participant-progress', require('../middleware/adminAuth').requireAdminAuth, (req, res) => {
   const query = `
     SELECT 
       p.id,
@@ -203,16 +203,17 @@ router.get('/participant-progress', (req, res) => {
       COUNT(DISTINCT sa.characteristic_id) as self_assessment_count,
       COUNT(DISTINCT pa_given.assessed_id) as peers_evaluated_count,
       COUNT(DISTINCT pa_received.assessor_id) as peers_who_evaluated_me_count,
-      (SELECT COUNT(*) - 1 FROM participants) as total_peers
+      (SELECT COUNT(*) - 1 FROM participants WHERE admin_id = ?) as total_peers
     FROM participants p
     LEFT JOIN self_assessments sa ON sa.participant_id = p.id
     LEFT JOIN peer_assessments pa_given ON pa_given.assessor_id = p.id
     LEFT JOIN peer_assessments pa_received ON pa_received.assessed_id = p.id
+    WHERE p.admin_id = ?
     GROUP BY p.id, p.name, p.code, p.has_completed_self_assessment, p.has_completed_peer_assessments
     ORDER BY p.name
   `;
   
-  db.all(query, [], (err, rows) => {
+  db.all(query, [req.admin.id, req.admin.id], (err, rows) => {
     if (err) {
       console.error('Erro ao buscar progresso dos participantes:', err);
       return res.status(500).json({ error: 'Erro interno do servidor' });
@@ -247,8 +248,8 @@ router.get('/participant-progress', (req, res) => {
   });
 });
 
-// GET /api/admin/settings - Buscar configurações do sistema
-router.get('/settings', async (req, res) => {
+// GET /api/admin/settings - Buscar configurações do sistema (apenas para admin logado)
+router.get('/settings', require('../middleware/adminAuth').requireAdminAuth, async (req, res) => {
   try {
     // Por enquanto retorna configurações padrão
     // Em produção, isso viria de uma tabela de configurações
@@ -268,8 +269,8 @@ router.get('/settings', async (req, res) => {
   }
 });
 
-// PUT /api/admin/settings - Atualizar configurações do sistema
-router.put('/settings', async (req, res) => {
+// PUT /api/admin/settings - Atualizar configurações do sistema (apenas para admin logado)
+router.put('/settings', require('../middleware/adminAuth').requireAdminAuth, async (req, res) => {
   try {
     const { email_notifications, auto_backup, debug_mode, backup_frequency } = req.body;
     
@@ -391,8 +392,8 @@ router.post('/backup', async (req, res) => {
   }
 });
 
-// POST /api/admin/restore - Restaurar backup do banco de dados
-router.post('/restore', async (req, res) => {
+// POST /api/admin/restore - Restaurar backup do banco de dados (apenas para admin logado)
+router.post('/restore', require('../middleware/adminAuth').requireAdminAuth, async (req, res) => {
   try {
     const { filename } = req.body;
     
@@ -541,8 +542,8 @@ router.delete('/clear-data', async (req, res) => {
   }
 });
 
-// GET /api/admin/backups - Listar backups disponíveis
-router.get('/backups', async (req, res) => {
+// GET /api/admin/backups - Listar backups disponíveis (apenas para admin logado)
+router.get('/backups', require('../middleware/adminAuth').requireAdminAuth, async (req, res) => {
   try {
     const fs = require('fs').promises;
     const path = require('path');

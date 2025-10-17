@@ -143,7 +143,7 @@ router.post('/self/:code', async (req, res) => {
   }
 });
 
-// GET /api/assessments/peers/:code - Buscar participantes para avaliação
+// GET /api/assessments/peers/:code - Buscar participantes para avaliação (apenas do mesmo admin)
 router.get('/peers/:code', async (req, res) => {
   const { code } = req.params;
   console.log('🔍 GET /api/assessments/peers/:code - Iniciando busca para code:', code);
@@ -178,19 +178,29 @@ router.get('/peers/:code', async (req, res) => {
       return res.status(500).json({ error: 'Tabela participants não existe' });
     }
     
-    // Contar registros
-    const countResult = await postgresInit.pool.query('SELECT COUNT(*) as count FROM participants');
-    console.log('📊 Total de participantes na tabela:', countResult.rows[0].count);
+    // Primeiro, buscar o admin_id do participante com o código fornecido
+    const participantCheck = await postgresInit.pool.query(`
+      SELECT admin_id FROM participants WHERE code = $1
+    `, [code]);
     
+    if (!participantCheck.rows || participantCheck.rows.length === 0) {
+      console.log('❌ Participante não encontrado');
+      return res.status(404).json({ error: 'Participante não encontrado' });
+    }
+    
+    const adminId = participantCheck.rows[0].admin_id;
+    console.log('🔍 Admin ID do participante:', adminId);
+    
+    // Buscar apenas participantes do mesmo admin
     const query = `
       SELECT id, name, code
       FROM participants 
-      WHERE code != $1
+      WHERE code != $1 AND admin_id = $2
       ORDER BY name
     `;
     
-    console.log('🔍 Executando query:', query, 'com parâmetro:', code);
-    const result = await postgresInit.pool.query(query, [code]);
+    console.log('🔍 Executando query:', query, 'com parâmetros:', code, adminId);
+    const result = await postgresInit.pool.query(query, [code, adminId]);
     console.log('✅ PostgreSQL: Participantes encontrados:', result.rows?.length || 0);
     res.json(result.rows);
   } catch (error) {
