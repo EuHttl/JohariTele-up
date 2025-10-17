@@ -106,17 +106,44 @@ class SubscriptionService {
   }
 
   /**
-   * Atualizar plano de assinatura
+   * Atualizar plano de assinatura (com pagamento)
    */
   async upgradePlan(planId: number, billingCycle: 'monthly' | 'yearly'): Promise<any> {
     try {
-      const response = await api.post('/subscriptions/upgrade', {
+      // Se for plano gratuito, usar método direto
+      if (planId === 1) {
+        const response = await api.post('/subscriptions/upgrade', {
+          plan_id: planId,
+          billing_cycle: billingCycle
+        });
+        return response.data;
+      }
+
+      // Para planos pagos, criar sessão de checkout
+      const response = await api.post('/payments/create-checkout-session', {
         plan_id: planId,
         billing_cycle: billingCycle
       });
+      
+      // Redirecionar para checkout do Stripe
+      window.location.href = response.data.url;
+      
       return response.data;
     } catch (error) {
       console.error('Erro ao atualizar plano:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Cancelar assinatura (com Stripe)
+   */
+  async cancelSubscriptionWithPayment(): Promise<any> {
+    try {
+      const response = await api.post('/payments/cancel-subscription');
+      return response.data;
+    } catch (error) {
+      console.error('Erro ao cancelar assinatura:', error);
       throw error;
     }
   }

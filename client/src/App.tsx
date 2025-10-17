@@ -14,6 +14,7 @@ import Reports from './pages/Reports';
 import AdminDashboard from './pages/AdminDashboard';
 import SubscriptionPlans from './pages/SubscriptionPlans';
 import SubscriptionUsage from './pages/SubscriptionUsage';
+import PaymentResult from './pages/PaymentResult';
 import { Analytics } from "@vercel/analytics/react"
 import './styles/globals.css';
 
@@ -41,6 +42,7 @@ function App() {
             <Route path="reports" element={<Reports />} />
             <Route path="usage" element={<SubscriptionUsage />} />
             <Route path="plans" element={<SubscriptionPlans />} />
+            <Route path="payment-result" element={<PaymentResult />} />
             <Route path="admin" element={<AdminDashboard />} />
             </Route>
             

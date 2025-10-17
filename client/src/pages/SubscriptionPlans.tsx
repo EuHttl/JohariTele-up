@@ -34,14 +34,40 @@ const SubscriptionPlans: React.FC = () => {
   const handleUpgrade = async (planId: number) => {
     try {
       setUpgrading(planId);
-      await subscriptionService.upgradePlan(planId, billingCycle);
-      await loadData(); // Recarregar dados após upgrade
-      alert('Plano atualizado com sucesso!');
+      
+      // Se for plano gratuito, fazer upgrade direto
+      if (planId === 1) {
+        await subscriptionService.upgradePlan(planId, billingCycle);
+        await loadData();
+        alert('Plano atualizado com sucesso!');
+      } else {
+        // Para planos pagos, redirecionar para Stripe
+        await subscriptionService.upgradePlan(planId, billingCycle);
+        // O redirecionamento acontece automaticamente no serviço
+      }
     } catch (error: any) {
       console.error('Erro ao atualizar plano:', error);
       alert(error.response?.data?.message || 'Erro ao atualizar plano');
-    } finally {
       setUpgrading(null);
+    }
+  };
+
+  const handleCancel = async () => {
+    if (!confirm('Tem certeza que deseja cancelar sua assinatura? Você perderá acesso aos recursos premium.')) {
+      return;
+    }
+
+    try {
+      if (currentSubscription?.subscription?.stripe_subscription_id) {
+        await subscriptionService.cancelSubscriptionWithPayment();
+      } else {
+        await subscriptionService.cancelSubscription();
+      }
+      await loadData();
+      alert('Assinatura cancelada com sucesso!');
+    } catch (error: any) {
+      console.error('Erro ao cancelar assinatura:', error);
+      alert(error.response?.data?.message || 'Erro ao cancelar assinatura');
     }
   };
 
@@ -221,6 +247,17 @@ const SubscriptionPlans: React.FC = () => {
               </div>
             )}
           </div>
+          
+          {currentSubscription.subscription?.plan?.type !== 'free' && (
+            <div className="subscription-actions">
+              <button 
+                onClick={handleCancel}
+                className="cancel-btn"
+              >
+                Cancelar Assinatura
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>
