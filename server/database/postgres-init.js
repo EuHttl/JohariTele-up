@@ -164,6 +164,64 @@ async function initializeDatabase() {
       `);
       console.log('✅ Tabela peer_assessments verificada/criada');
 
+      // Criar tabela de planos de assinatura
+      await client.query(`
+        CREATE TABLE IF NOT EXISTS subscription_plans (
+          id SERIAL PRIMARY KEY,
+          name VARCHAR(255) NOT NULL,
+          type VARCHAR(50) NOT NULL CHECK (type IN ('free', 'professional', 'enterprise')),
+          price_monthly DECIMAL(10,2) DEFAULT 0,
+          price_yearly DECIMAL(10,2) DEFAULT 0,
+          max_participants INTEGER NOT NULL,
+          max_assessments_per_month INTEGER NOT NULL,
+          features TEXT NOT NULL,
+          is_active BOOLEAN DEFAULT TRUE,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+      console.log('✅ Tabela subscription_plans verificada/criada');
+
+      // Criar tabela de assinaturas
+      await client.query(`
+        CREATE TABLE IF NOT EXISTS subscriptions (
+          id SERIAL PRIMARY KEY,
+          admin_id INTEGER NOT NULL,
+          plan_id INTEGER NOT NULL,
+          status VARCHAR(50) NOT NULL CHECK (status IN ('active', 'cancelled', 'expired', 'trial')),
+          billing_cycle VARCHAR(20) NOT NULL CHECK (billing_cycle IN ('monthly', 'yearly')),
+          started_at TIMESTAMP NOT NULL,
+          expires_at TIMESTAMP,
+          cancelled_at TIMESTAMP,
+          stripe_subscription_id VARCHAR(255),
+          stripe_customer_id VARCHAR(255),
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (admin_id) REFERENCES admins (id) ON DELETE CASCADE,
+          FOREIGN KEY (plan_id) REFERENCES subscription_plans (id)
+        )
+      `);
+      console.log('✅ Tabela subscriptions verificada/criada');
+
+      // Criar tabela de uso (tracking de limites)
+      await client.query(`
+        CREATE TABLE IF NOT EXISTS usage_tracking (
+          id SERIAL PRIMARY KEY,
+          admin_id INTEGER NOT NULL,
+          subscription_id INTEGER NOT NULL,
+          month_year VARCHAR(7) NOT NULL,
+          participants_created INTEGER DEFAULT 0,
+          assessments_completed INTEGER DEFAULT 0,
+          reports_generated INTEGER DEFAULT 0,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (admin_id) REFERENCES admins (id) ON DELETE CASCADE,
+          FOREIGN KEY (subscription_id) REFERENCES subscriptions (id),
+          UNIQUE(admin_id, month_year)
+        )
+      `);
+      console.log('✅ Tabela usage_tracking verificada/criada');
+
       // Verificar se existe administrador
       const adminCount = await client.query('SELECT COUNT(*) as count FROM admins');
       console.log(`📊 Total de administradores: ${adminCount.rows[0].count}`);
@@ -198,6 +256,81 @@ async function initializeDatabase() {
         }
         
         console.log('✅ Características inseridas com sucesso!');
+      }
+
+      // Inserir planos de assinatura se não existirem
+      const plansCount = await client.query('SELECT COUNT(*) as count FROM subscription_plans');
+      console.log(`📊 Total de planos: ${plansCount.rows[0].count}`);
+      
+      if (parseInt(plansCount.rows[0].count) === 0) {
+        console.log('➕ Inserindo planos de assinatura...');
+        
+        const plans = [
+          {
+            name: 'Gratuito',
+            type: 'free',
+            price_monthly: 0,
+            price_yearly: 0,
+            max_participants: 5,
+            max_assessments_per_month: 1,
+            features: JSON.stringify([
+              'Até 5 participantes',
+              '1 avaliação por mês',
+              'Relatórios básicos',
+              'Suporte por email'
+            ])
+          },
+          {
+            name: 'Profissional',
+            type: 'professional',
+            price_monthly: 97,
+            price_yearly: 970,
+            max_participants: 25,
+            max_assessments_per_month: -1,
+            features: JSON.stringify([
+              'Até 25 participantes',
+              'Avaliações ilimitadas',
+              'Relatórios completos',
+              'Exportação PDF/Excel',
+              'Notificações automáticas',
+              'Suporte prioritário'
+            ])
+          },
+          {
+            name: 'Empresarial',
+            type: 'enterprise',
+            price_monthly: 197,
+            price_yearly: 1970,
+            max_participants: -1,
+            max_assessments_per_month: -1,
+            features: JSON.stringify([
+              'Participantes ilimitados',
+              'Avaliações ilimitadas',
+              'Relatórios premium',
+              'Análise de equipe',
+              'API de integração',
+              'White-label',
+              'Suporte 24/7'
+            ])
+          }
+        ];
+
+        for (const plan of plans) {
+          await client.query(`
+            INSERT INTO subscription_plans (name, type, price_monthly, price_yearly, max_participants, max_assessments_per_month, features) 
+            VALUES ($1, $2, $3, $4, $5, $6, $7)
+          `, [
+            plan.name,
+            plan.type,
+            plan.price_monthly,
+            plan.price_yearly,
+            plan.max_participants,
+            plan.max_assessments_per_month,
+            plan.features
+          ]);
+        }
+        
+        console.log('✅ Planos de assinatura inseridos com sucesso!');
       }
 
       console.log('✅ Banco PostgreSQL inicializado com sucesso!');

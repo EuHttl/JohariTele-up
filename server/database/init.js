@@ -151,6 +151,61 @@ function initializeDatabase() {
       )
     `);
 
+    // Criar tabela de planos de assinatura
+    db.run(`
+      CREATE TABLE IF NOT EXISTS subscription_plans (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        type TEXT NOT NULL CHECK (type IN ('free', 'professional', 'enterprise')),
+        price_monthly REAL DEFAULT 0,
+        price_yearly REAL DEFAULT 0,
+        max_participants INTEGER NOT NULL,
+        max_assessments_per_month INTEGER NOT NULL,
+        features TEXT NOT NULL, -- JSON string com features
+        is_active BOOLEAN DEFAULT TRUE,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // Criar tabela de assinaturas
+    db.run(`
+      CREATE TABLE IF NOT EXISTS subscriptions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        admin_id INTEGER NOT NULL,
+        plan_id INTEGER NOT NULL,
+        status TEXT NOT NULL CHECK (status IN ('active', 'cancelled', 'expired', 'trial')),
+        billing_cycle TEXT NOT NULL CHECK (billing_cycle IN ('monthly', 'yearly')),
+        started_at DATETIME NOT NULL,
+        expires_at DATETIME,
+        cancelled_at DATETIME,
+        stripe_subscription_id TEXT,
+        stripe_customer_id TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (admin_id) REFERENCES admins (id),
+        FOREIGN KEY (plan_id) REFERENCES subscription_plans (id)
+      )
+    `);
+
+    // Criar tabela de uso (tracking de limites)
+    db.run(`
+      CREATE TABLE IF NOT EXISTS usage_tracking (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        admin_id INTEGER NOT NULL,
+        subscription_id INTEGER NOT NULL,
+        month_year TEXT NOT NULL, -- formato: YYYY-MM
+        participants_created INTEGER DEFAULT 0,
+        assessments_completed INTEGER DEFAULT 0,
+        reports_generated INTEGER DEFAULT 0,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (admin_id) REFERENCES admins (id),
+        FOREIGN KEY (subscription_id) REFERENCES subscriptions (id),
+        UNIQUE(admin_id, month_year)
+      )
+    `);
+
     // Inserir características se não existirem
     db.get("SELECT COUNT(*) as count FROM characteristics", (err, row) => {
       if (err) {
@@ -168,6 +223,88 @@ function initializeDatabase() {
         
         stmt.finalize();
         console.log(`✅ ${johariCharacteristics.length} características inseridas`);
+      }
+    });
+
+    // Inserir planos de assinatura padrão
+    db.get("SELECT COUNT(*) as count FROM subscription_plans", (err, row) => {
+      if (err) {
+        console.error('Erro ao verificar planos:', err);
+        return;
+      }
+
+      if (row.count === 0) {
+        console.log('📋 Inserindo planos de assinatura...');
+        
+        const plans = [
+          {
+            name: 'Gratuito',
+            type: 'free',
+            price_monthly: 0,
+            price_yearly: 0,
+            max_participants: 5,
+            max_assessments_per_month: 1,
+            features: JSON.stringify([
+              'Até 5 participantes',
+              '1 avaliação por mês',
+              'Relatórios básicos',
+              'Suporte por email'
+            ])
+          },
+          {
+            name: 'Profissional',
+            type: 'professional',
+            price_monthly: 97,
+            price_yearly: 970,
+            max_participants: 25,
+            max_assessments_per_month: -1, // -1 = ilimitado
+            features: JSON.stringify([
+              'Até 25 participantes',
+              'Avaliações ilimitadas',
+              'Relatórios completos',
+              'Exportação PDF/Excel',
+              'Notificações automáticas',
+              'Suporte prioritário'
+            ])
+          },
+          {
+            name: 'Empresarial',
+            type: 'enterprise',
+            price_monthly: 197,
+            price_yearly: 1970,
+            max_participants: -1, // -1 = ilimitado
+            max_assessments_per_month: -1,
+            features: JSON.stringify([
+              'Participantes ilimitados',
+              'Avaliações ilimitadas',
+              'Relatórios premium',
+              'Análise de equipe',
+              'API de integração',
+              'White-label',
+              'Suporte 24/7'
+            ])
+          }
+        ];
+
+        const stmt = db.prepare(`
+          INSERT INTO subscription_plans (name, type, price_monthly, price_yearly, max_participants, max_assessments_per_month, features) 
+          VALUES (?, ?, ?, ?, ?, ?, ?)
+        `);
+        
+        plans.forEach(plan => {
+          stmt.run(
+            plan.name,
+            plan.type,
+            plan.price_monthly,
+            plan.price_yearly,
+            plan.max_participants,
+            plan.max_assessments_per_month,
+            plan.features
+          );
+        });
+        
+        stmt.finalize();
+        console.log(`✅ ${plans.length} planos de assinatura inseridos`);
       }
     });
 

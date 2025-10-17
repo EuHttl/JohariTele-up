@@ -113,3 +113,61 @@ export interface AuthResponse {
   user: User;
   message: string;
 }
+
+export interface SubscriptionPlan {
+  id: number;
+  name: string;
+  type: 'free' | 'professional' | 'enterprise';
+  price_monthly: number;
+  price_yearly: number;
+  max_participants: number;
+  max_assessments_per_month: number;
+  features: string[];
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Subscription {
+  id: number;
+  admin_id: number;
+  plan_id: number;
+  status: 'active' | 'cancelled' | 'expired' | 'trial';
+  billing_cycle: 'monthly' | 'yearly';
+  started_at: string;
+  expires_at?: string;
+  cancelled_at?: string;
+  stripe_subscription_id?: string;
+  stripe_customer_id?: string;
+  created_at: string;
+  updated_at: string;
+  plan?: SubscriptionPlan;
+}
+
+export interface UsageTracking {
+  id: number;
+  admin_id: number;
+  subscription_id: number;
+  month_year: string;
+  participants_created: number;
+  assessments_completed: number;
+  reports_generated: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface SubscriptionLimits {
+  max_participants: number;
+  max_assessments_per_month: number;
+  can_export: boolean;
+  can_use_api: boolean;
+  can_white_label: boolean;
+  has_priority_support: boolean;
+}
+
+export interface BillingInfo {
+  current_plan: SubscriptionPlan;
+  subscription: Subscription;
+  usage: UsageTracking;
+  limits: SubscriptionLimits;
+}
