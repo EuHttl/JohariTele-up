@@ -8,7 +8,9 @@ import {
   BarChart3, 
   LogOut, 
   User,
-  Settings
+  Settings,
+  CreditCard,
+  TrendingUp
 } from 'lucide-react';
 import '../styles/layout.css';
 
@@ -20,6 +22,8 @@ const Layout: React.FC = () => {
     { name: 'Dashboard', href: '/app/dashboard', icon: LayoutDashboard },
     { name: 'Participantes', href: '/app/participants', icon: Users },
     { name: 'Relatórios', href: '/app/reports', icon: BarChart3 },
+    { name: 'Uso', href: '/app/usage', icon: TrendingUp },
+    { name: 'Planos', href: '/app/plans', icon: CreditCard },
     { name: 'Admin', href: '/app/admin', icon: Settings },
   ];
 

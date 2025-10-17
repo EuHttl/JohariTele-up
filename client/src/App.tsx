@@ -12,6 +12,8 @@ import AssessmentPage from './pages/Assessment';
 import Report from './pages/Report';
 import Reports from './pages/Reports';
 import AdminDashboard from './pages/AdminDashboard';
+import SubscriptionPlans from './pages/SubscriptionPlans';
+import SubscriptionUsage from './pages/SubscriptionUsage';
 import { Analytics } from "@vercel/analytics/react"
 import './styles/globals.css';
 
@@ -34,10 +36,12 @@ function App() {
               </ProtectedRoute>
             }>
               <Route index element={<Navigate to="/app/dashboard" replace />} />
-              <Route path="dashboard" element={<Dashboard />} />
-              <Route path="participants" element={<Participants />} />
-              <Route path="reports" element={<Reports />} />
-              <Route path="admin" element={<AdminDashboard />} />
+            <Route path="dashboard" element={<Dashboard />} />
+            <Route path="participants" element={<Participants />} />
+            <Route path="reports" element={<Reports />} />
+            <Route path="usage" element={<SubscriptionUsage />} />
+            <Route path="plans" element={<SubscriptionPlans />} />
+            <Route path="admin" element={<AdminDashboard />} />
             </Route>
             
             {/* Rotas dos participantes */}
