@@ -50,7 +50,7 @@ O Sistema Janela de Johari é uma ferramenta de desenvolvimento pessoal e de equ
 
 ### **1. Acesso ao Sistema**
 ```
-URL: https://johari-tele-up.vercel.app
+URL: https://johari.vercel.app
 Login Admin: hyttalo2002@gmail.com
 Senha: admin123
 ```

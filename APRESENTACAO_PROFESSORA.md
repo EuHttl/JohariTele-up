@@ -336,7 +336,7 @@ Este projeto representa a **interseção entre tecnologia e psicologia**, oferec
 
 **Desenvolvedor**: Hyttalo Costa  
 **Email**: hyttalo2002@gmail.com
-**Sistema**: https://johari-tele-up.vercel.app  
+**Sistema**: https://johari.vercel.app  
 **Código**: Disponível para revisão acadêmica  
 **Documentação**: Completa e detalhada
 

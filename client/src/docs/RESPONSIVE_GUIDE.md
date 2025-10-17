@@ -1,6 +1,6 @@
 # Guia de Responsividade Avançada
 
-Este guia explica como usar o sistema de responsividade avançada implementado no projeto Johari Tele-up.
+Este guia explica como usar o sistema de responsividade avançada implementado no projeto Janela de Johari.
 
 ## 📱 Sistema de Responsividade
 

@@ -5,7 +5,7 @@ Sistema completo para aplicação da Janela de Johari, permitindo autoavaliaçã
 ## 🚀 Deploy em Produção
 
 ### Railway (Backend)
-- **URL**: https://joharitele-up-production.up.railway.app
+- **URL**: https://johari-production.up.railway.app
 - **Banco**: PostgreSQL
 - **Status**: ✅ Ativo
 
@@ -62,7 +62,7 @@ DATABASE_URL=postgresql://...
 
 ### Vercel (Frontend)
 ```env
-REACT_APP_API_URL=https://joharitele-up-production.up.railway.app/api
+REACT_APP_API_URL=https://johari-production.up.railway.app/api
 ```
 
 ## 🎯 Acesso

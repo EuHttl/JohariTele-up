@@ -1,6 +1,6 @@
 # Guia de Configuração SMTP
 
-Este guia explica como configurar o servidor SMTP para envio de notificações automáticas no sistema Johari Tele-up.
+Este guia explica como configurar o servidor SMTP para envio de notificações automáticas no sistema Janela de Johari.
 
 ## 📧 Configurações SMTP Suportadas
 
@@ -18,7 +18,7 @@ Este guia explica como configurar o servidor SMTP para envio de notificações a
 2. **Gere uma senha de app:**
    - Acesse: [myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords)
    - Selecione "Email" e "Outro (nome personalizado)"
-   - Digite "Johari Tele-up" como nome
+   - Digite "Janela de Johari" como nome
    - Copie a senha gerada (16 caracteres)
 
 3. **Configure no sistema:**
@@ -85,7 +85,7 @@ Senha: [sua senha]
 ## 🔧 Configuração Passo a Passo
 
 ### Passo 1: Acessar Configurações
-1. Faça login no sistema Johari Tele-up
+1. Faça login no sistema Janela de Johari
 2. Navegue para **Configurações** → **Email**
 3. Clique em **Habilitar** se ainda não estiver ativo
 
@@ -102,7 +102,7 @@ Senha: [sua senha]
 3. Se bem-sucedido, clique em **"Salvar Configurações"**
 
 ### Passo 4: Configurar Remetente
-1. **Nome do Remetente:** "Johari Tele-up" (ou personalizado)
+1. **Nome do Remetente:** "Janela de Johari" (ou personalizado)
 2. **Email do Remetente:** Seu email (deve ser o mesmo do SMTP)
 
 ## 📋 Templates de Email Disponíveis

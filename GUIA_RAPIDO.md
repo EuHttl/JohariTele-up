@@ -3,7 +3,7 @@
 ## 🎯 **Acesso ao Sistema**
 
 ```
-🌐 URL: https://johari-tele-up.vercel.app
+🌐 URL: https://johari.vercel.app
 👤 Login Admin: hyttalo2002@gmail.com / admin123
 📱 Mobile: Funciona em smartphones e tablets
 ```

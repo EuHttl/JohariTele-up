@@ -28,8 +28,8 @@ app.set('trust proxy', 1);
 
 // Configuração CORS para produção
 const allowedOrigins = [
-  'https://johari-tele-up.vercel.app',
-  'https://johari-tele-up-git-master-euhttl.vercel.app',
+  'https://johari.vercel.app',
+  'https://johari-git-master.vercel.app',
   'http://localhost:3000', // Para desenvolvimento local
   'http://localhost:3001'  // Para desenvolvimento local alternativo
 ];
