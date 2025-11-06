@@ -2,11 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { Users, FileText, Download, TrendingUp, AlertCircle, CheckCircle, Crown, Star, Zap } from 'lucide-react';
 import { subscriptionService, UsageInfo } from '../services/subscriptionService';
 import { Link } from 'react-router-dom';
+import ErrorState from '../components/ErrorState';
 import '../styles/design-system.css';
 
 const SubscriptionUsage: React.FC = () => {
   const [usage, setUsage] = useState<UsageInfo | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     loadUsage();
@@ -15,10 +17,17 @@ const SubscriptionUsage: React.FC = () => {
   const loadUsage = async () => {
     try {
       setLoading(true);
+      setError(null);
       const usageData = await subscriptionService.getUsage();
       setUsage(usageData);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao carregar uso:', error);
+      if (error.response?.status >= 500 || error.code === 'NETWORK_ERROR') {
+        setError('Não foi possível carregar as informações de uso. Verifique sua conexão e tente novamente.');
+      } else {
+        // Pode ser que não há assinatura ainda
+        setError('Não foi possível carregar as informações de uso da sua assinatura.');
+      }
     } finally {
       setLoading(false);
     }
@@ -54,14 +63,15 @@ const SubscriptionUsage: React.FC = () => {
     );
   }
 
-  if (!usage) {
+  if (error || !usage) {
     return (
       <div className="page-container">
-        <div className="empty-state">
-          <AlertCircle className="empty-state-icon" style={{ color: 'var(--color-error)' }} />
-          <h3 className="empty-state-title">Erro ao carregar dados</h3>
-          <p className="empty-state-description">Não foi possível carregar as informações de uso.</p>
-        </div>
+        <ErrorState
+          title="Não foi possível carregar informações de uso"
+          message={error || 'Não foi possível carregar as informações de uso da sua assinatura.'}
+          onRetry={loadUsage}
+          type="warning"
+        />
       </div>
     );
   }

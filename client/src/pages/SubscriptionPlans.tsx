@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Check, Crown, Star, Users, FileText, Download, Code, Headphones, Zap, ArrowRight } from 'lucide-react';
 import { subscriptionService, SubscriptionPlan, BillingInfo } from '../services/subscriptionService';
+import ErrorState from '../components/ErrorState';
+import EmptyState from '../components/EmptyState';
 import '../styles/design-system.css';
 
 const SubscriptionPlans: React.FC = () => {
@@ -9,6 +11,7 @@ const SubscriptionPlans: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
   const [upgrading, setUpgrading] = useState<number | string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     loadData();
@@ -17,15 +20,22 @@ const SubscriptionPlans: React.FC = () => {
   const loadData = async () => {
     try {
       setLoading(true);
+      setError(null);
       const [plansData, subscriptionData] = await Promise.all([
         subscriptionService.getPlans(),
         subscriptionService.getCurrentSubscription()
       ]);
       
-      setPlans(plansData);
+      setPlans(Array.isArray(plansData) ? plansData : []);
       setCurrentSubscription(subscriptionData);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao carregar dados:', error);
+      if (error.response?.status >= 500 || error.code === 'NETWORK_ERROR') {
+        setError('Não foi possível carregar os planos. Verifique sua conexão e tente novamente.');
+      } else {
+        // Pode ser que não há planos configurados ainda
+        setPlans([]);
+      }
     } finally {
       setLoading(false);
     }
@@ -128,6 +138,33 @@ const SubscriptionPlans: React.FC = () => {
       <div className="loading-container">
         <div className="loading-spinner"></div>
         <p className="loading-text">Carregando planos...</p>
+      </div>
+    );
+  }
+
+  // Se houver erro de conexão, mostrar erro
+  if (error) {
+    return (
+      <div className="page-container">
+        <ErrorState
+          title="Erro ao carregar planos"
+          message={error}
+          onRetry={loadData}
+        />
+      </div>
+    );
+  }
+
+  // Se não houver planos, mostrar aviso
+  if (plans.length === 0) {
+    return (
+      <div className="page-container">
+        <EmptyState
+          icon={Users}
+          title="Nenhum plano disponível"
+          description="Não há planos de assinatura configurados no momento. Entre em contato com o suporte para mais informações."
+          type="info"
+        />
       </div>
     );
   }

@@ -3,6 +3,8 @@ import { participantsAPI } from '../services/api';
 import { Participant } from '../types';
 import Modal from '../components/Modal';
 import AssessmentViewer from '../components/AssessmentViewer';
+import ErrorState from '../components/ErrorState';
+import EmptyState from '../components/EmptyState';
 import { 
   Plus, 
   Edit, 
@@ -29,6 +31,7 @@ const Participants: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [showAssessmentViewer, setShowAssessmentViewer] = useState(false);
   const [selectedParticipant, setSelectedParticipant] = useState<Participant | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchParticipants();
@@ -37,11 +40,18 @@ const Participants: React.FC = () => {
   const fetchParticipants = async () => {
     try {
       setLoading(true);
+      setLoadError(null);
       const data = await participantsAPI.getAll();
       setParticipants(Array.isArray(data) ? data : []);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao carregar participantes:', error);
-      setParticipants([]);
+      // Se for erro de conexão, mostrar erro. Se for 404 ou vazio, apenas lista vazia
+      if (error.response?.status >= 500 || error.code === 'NETWORK_ERROR') {
+        setLoadError('Não foi possível carregar os participantes. Verifique sua conexão e tente novamente.');
+      } else {
+        // Pode ser que simplesmente não há participantes ainda
+        setParticipants([]);
+      }
     } finally {
       setLoading(false);
     }
@@ -131,6 +141,19 @@ const Participants: React.FC = () => {
       <div className="loading-container">
         <div className="loading-spinner"></div>
         <p className="loading-text">Carregando participantes...</p>
+      </div>
+    );
+  }
+
+  // Se houver erro ao carregar, mostrar erro
+  if (loadError) {
+    return (
+      <div className="page-container">
+        <ErrorState
+          title="Erro ao carregar participantes"
+          message={loadError}
+          onRetry={fetchParticipants}
+        />
       </div>
     );
   }
@@ -256,32 +279,23 @@ const Participants: React.FC = () => {
         </div>
         <div className="card-body" style={{ padding: 0 }}>
           {filteredParticipants.length === 0 ? (
-            <div className="empty-state">
-              <Users className="empty-state-icon" />
-              <h3 className="empty-state-title">
-                {searchTerm ? 'Nenhum participante encontrado' : 'Nenhum participante cadastrado'}
-              </h3>
-              <p className="empty-state-description">
-                {searchTerm 
-                  ? 'Tente ajustar os termos de busca'
-                  : 'Comece adicionando participantes ao sistema'
-                }
-              </p>
-              {!searchTerm && (
-                <button
-                  onClick={() => {
-                    setEditingParticipant(null);
-                    setFormData({ name: '', email: '' });
-                    setShowModal(true);
-                  }}
-                  className="btn btn-primary"
-                  style={{ marginTop: 'var(--space-4)' }}
-                >
-                  <Plus className="w-4 h-4" />
-                  Adicionar Primeiro Participante
-                </button>
-              )}
-            </div>
+            <EmptyState
+              icon={Users}
+              title={searchTerm ? 'Nenhum participante encontrado' : 'Nenhum participante cadastrado'}
+              description={searchTerm 
+                ? 'Tente ajustar os termos de busca ou limpar os filtros aplicados.'
+                : 'Comece adicionando participantes ao sistema para realizar avaliações comportamentais.'
+              }
+              action={!searchTerm ? {
+                label: 'Adicionar Primeiro Participante',
+                onClick: () => {
+                  setEditingParticipant(null);
+                  setFormData({ name: '', email: '' });
+                  setShowModal(true);
+                },
+                icon: Plus
+              } : undefined}
+            />
           ) : (
             <div className="table-container">
               <table className="table">

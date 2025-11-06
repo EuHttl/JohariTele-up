@@ -19,6 +19,8 @@ import {
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import PDFExportButton, { ComparativeReportPDFButton, ElementPDFButton } from '../components/PDFExportButton';
 import AdvancedFilters, { FilterOptions } from '../components/AdvancedFilters';
+import ErrorState from '../components/ErrorState';
+import EmptyState from '../components/EmptyState';
 import '../styles/design-system.css';
 
 const Reports: React.FC = () => {
@@ -45,6 +47,8 @@ const Reports: React.FC = () => {
 
   const fetchReports = async () => {
     try {
+      setError('');
+      setLoading(true);
       const [comparative, characteristics] = await Promise.all([
         reportsAPI.getComparativeReport(),
         reportsAPI.getCharacteristicAnalysis()
@@ -54,7 +58,14 @@ const Reports: React.FC = () => {
       setCharacteristicAnalysis(characteristics);
     } catch (error: any) {
       console.error('Erro ao carregar relatórios:', error);
-      setError(error.response?.data?.message || 'Erro ao carregar relatórios');
+      // Se for erro de conexão, mostrar erro. Se for 404 ou vazio, apenas não há dados
+      if (error.response?.status >= 500 || error.code === 'NETWORK_ERROR') {
+        setError('Não foi possível conectar ao servidor. Verifique sua conexão e tente novamente.');
+      } else {
+        // Pode ser que simplesmente não há relatórios ainda
+        setComparativeReport(null);
+        setCharacteristicAnalysis(null);
+      }
     } finally {
       setLoading(false);
     }
@@ -189,13 +200,15 @@ const Reports: React.FC = () => {
     );
   }
 
+  // Se houver erro de conexão, mostrar erro
   if (error) {
     return (
       <div className="page-container">
-        <div className="alert alert-error">
-          <AlertCircle className="w-5 h-5" />
-          <span>{error}</span>
-        </div>
+        <ErrorState
+          title="Erro ao carregar relatórios"
+          message={error}
+          onRetry={fetchReports}
+        />
       </div>
     );
   }
@@ -399,13 +412,17 @@ const Reports: React.FC = () => {
         </div>
         <div className="card-body" style={{ padding: 0 }}>
           {!comparativeReport?.participants || filteredParticipants.length === 0 ? (
-            <div className="empty-state">
-              <FileText className="empty-state-icon" />
-              <h3 className="empty-state-title">Nenhum relatório disponível</h3>
-              <p className="empty-state-description">
-                Os relatórios serão gerados automaticamente quando as avaliações forem concluídas.
-              </p>
-            </div>
+            <EmptyState
+              icon={FileText}
+              title="Nenhum relatório disponível"
+              description="Os relatórios serão gerados automaticamente quando as avaliações forem concluídas. Comece adicionando participantes e realizando avaliações."
+              action={{
+                label: 'Ver Participantes',
+                onClick: () => window.location.href = '/app/participants',
+                icon: Users
+              }}
+              type="info"
+            />
           ) : (
             <div className="table-container">
               <table className="table">

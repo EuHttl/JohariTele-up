@@ -462,6 +462,41 @@
   font-size: 0.875rem;
   color: var(--text-secondary);
   margin: 0 0 var(--space-6) 0;
+  max-width: 500px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Error State - usa os mesmos estilos do empty-state mas com cores diferentes */
+.error-state {
+  text-align: center;
+  padding: var(--space-12) var(--space-6);
+}
+
+.error-state-icon {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto var(--space-6);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.error-state-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 var(--space-3) 0;
+}
+
+.error-state-description {
+  font-size: 1rem;
+  color: var(--text-secondary);
+  margin: 0 0 var(--space-6) 0;
+  max-width: 500px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 /* Loading State */

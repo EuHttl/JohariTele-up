@@ -17,6 +17,8 @@ import {
   Activity,
   Zap,
 } from 'lucide-react';
+import ErrorState from '../components/ErrorState';
+import EmptyState from '../components/EmptyState';
 import '../styles/design-system.css';
 
 interface StatsData {
@@ -29,20 +31,30 @@ const Dashboard: React.FC = () => {
   const [stats, setStats] = useState<StatsData | null>(null);
   const [participants, setParticipants] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
+        setError(null);
+        setLoading(true);
         const [statsData, participantsData] = await Promise.all([
           participantsAPI.getStats(),
           participantsAPI.getAll()
         ]);
         
-        setStats(statsData);
+        setStats(statsData || { total_participants: 0, completed_self: 0, completed_peer: 0 });
         setParticipants(Array.isArray(participantsData) ? participantsData : []);
-      } catch (error) {
+      } catch (error: any) {
         console.error('Erro ao carregar dados:', error);
-        setParticipants([]);
+        // Não é erro se não houver dados, apenas se houver falha na requisição
+        if (error.response?.status >= 500 || error.code === 'NETWORK_ERROR') {
+          setError('Não foi possível conectar ao servidor. Verifique sua conexão e tente novamente.');
+        } else {
+          // Se for erro 404 ou similar, pode ser que simplesmente não há dados ainda
+          setStats({ total_participants: 0, completed_self: 0, completed_peer: 0 });
+          setParticipants([]);
+        }
       } finally {
         setLoading(false);
       }
@@ -76,6 +88,20 @@ const Dashboard: React.FC = () => {
       <div className="loading-container">
         <div className="loading-spinner"></div>
         <p className="loading-text">Carregando dashboard...</p>
+      </div>
+    );
+  }
+
+  // Se houver erro de conexão, mostrar erro
+  if (error) {
+    return (
+      <div className="page-container">
+        <ErrorState
+          title="Erro ao carregar dados"
+          message={error}
+          onRetry={() => window.location.reload()}
+          showHomeButton={true}
+        />
       </div>
     );
   }
@@ -285,17 +311,16 @@ const Dashboard: React.FC = () => {
         </div>
         <div className="card-body">
           {participantsArray.length === 0 ? (
-            <div className="empty-state">
-              <Users className="empty-state-icon" />
-              <h3 className="empty-state-title">Nenhum participante cadastrado</h3>
-              <p className="empty-state-description">
-                Comece adicionando participantes ao sistema para realizar avaliações.
-              </p>
-              <Link to="/app/participants" className="btn btn-primary" style={{ marginTop: 'var(--space-4)' }}>
-                <Plus className="w-4 h-4" />
-                Adicionar Primeiro Participante
-              </Link>
-            </div>
+            <EmptyState
+              icon={Users}
+              title="Nenhum participante cadastrado"
+              description="Comece adicionando participantes ao sistema para realizar avaliações comportamentais."
+              action={{
+                label: 'Adicionar Primeiro Participante',
+                onClick: () => window.location.href = '/app/participants',
+                icon: Plus
+              }}
+            />
           ) : (
             <div className="table-container">
               <table className="table">
