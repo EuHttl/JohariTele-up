@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import MobileNavigation from './MobileNavigation';
@@ -21,8 +21,27 @@ import '../styles/layout.css';
 const Layout: React.FC = () => {
   const { user, logout } = useAuth();
   const location = useLocation();
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  // Sidebar começa aberta em desktop, fechada em mobile
+  const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth > 1024);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  
+  // Ajustar sidebar ao redimensionar a janela
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth > 1024) {
+        // Desktop: manter estado atual ou abrir se estava fechada
+        if (!sidebarOpen) {
+          setSidebarOpen(true);
+        }
+      } else {
+        // Mobile: sempre fechar sidebar (usa menu mobile)
+        setSidebarOpen(false);
+      }
+    };
+    
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [sidebarOpen]);
 
   const navigation = [
     { name: 'Dashboard', href: '/app/dashboard', icon: LayoutDashboard, color: 'text-blue-500' },
@@ -76,7 +95,8 @@ const Layout: React.FC = () => {
           <button 
             className="sidebar-toggle"
             onClick={toggleSidebar}
-            aria-label="Toggle sidebar"
+            aria-label={sidebarOpen ? "Colapsar sidebar" : "Expandir sidebar"}
+            title={sidebarOpen ? "Colapsar" : "Expandir"}
           >
             {sidebarOpen ? <ChevronLeft className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
           </button>

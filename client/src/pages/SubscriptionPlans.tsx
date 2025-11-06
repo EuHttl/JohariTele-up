@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Check, Crown, Star, Zap, Users, FileText, Download, Code, Headphones } from 'lucide-react';
+import { Check, Crown, Star, Users, FileText, Download, Code, Headphones, Zap, ArrowRight } from 'lucide-react';
 import { subscriptionService, SubscriptionPlan, BillingInfo } from '../services/subscriptionService';
-import '../styles/subscription-plans.css';
+import '../styles/design-system.css';
 
 const SubscriptionPlans: React.FC = () => {
   const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
@@ -35,7 +35,6 @@ const SubscriptionPlans: React.FC = () => {
     try {
       setUpgrading(planId);
       
-      // Encontrar o plano - pode ser ObjectId string ou número
       const plan = plans.find(p => {
         const pId = String(p.id);
         const searchId = String(planId);
@@ -46,15 +45,12 @@ const SubscriptionPlans: React.FC = () => {
         throw new Error('Plano não encontrado');
       }
       
-      // Se for plano gratuito, fazer upgrade direto
       if (plan.type === 'free') {
         await subscriptionService.upgradePlan(plan.id, billingCycle);
         await loadData();
         alert('Plano atualizado com sucesso!');
       } else {
-        // Para planos pagos, redirecionar para Stripe
         await subscriptionService.upgradePlan(plan.id, billingCycle);
-        // O redirecionamento acontece automaticamente no serviço
       }
     } catch (error: any) {
       console.error('Erro ao atualizar plano:', error);
@@ -86,13 +82,13 @@ const SubscriptionPlans: React.FC = () => {
   const getPlanIcon = (planType: string) => {
     switch (planType) {
       case 'free':
-        return <Users className="w-8 h-8 text-gray-600" />;
+        return <Users className="w-6 h-6" />;
       case 'professional':
-        return <Star className="w-8 h-8 text-blue-600" />;
+        return <Star className="w-6 h-6" />;
       case 'enterprise':
-        return <Crown className="w-8 h-8 text-purple-600" />;
+        return <Crown className="w-6 h-6" />;
       default:
-        return <Users className="w-8 h-8 text-gray-600" />;
+        return <Users className="w-6 h-6" />;
     }
   };
 
@@ -123,159 +119,294 @@ const SubscriptionPlans: React.FC = () => {
     
     if (!currentPlan) return true;
     
-    // Lógica de upgrade: free < professional < enterprise
     const planOrder: Record<string, number> = { free: 0, professional: 1, enterprise: 2 };
     return (planOrder[plan.type] || 0) > (planOrder[currentPlan.type] || 0);
   };
 
   if (loading) {
     return (
-      <div className="subscription-plans-loading">
+      <div className="loading-container">
         <div className="loading-spinner"></div>
-        <p>Carregando planos...</p>
+        <p className="loading-text">Carregando planos...</p>
       </div>
     );
   }
 
   return (
-    <div className="subscription-plans">
-      <div className="subscription-plans-header">
-        <h1>Planos de Assinatura</h1>
-        <p>Escolha o plano ideal para suas necessidades</p>
+    <div className="page-container">
+      {/* Page Header */}
+      <div className="page-header">
+        <div>
+          <h1 className="page-title">Planos de Assinatura</h1>
+          <p className="page-subtitle">Escolha o plano ideal para suas necessidades</p>
+        </div>
         
-        <div className="billing-cycle-toggle">
+        {/* Billing Cycle Toggle */}
+        <div style={{ 
+          display: 'inline-flex', 
+          background: 'var(--bg-gray-100)', 
+          borderRadius: 'var(--radius-md)', 
+          padding: '4px',
+          gap: '4px'
+        }}>
           <button
-            className={`billing-toggle-btn ${billingCycle === 'monthly' ? 'active' : ''}`}
             onClick={() => setBillingCycle('monthly')}
+            className="btn"
+            style={{
+              background: billingCycle === 'monthly' ? 'var(--bg-white)' : 'transparent',
+              color: billingCycle === 'monthly' ? 'var(--color-primary)' : 'var(--text-secondary)',
+              boxShadow: billingCycle === 'monthly' ? 'var(--shadow-sm)' : 'none',
+              border: 'none'
+            }}
           >
             Mensal
           </button>
           <button
-            className={`billing-toggle-btn ${billingCycle === 'yearly' ? 'active' : ''}`}
             onClick={() => setBillingCycle('yearly')}
+            className="btn"
+            style={{
+              background: billingCycle === 'yearly' ? 'var(--bg-white)' : 'transparent',
+              color: billingCycle === 'yearly' ? 'var(--color-primary)' : 'var(--text-secondary)',
+              boxShadow: billingCycle === 'yearly' ? 'var(--shadow-sm)' : 'none',
+              border: 'none',
+              position: 'relative'
+            }}
           >
             Anual
-            <span className="savings-badge">Economize 17%</span>
+            <span style={{
+              position: 'absolute',
+              top: '-8px',
+              right: '-8px',
+              background: 'var(--color-success)',
+              color: 'white',
+              fontSize: '0.625rem',
+              padding: '2px 6px',
+              borderRadius: 'var(--radius-full)',
+              fontWeight: 600
+            }}>
+              -17%
+            </span>
           </button>
         </div>
       </div>
 
-      <div className="plans-grid">
+      {/* Plans Grid */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 'var(--space-6)', marginBottom: 'var(--space-8)' }}>
         {plans.map((plan) => {
           const price = billingCycle === 'monthly' ? plan.price_monthly : plan.price_yearly;
           const savings = subscriptionService.calculateAnnualSavings(plan.price_monthly, plan.price_yearly);
           const isCurrent = isCurrentPlan(plan);
           const canUpgradePlan = canUpgrade(plan);
+          const isEnterprise = plan.type === 'enterprise';
           
           return (
-            <div key={plan.id} className={`plan-card ${plan.type} ${isCurrent ? 'current' : ''}`}>
-              <div className="plan-header">
-                <div className="plan-icon">
-                  {getPlanIcon(plan.type)}
+            <div 
+              key={plan.id} 
+              className="card"
+              style={{
+                position: 'relative',
+                border: isEnterprise ? '2px solid var(--color-secondary)' : '1px solid var(--bg-gray-200)',
+                background: isEnterprise 
+                  ? 'linear-gradient(135deg, rgba(139, 92, 246, 0.05) 0%, rgba(124, 58, 237, 0.05) 100%)'
+                  : 'var(--bg-white)',
+                transform: isEnterprise ? 'scale(1.02)' : 'scale(1)',
+                boxShadow: isEnterprise ? 'var(--shadow-xl)' : 'var(--shadow-sm)'
+              }}
+            >
+              {isEnterprise && (
+                <div style={{
+                  position: 'absolute',
+                  top: 'var(--space-4)',
+                  right: 'var(--space-4)',
+                  background: 'linear-gradient(135deg, var(--color-secondary) 0%, var(--color-secondary-dark) 100%)',
+                  color: 'white',
+                  padding: 'var(--space-1) var(--space-3)',
+                  borderRadius: 'var(--radius-full)',
+                  fontSize: '0.75rem',
+                  fontWeight: 600
+                }}>
+                  Popular
                 </div>
-                <h3>{plan.name}</h3>
-                {isCurrent && <span className="current-badge">Plano Atual</span>}
-              </div>
+              )}
+              
+              {isCurrent && (
+                <div style={{
+                  position: 'absolute',
+                  top: 'var(--space-4)',
+                  left: 'var(--space-4)',
+                  background: 'var(--color-success)',
+                  color: 'white',
+                  padding: 'var(--space-1) var(--space-3)',
+                  borderRadius: 'var(--radius-full)',
+                  fontSize: '0.75rem',
+                  fontWeight: 600
+                }}>
+                  Plano Atual
+                </div>
+              )}
 
-              <div className="plan-pricing">
-                <div className="price">
-                  <span className="currency">R$</span>
-                  <span className="amount">
-                    {billingCycle === 'monthly' 
-                      ? Math.floor(price).toString()
-                      : Math.floor(price / 12).toString()
-                    }
-                  </span>
-                  <span className="period">
-                    /{billingCycle === 'monthly' ? 'mês' : 'ano'}
-                  </span>
-                </div>
-                {billingCycle === 'yearly' && savings > 0 && (
-                  <div className="savings">
-                    Economize {subscriptionService.formatPrice(savings)}/ano
+              <div className="card-body">
+                {/* Plan Header */}
+                <div style={{ textAlign: 'center', marginBottom: 'var(--space-6)' }}>
+                  <div style={{
+                    width: '64px',
+                    height: '64px',
+                    margin: '0 auto var(--space-4)',
+                    borderRadius: 'var(--radius-lg)',
+                    background: isEnterprise
+                      ? 'linear-gradient(135deg, var(--color-secondary) 0%, var(--color-secondary-dark) 100%)'
+                      : plan.type === 'professional'
+                      ? 'linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%)'
+                      : 'linear-gradient(135deg, #6b7280 0%, #4b5563 100%)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: 'white',
+                    boxShadow: 'var(--shadow-md)'
+                  }}>
+                    {getPlanIcon(plan.type)}
                   </div>
-                )}
-              </div>
+                  <h3 style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--text-primary)', margin: '0 0 var(--space-2) 0' }}>
+                    {plan.name}
+                  </h3>
+                </div>
 
-              <div className="plan-features">
-                <ul>
-                  {plan.features.map((feature, index) => (
-                    <li key={index}>
-                      <div className="feature-icon">
-                        {getFeatureIcon(feature)}
-                      </div>
-                      <span>{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+                {/* Pricing */}
+                <div style={{ textAlign: 'center', marginBottom: 'var(--space-6)' }}>
+                  <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: 'var(--space-1)' }}>
+                    <span style={{ fontSize: '1.25rem', fontWeight: 600, color: 'var(--text-secondary)' }}>R$</span>
+                    <span style={{ fontSize: '3rem', fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1 }}>
+                      {billingCycle === 'monthly' 
+                        ? Math.floor(price).toString()
+                        : Math.floor(price / 12).toString()
+                      }
+                    </span>
+                    <span style={{ fontSize: '1rem', fontWeight: 500, color: 'var(--text-secondary)' }}>
+                      /{billingCycle === 'monthly' ? 'mês' : 'ano'}
+                    </span>
+                  </div>
+                  {billingCycle === 'yearly' && savings > 0 && (
+                    <div style={{ marginTop: 'var(--space-2)', fontSize: '0.875rem', color: 'var(--color-success)', fontWeight: 600 }}>
+                      Economize {subscriptionService.formatPrice(savings)}/ano
+                    </div>
+                  )}
+                </div>
 
-              <div className="plan-actions">
-                {isCurrent ? (
-                  <button className="plan-btn current-btn" disabled>
-                    Plano Atual
-                  </button>
-                ) : canUpgradePlan ? (
-                  <button
-                    className="plan-btn upgrade-btn"
-                    onClick={() => handleUpgrade(plan.id)}
-                    disabled={String(upgrading) === String(plan.id)}
-                  >
-                    {String(upgrading) === String(plan.id) ? 'Atualizando...' : 'Escolher Plano'}
-                  </button>
-                ) : (
-                  <button className="plan-btn disabled-btn" disabled>
-                    Downgrade não permitido
-                  </button>
-                )}
+                {/* Features */}
+                <div style={{ marginBottom: 'var(--space-6)' }}>
+                  <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+                    {plan.features.map((feature, index) => (
+                      <li key={index} style={{ display: 'flex', alignItems: 'start', gap: 'var(--space-3)' }}>
+                        <div style={{
+                          width: '20px',
+                          height: '20px',
+                          borderRadius: '50%',
+                          background: 'var(--color-success-light)',
+                          color: 'var(--color-success)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          flexShrink: 0,
+                          marginTop: '2px'
+                        }}>
+                          <Check className="w-3 h-3" />
+                        </div>
+                        <span style={{ fontSize: '0.875rem', color: 'var(--text-primary)', lineHeight: 1.5 }}>
+                          {feature}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                {/* Action Button */}
+                <div>
+                  {isCurrent ? (
+                    <button className="btn btn-secondary" disabled style={{ width: '100%' }}>
+                      Plano Atual
+                    </button>
+                  ) : canUpgradePlan ? (
+                    <button
+                      className={`btn ${isEnterprise ? 'btn-primary' : 'btn-outline'}`}
+                      onClick={() => handleUpgrade(plan.id)}
+                      disabled={String(upgrading) === String(plan.id)}
+                      style={{ 
+                        width: '100%',
+                        background: isEnterprise 
+                          ? 'linear-gradient(135deg, var(--color-secondary) 0%, var(--color-secondary-dark) 100%)'
+                          : undefined,
+                        border: isEnterprise ? 'none' : undefined,
+                        color: isEnterprise ? 'white' : undefined
+                      }}
+                    >
+                      {String(upgrading) === String(plan.id) ? (
+                        <>Atualizando...</>
+                      ) : (
+                        <>
+                          Escolher Plano
+                          <ArrowRight className="w-4 h-4" />
+                        </>
+                      )}
+                    </button>
+                  ) : (
+                    <button className="btn btn-secondary" disabled style={{ width: '100%' }}>
+                      Downgrade não permitido
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           );
         })}
       </div>
 
-      {currentSubscription && (
-        <div className="current-subscription-info">
-          <h3>Sua Assinatura Atual</h3>
-          <div className="subscription-details">
-            <div className="detail-item">
-              <span className="label">Plano:</span>
-              <span className="value">
-                {currentSubscription.subscription?.plan?.name || 'Gratuito'}
-              </span>
+      {/* Current Subscription Info */}
+      {currentSubscription && currentSubscription.subscription && (
+        <div className="card">
+          <div className="card-header">
+            <h3 className="card-title">Sua Assinatura Atual</h3>
+            <p className="card-subtitle">Informações sobre sua assinatura ativa</p>
+          </div>
+          <div className="card-body">
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 'var(--space-4)' }}>
+              <div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: 'var(--space-1)' }}>Plano</div>
+                <div style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--text-primary)' }}>
+                  {currentSubscription.subscription.plan?.name || 'Gratuito'}
+                </div>
+              </div>
+              <div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: 'var(--space-1)' }}>Ciclo</div>
+                <div style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--text-primary)' }}>
+                  {currentSubscription.subscription.billing_cycle === 'monthly' ? 'Mensal' : 'Anual'}
+                </div>
+              </div>
+              <div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: 'var(--space-1)' }}>Status</div>
+                <div>
+                  <span className={`badge ${currentSubscription.subscription.status === 'active' ? 'badge-success' : 'badge-error'}`}>
+                    {currentSubscription.subscription.status === 'active' ? 'Ativo' : 'Inativo'}
+                  </span>
+                </div>
+              </div>
+              {currentSubscription.subscription.expires_at && (
+                <div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: 'var(--space-1)' }}>Expira em</div>
+                  <div style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--text-primary)' }}>
+                    {new Date(currentSubscription.subscription.expires_at).toLocaleDateString('pt-BR')}
+                  </div>
+                </div>
+              )}
             </div>
-            <div className="detail-item">
-              <span className="label">Ciclo:</span>
-              <span className="value">
-                {currentSubscription.subscription?.billing_cycle === 'monthly' ? 'Mensal' : 'Anual'}
-              </span>
-            </div>
-            <div className="detail-item">
-              <span className="label">Status:</span>
-              <span className={`value status ${currentSubscription.subscription?.status || 'active'}`}>
-                {currentSubscription.subscription?.status === 'active' ? 'Ativo' : 'Inativo'}
-              </span>
-            </div>
-            {currentSubscription.subscription?.expires_at && (
-              <div className="detail-item">
-                <span className="label">Expira em:</span>
-                <span className="value">
-                  {new Date(currentSubscription.subscription.expires_at).toLocaleDateString('pt-BR')}
-                </span>
+            
+            {currentSubscription.subscription.plan?.type !== 'free' && (
+              <div style={{ marginTop: 'var(--space-6)', paddingTop: 'var(--space-6)', borderTop: '1px solid var(--bg-gray-200)' }}>
+                <button onClick={handleCancel} className="btn btn-danger">
+                  Cancelar Assinatura
+                </button>
               </div>
             )}
           </div>
-          
-          {currentSubscription.subscription?.plan?.type !== 'free' && (
-            <div className="subscription-actions">
-              <button 
-                onClick={handleCancel}
-                className="cancel-btn"
-              >
-                Cancelar Assinatura
-              </button>
-            </div>
-          )}
         </div>
       )}
     </div>

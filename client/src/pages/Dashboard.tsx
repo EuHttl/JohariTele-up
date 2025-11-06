@@ -13,14 +13,11 @@ import {
   Target,
   Award,
   ArrowRight,
-  Sparkles,
-  Star,
-  Heart,
-  Brain,
-  Lightbulb,
   TrendingUp,
+  Activity,
+  Zap,
 } from 'lucide-react';
-import '../styles/dashboard.css';
+import '../styles/design-system.css';
 
 interface StatsData {
   total_participants: number;
@@ -40,7 +37,6 @@ const Dashboard: React.FC = () => {
           participantsAPI.getStats(),
           participantsAPI.getAll()
         ]);
-        
         
         setStats(statsData);
         setParticipants(Array.isArray(participantsData) ? participantsData : []);
@@ -62,26 +58,11 @@ const Dashboard: React.FC = () => {
 
   const getStatusBadge = (participant: any) => {
     if (participant.has_completed_self_assessment && participant.has_completed_peer_assessments) {
-      return (
-        <span className="dashboard-status-badge complete">
-          <CheckCircle className="w-3 h-3 mr-1" />
-          Completo
-        </span>
-      );
+      return <span className="badge badge-success">Completo</span>;
     } else if (participant.has_completed_self_assessment) {
-      return (
-        <span className="dashboard-status-badge in-progress">
-          <Clock className="w-3 h-3 mr-1" />
-          Em Progresso
-        </span>
-      );
+      return <span className="badge badge-warning">Em Progresso</span>;
     } else {
-      return (
-        <span className="dashboard-status-badge pending">
-          <EyeOff className="w-3 h-3 mr-1" />
-          Pendente
-        </span>
-      );
+      return <span className="badge badge-error">Pendente</span>;
     }
   };
 
@@ -92,350 +73,305 @@ const Dashboard: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="dashboard-loading">
-        <div className="dashboard-loading-content">
-          <div className="dashboard-loading-spinner"></div>
-          <h2 className="dashboard-loading-title">Carregando Dashboard...</h2>
-          <p className="dashboard-loading-subtitle">Preparando seus dados</p>
-        </div>
+      <div className="loading-container">
+        <div className="loading-spinner"></div>
+        <p className="loading-text">Carregando dashboard...</p>
       </div>
     );
   }
 
   return (
-    <div className="dashboard-container">
-      {/* Hero Section */}
-      <div className="dashboard-hero">
-        <div className="dashboard-hero-overlay"></div>
-        
-        <div className="dashboard-hero-content">
-          <div className="dashboard-hero-grid">
-            <div className="dashboard-hero-text">
-              <div className="dashboard-hero-badge">
-                <div className="dashboard-hero-icon">
-                  <Brain className="w-6 h-6 text-white" />
-                </div>
-                <span className="text-purple-200 text-sm font-medium">Sistema de Avaliação</span>
-              </div>
-              
-              <h1 className="dashboard-hero-title">
-                Janela de <span className="bg-gradient-to-r from-yellow-300 to-pink-400 bg-clip-text text-transparent">Johari</span>
-              </h1>
-              
-              <p className="dashboard-hero-subtitle">
-                Descubra o potencial oculto da sua equipe através da análise comportamental mais completa
-              </p>
-              
-              <div className="dashboard-hero-actions">
-                <Link 
-                  to="/app/participants" 
-                  className="dashboard-hero-btn"
-                >
-                  <Plus className="w-5 h-5 mr-2" />
-                  Gerenciar Participantes
-                  <ArrowRight className="w-4 h-4 ml-2" />
-                </Link>
-                
-                <Link 
-                  to="/app/reports" 
-                  className="dashboard-hero-btn-secondary"
-                >
-                  <BarChart3 className="w-5 h-5 mr-2" />
-                  Ver Relatórios
-                  <Sparkles className="w-4 h-4 ml-2" />
-                </Link>
-              </div>
-            </div>
-            
-            <div className="dashboard-hero-visual">
-              <div className="relative">
-                <div className="dashboard-progress-card">
-                  <div className="text-center">
-                    <div className="dashboard-progress-icon">
-                      <Target className="w-8 h-8 text-white" />
-                    </div>
-                    <h3 className="dashboard-progress-title">Progresso Geral</h3>
-                    <div className="dashboard-progress-percentage">
-                      {getCompletionPercentage(completedParticipants, stats?.total_participants || 1)}%
-                    </div>
-                    <p className="dashboard-progress-label">Avaliações Completas</p>
-                  </div>
-                </div>
-                <div className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-r from-yellow-400 to-pink-400 rounded-full flex items-center justify-center">
-                  <Star className="w-4 h-4 text-white" />
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+    <div className="page-container">
+      {/* Page Header */}
+      <div className="page-header">
+        <h1 className="page-title">Dashboard</h1>
+        <p className="page-subtitle">Visão geral do sistema de avaliação comportamental</p>
       </div>
 
       {/* Stats Grid */}
-      <div className="dashboard-stats-grid">
-        {/* Total Participants */}
-        <div className="dashboard-stats-card">
-          <div className="dashboard-stats-header">
-            <div className="dashboard-stats-icon primary">
-              <Users className="w-6 h-6 text-white" />
+      <div className="stats-grid">
+        <div className="stat-card">
+          <div className="stat-header">
+            <div className="stat-icon">
+              <Users className="w-6 h-6" />
             </div>
-            <div className="dashboard-stats-numbers">
-              <div className="dashboard-stats-number">{stats?.total_participants || 0}</div>
-              <div className="dashboard-stats-subtitle">cadastrados</div>
+            <div className="stat-content">
+              <p className="stat-value">{stats?.total_participants || 0}</p>
+              <p className="stat-label">Participantes</p>
             </div>
-          </div>
-          <h3 className="dashboard-stats-title">Participantes</h3>
-          <p className="dashboard-stats-description">Total cadastrados</p>
-        </div>
-
-        {/* Autoavaliações */}
-        <div className="dashboard-stats-card">
-          <div className="dashboard-stats-header">
-            <div className="dashboard-stats-icon success">
-              <UserCheck className="w-6 h-6 text-white" />
-            </div>
-            <div className="dashboard-stats-numbers">
-              <div className="dashboard-stats-number">{stats?.completed_self || 0}</div>
-              <div className="dashboard-stats-subtitle">{getCompletionPercentage(stats?.completed_self || 0, stats?.total_participants || 1)}%</div>
-            </div>
-          </div>
-          <h3 className="dashboard-stats-title">Autoavaliações</h3>
-          <p className="dashboard-stats-description">Concluídas</p>
-          <div className="dashboard-progress-bar">
-            <div 
-              className="dashboard-progress-fill success"
-              style={{ width: `${getCompletionPercentage(stats?.completed_self || 0, stats?.total_participants || 1)}%` }}
-            ></div>
           </div>
         </div>
 
-        {/* Avaliações Entre Pares */}
-        <div className="dashboard-stats-card">
-          <div className="dashboard-stats-header">
-            <div className="dashboard-stats-icon purple">
-              <Heart className="w-6 h-6 text-white" />
+        <div className="stat-card">
+          <div className="stat-header">
+            <div className="stat-icon" style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)' }}>
+              <UserCheck className="w-6 h-6" />
             </div>
-            <div className="dashboard-stats-numbers">
-              <div className="dashboard-stats-number">{stats?.completed_peer || 0}</div>
-              <div className="dashboard-stats-subtitle">{getCompletionPercentage(stats?.completed_peer || 0, stats?.total_participants || 1)}%</div>
+            <div className="stat-content">
+              <p className="stat-value">{stats?.completed_self || 0}</p>
+              <p className="stat-label">Autoavaliações</p>
+              <div className="stat-change positive">
+                <TrendingUp className="w-4 h-4" />
+                {getCompletionPercentage(stats?.completed_self || 0, stats?.total_participants || 1)}%
+              </div>
             </div>
-          </div>
-          <h3 className="dashboard-stats-title">Entre Pares</h3>
-          <p className="dashboard-stats-description">Avaliações</p>
-          <div className="dashboard-progress-bar">
-            <div 
-              className="dashboard-progress-fill purple"
-              style={{ width: `${getCompletionPercentage(stats?.completed_peer || 0, stats?.total_participants || 1)}%` }}
-            ></div>
           </div>
         </div>
 
-        {/* Completos */}
-        <div className="dashboard-stats-card">
-          <div className="dashboard-stats-header">
-            <div className="dashboard-stats-icon warning">
-              <Award className="w-6 h-6 text-white" />
+        <div className="stat-card">
+          <div className="stat-header">
+            <div className="stat-icon" style={{ background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)' }}>
+              <Activity className="w-6 h-6" />
             </div>
-            <div className="dashboard-stats-numbers">
-              <div className="dashboard-stats-number">{completedParticipants}</div>
-              <div className="dashboard-stats-subtitle">finalizados</div>
+            <div className="stat-content">
+              <p className="stat-value">{stats?.completed_peer || 0}</p>
+              <p className="stat-label">Avaliações entre Pares</p>
+              <div className="stat-change positive">
+                <TrendingUp className="w-4 h-4" />
+                {getCompletionPercentage(stats?.completed_peer || 0, stats?.total_participants || 1)}%
+              </div>
             </div>
           </div>
-          <h3 className="dashboard-stats-title">Completos</h3>
-          <p className="dashboard-stats-description">Prontos para análise</p>
-          <div className="dashboard-progress-bar">
-            <div 
-              className="dashboard-progress-fill warning"
-              style={{ width: `${getCompletionPercentage(completedParticipants, stats?.total_participants || 1)}%` }}
-            ></div>
+        </div>
+
+        <div className="stat-card">
+          <div className="stat-header">
+            <div className="stat-icon" style={{ background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)' }}>
+              <Award className="w-6 h-6" />
+            </div>
+            <div className="stat-content">
+              <p className="stat-value">{completedParticipants}</p>
+              <p className="stat-label">Completos</p>
+              <div className="stat-change positive">
+                <CheckCircle className="w-4 h-4" />
+                {getCompletionPercentage(completedParticipants, stats?.total_participants || 1)}%
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Insights Section */}
-      <div className="dashboard-participants-section">
-        <div className="dashboard-participants-card">
-          <div className="dashboard-participants-header">
-            <div className="dashboard-participants-title-section">
-              <div className="dashboard-participants-title-group">
-                <div className="dashboard-participants-title-icon">
-                  <Lightbulb className="w-5 h-5 text-white" />
-                </div>
-                <div>
-                  <h3 className="dashboard-participants-title">Insights da Avaliação</h3>
-                  <p className="dashboard-participants-subtitle">Análise e métricas do progresso das avaliações</p>
-                </div>
+      {/* Main Content Grid */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: 'var(--space-6)' }}>
+        {/* Progress Overview Card */}
+        <div className="card">
+          <div className="card-header">
+            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
+              <div className="stat-icon" style={{ width: '36px', height: '36px' }}>
+                <Target className="w-5 h-5" />
               </div>
-              <Link 
-                to="/app/reports" 
-                className="dashboard-participants-add-btn"
-              >
-                <BarChart3 className="w-4 h-4 mr-2" />
-                Ver Relatórios
-              </Link>
+              <div>
+                <h3 className="card-title">Progresso Geral</h3>
+                <p className="card-subtitle">Visão geral das avaliações</p>
+              </div>
             </div>
           </div>
-
-          <div className="dashboard-participants-content">
-            {participantsArray.length === 0 ? (
-              <div className="dashboard-empty-state">
-                <div className="dashboard-empty-icon">
-                  <Users className="w-8 h-8 text-gray-400" />
-                </div>
-                <h3 className="dashboard-empty-title">Nenhum participante cadastrado</h3>
-                <p className="dashboard-empty-description">
-                  Comece adicionando participantes ao sistema para ver insights das avaliações.
-                </p>
-                <Link 
-                  to="/app/participants" 
-                  className="dashboard-empty-btn"
-                >
-                  <Plus className="w-5 h-5 mr-2" />
-                  Adicionar Primeiro Participante
-                </Link>
+          <div className="card-body">
+            <div style={{ marginBottom: 'var(--space-6)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 'var(--space-2)' }}>
+                <span style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>Autoavaliações</span>
+                <span style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-primary)' }}>
+                  {stats?.completed_self || 0} / {stats?.total_participants || 0}
+                </span>
               </div>
-            ) : (
-              <div className="dashboard-insights-grid">
-                {/* Progress Overview */}
-                <div className="dashboard-insight-card">
-                  <div className="dashboard-insight-header">
-                    <div className="dashboard-insight-icon">
-                      <TrendingUp className="w-6 h-6" />
-                    </div>
-                    <h3 className="dashboard-insight-title">Progresso Geral</h3>
-                  </div>
-                  <div className="dashboard-insight-content">
-                    <div className="dashboard-progress-item">
-                      <div className="dashboard-progress-label">
-                        <CheckCircle className="w-4 h-4 text-green-500 mr-2" />
-                        Avaliações Completas
-                      </div>
-                      <div className="dashboard-progress-value">
-                        {stats?.completed_self || 0} / {stats?.total_participants || 0}
-                      </div>
-                      <div className="dashboard-progress-bar">
-                        <div 
-                          className="dashboard-progress-fill"
-                          style={{ width: `${getCompletionPercentage(stats?.completed_self || 0, stats?.total_participants || 1)}%` }}
-                        ></div>
-                      </div>
-                    </div>
-                    <div className="dashboard-progress-item">
-                      <div className="dashboard-progress-label">
-                        <Users className="w-4 h-4 text-blue-500 mr-2" />
-                        Avaliações por Pares
-                      </div>
-                      <div className="dashboard-progress-value">
-                        {stats?.completed_peer || 0} / {stats?.total_participants || 0}
-                      </div>
-                      <div className="dashboard-progress-bar">
-                        <div 
-                          className="dashboard-progress-fill"
-                          style={{ width: `${getCompletionPercentage(stats?.completed_peer || 0, stats?.total_participants || 1)}%` }}
-                        ></div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Status Distribution */}
-                <div className="dashboard-insight-card">
-                  <div className="dashboard-insight-header">
-                    <div className="dashboard-insight-icon">
-                      <Target className="w-6 h-6" />
-                    </div>
-                    <h3 className="dashboard-insight-title">Distribuição de Status</h3>
-                  </div>
-                  <div className="dashboard-insight-content">
-                    <div className="dashboard-status-distribution">
-                      <div className="dashboard-status-item">
-                        <div className="dashboard-status-dot complete"></div>
-                        <span className="dashboard-status-label">Completos</span>
-                        <span className="dashboard-status-count">
-                          {participantsArray.filter(p => p.has_completed_self_assessment && p.has_completed_peer_assessments).length}
-                        </span>
-                      </div>
-                      <div className="dashboard-status-item">
-                        <div className="dashboard-status-dot in-progress"></div>
-                        <span className="dashboard-status-label">Em Progresso</span>
-                        <span className="dashboard-status-count">
-                          {participantsArray.filter(p => p.has_completed_self_assessment && !p.has_completed_peer_assessments).length}
-                        </span>
-                      </div>
-                      <div className="dashboard-status-item">
-                        <div className="dashboard-status-dot pending"></div>
-                        <span className="dashboard-status-label">Pendentes</span>
-                        <span className="dashboard-status-count">
-                          {participantsArray.filter(p => !p.has_completed_self_assessment).length}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Quick Actions */}
-                <div className="dashboard-insight-card">
-                  <div className="dashboard-insight-header">
-                    <div className="dashboard-insight-icon">
-                      <Sparkles className="w-6 h-6" />
-                    </div>
-                    <h3 className="dashboard-insight-title">Ações Rápidas</h3>
-                  </div>
-                  <div className="dashboard-insight-content">
-                    <div className="dashboard-quick-actions">
-                      <Link to="/app/participants" className="dashboard-quick-action">
-                        <Users className="w-5 h-5" />
-                        <span>Gerenciar Participantes</span>
-                      </Link>
-                      <Link to="/app/reports" className="dashboard-quick-action">
-                        <BarChart3 className="w-5 h-5" />
-                        <span>Ver Relatórios</span>
-                      </Link>
-                      <Link to="/app/admin" className="dashboard-quick-action">
-                        <Award className="w-5 h-5" />
-                        <span>Painel Admin</span>
-                      </Link>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Recent Activity */}
-                <div className="dashboard-insight-card">
-                  <div className="dashboard-insight-header">
-                    <div className="dashboard-insight-icon">
-                      <Clock className="w-6 h-6" />
-                    </div>
-                    <h3 className="dashboard-insight-title">Atividade Recente</h3>
-                  </div>
-                  <div className="dashboard-insight-content">
-                    <div className="dashboard-activity-list">
-                      {participantsArray.slice(0, 3).map((participant) => (
-                        <div key={participant.id} className="dashboard-activity-item">
-                          <div className="dashboard-activity-avatar">
-                            {participant.name.charAt(0).toUpperCase()}
-                          </div>
-                          <div className="dashboard-activity-info">
-                            <p className="dashboard-activity-name">{participant.name}</p>
-                            <p className="dashboard-activity-status">
-                              {getStatusBadge(participant)}
-                            </p>
-                          </div>
-                          <div className="dashboard-activity-action">
-                            <Link
-                              to={`/assessment/${participant.code}`}
-                              className="dashboard-activity-btn"
-                            >
-                              <Eye className="w-4 h-4" />
-                            </Link>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
+              <div style={{ 
+                width: '100%', 
+                height: '8px', 
+                backgroundColor: 'var(--bg-gray-200)', 
+                borderRadius: 'var(--radius-full)',
+                overflow: 'hidden'
+              }}>
+                <div style={{ 
+                  width: `${getCompletionPercentage(stats?.completed_self || 0, stats?.total_participants || 1)}%`,
+                  height: '100%',
+                  background: 'linear-gradient(90deg, #10b981 0%, #059669 100%)',
+                  transition: 'width 0.3s ease'
+                }}></div>
               </div>
-            )}
+            </div>
+
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 'var(--space-2)' }}>
+                <span style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>Avaliações entre Pares</span>
+                <span style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-primary)' }}>
+                  {stats?.completed_peer || 0} / {stats?.total_participants || 0}
+                </span>
+              </div>
+              <div style={{ 
+                width: '100%', 
+                height: '8px', 
+                backgroundColor: 'var(--bg-gray-200)', 
+                borderRadius: 'var(--radius-full)',
+                overflow: 'hidden'
+              }}>
+                <div style={{ 
+                  width: `${getCompletionPercentage(stats?.completed_peer || 0, stats?.total_participants || 1)}%`,
+                  height: '100%',
+                  background: 'linear-gradient(90deg, #8b5cf6 0%, #7c3aed 100%)',
+                  transition: 'width 0.3s ease'
+                }}></div>
+              </div>
+            </div>
           </div>
         </div>
+
+        {/* Status Distribution Card */}
+        <div className="card">
+          <div className="card-header">
+            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
+              <div className="stat-icon" style={{ width: '36px', height: '36px', background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)' }}>
+                <BarChart3 className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="card-title">Distribuição de Status</h3>
+                <p className="card-subtitle">Status dos participantes</p>
+              </div>
+            </div>
+          </div>
+          <div className="card-body">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 'var(--space-3)', background: 'var(--bg-gray-50)', borderRadius: 'var(--radius-md)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
+                  <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#10b981' }}></div>
+                  <span style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--text-primary)' }}>Completos</span>
+                </div>
+                <span style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+                  {participantsArray.filter(p => p.has_completed_self_assessment && p.has_completed_peer_assessments).length}
+                </span>
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 'var(--space-3)', background: 'var(--bg-gray-50)', borderRadius: 'var(--radius-md)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
+                  <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#f59e0b' }}></div>
+                  <span style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--text-primary)' }}>Em Progresso</span>
+                </div>
+                <span style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+                  {participantsArray.filter(p => p.has_completed_self_assessment && !p.has_completed_peer_assessments).length}
+                </span>
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 'var(--space-3)', background: 'var(--bg-gray-50)', borderRadius: 'var(--radius-md)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
+                  <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#ef4444' }}></div>
+                  <span style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--text-primary)' }}>Pendentes</span>
+                </div>
+                <span style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+                  {participantsArray.filter(p => !p.has_completed_self_assessment).length}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Participants List Card */}
+      <div className="card" style={{ marginTop: 'var(--space-6)' }}>
+        <div className="card-header">
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
+              <div className="stat-icon" style={{ width: '36px', height: '36px' }}>
+                <Users className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="card-title">Participantes</h3>
+                <p className="card-subtitle">Lista de participantes cadastrados</p>
+              </div>
+            </div>
+            <Link to="/app/participants" className="btn btn-primary">
+              <Plus className="w-4 h-4" />
+              Adicionar Participante
+            </Link>
+          </div>
+        </div>
+        <div className="card-body">
+          {participantsArray.length === 0 ? (
+            <div className="empty-state">
+              <Users className="empty-state-icon" />
+              <h3 className="empty-state-title">Nenhum participante cadastrado</h3>
+              <p className="empty-state-description">
+                Comece adicionando participantes ao sistema para realizar avaliações.
+              </p>
+              <Link to="/app/participants" className="btn btn-primary" style={{ marginTop: 'var(--space-4)' }}>
+                <Plus className="w-4 h-4" />
+                Adicionar Primeiro Participante
+              </Link>
+            </div>
+          ) : (
+            <div className="table-container">
+              <table className="table">
+                <thead>
+                  <tr>
+                    <th>Nome</th>
+                    <th>Email</th>
+                    <th>Status</th>
+                    <th>Ações</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {participantsArray.slice(0, 5).map((participant) => (
+                    <tr key={participant.id}>
+                      <td style={{ fontWeight: 500 }}>{participant.name}</td>
+                      <td style={{ color: 'var(--text-secondary)' }}>{participant.email}</td>
+                      <td>{getStatusBadge(participant)}</td>
+                      <td>
+                        <div className="action-buttons">
+                          <Link
+                            to={`/assessment/${participant.code}`}
+                            className="action-btn"
+                            title="Visualizar"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </Link>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {participantsArray.length > 5 && (
+                <div style={{ padding: 'var(--space-4)', textAlign: 'center', borderTop: '1px solid var(--bg-gray-200)' }}>
+                  <Link to="/app/participants" className="btn btn-secondary">
+                    Ver Todos ({participantsArray.length})
+                    <ArrowRight className="w-4 h-4" />
+                  </Link>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Quick Actions */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 'var(--space-4)', marginTop: 'var(--space-6)' }}>
+        <Link to="/app/participants" className="card" style={{ textDecoration: 'none', color: 'inherit' }}>
+          <div className="card-body" style={{ textAlign: 'center' }}>
+            <div className="stat-icon" style={{ margin: '0 auto var(--space-4)' }}>
+              <Users className="w-6 h-6" />
+            </div>
+            <h3 style={{ fontSize: '1rem', fontWeight: 600, margin: '0 0 var(--space-2) 0' }}>Gerenciar Participantes</h3>
+            <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', margin: 0 }}>Adicionar e editar participantes</p>
+          </div>
+        </Link>
+
+        <Link to="/app/reports" className="card" style={{ textDecoration: 'none', color: 'inherit' }}>
+          <div className="card-body" style={{ textAlign: 'center' }}>
+            <div className="stat-icon" style={{ margin: '0 auto var(--space-4)', background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)' }}>
+              <BarChart3 className="w-6 h-6" />
+            </div>
+            <h3 style={{ fontSize: '1rem', fontWeight: 600, margin: '0 0 var(--space-2) 0' }}>Ver Relatórios</h3>
+            <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', margin: 0 }}>Visualizar análises e insights</p>
+          </div>
+        </Link>
+
+        <Link to="/app/usage" className="card" style={{ textDecoration: 'none', color: 'inherit' }}>
+          <div className="card-body" style={{ textAlign: 'center' }}>
+            <div className="stat-icon" style={{ margin: '0 auto var(--space-4)', background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)' }}>
+              <Zap className="w-6 h-6" />
+            </div>
+            <h3 style={{ fontSize: '1rem', fontWeight: 600, margin: '0 0 var(--space-2) 0' }}>Uso e Limites</h3>
+            <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', margin: 0 }}>Monitorar uso do sistema</p>
+          </div>
+        </Link>
       </div>
     </div>
   );

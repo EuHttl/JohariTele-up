@@ -2,22 +2,21 @@ import React, { useState, useEffect } from 'react';
 import { participantsAPI } from '../services/api';
 import { Participant } from '../types';
 import Modal from '../components/Modal';
-import ResponsiveTable from '../components/ResponsiveTable';
 import AssessmentViewer from '../components/AssessmentViewer';
 import { 
   Plus, 
   Edit, 
   Trash2, 
-  User, 
   Copy,
   CheckCircle,
   AlertCircle,
   Search,
   Eye,
   FileText,
-  Users
+  Users,
+  X,
 } from 'lucide-react';
-import '../styles/participants.css';
+import '../styles/design-system.css';
 
 const Participants: React.FC = () => {
   const [participants, setParticipants] = useState<Participant[]>([]);
@@ -37,6 +36,7 @@ const Participants: React.FC = () => {
 
   const fetchParticipants = async () => {
     try {
+      setLoading(true);
       const data = await participantsAPI.getAll();
       setParticipants(Array.isArray(data) ? data : []);
     } catch (error) {
@@ -65,6 +65,9 @@ const Participants: React.FC = () => {
       setShowModal(false);
       setEditingParticipant(null);
       fetchParticipants();
+      
+      // Auto-hide success message
+      setTimeout(() => setSuccess(''), 3000);
     } catch (error: any) {
       setError(error.response?.data?.message || 'Erro ao salvar participante');
     }
@@ -77,11 +80,12 @@ const Participants: React.FC = () => {
   };
 
   const handleDelete = async (id: number) => {
-    if (window.confirm('Tem certeza que deseja excluir este participante?')) {
+    if (window.confirm('Tem certeza que deseja excluir este participante? Esta ação não pode ser desfeita.')) {
       try {
         await participantsAPI.delete(id);
         setSuccess('Participante excluído com sucesso!');
         fetchParticipants();
+        setTimeout(() => setSuccess(''), 3000);
       } catch (error: any) {
         setError(error.response?.data?.message || 'Erro ao excluir participante');
       }
@@ -91,13 +95,13 @@ const Participants: React.FC = () => {
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
     setSuccess('Código copiado para a área de transferência!');
+    setTimeout(() => setSuccess(''), 3000);
   };
 
   const handleViewAssessment = (participant: Participant) => {
     setSelectedParticipant(participant);
     setShowAssessmentViewer(true);
   };
-
 
   const filteredParticipants = participants.filter(participant =>
     participant.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -112,41 +116,33 @@ const Participants: React.FC = () => {
     pending: participants.filter(p => !p.has_completed_self_assessment).length
   };
 
+  const getStatusBadge = (participant: Participant) => {
+    if (participant.has_completed_self_assessment && participant.has_completed_peer_assessments) {
+      return <span className="badge badge-success">Completo</span>;
+    } else if (participant.has_completed_self_assessment) {
+      return <span className="badge badge-warning">Em Progresso</span>;
+    } else {
+      return <span className="badge badge-error">Pendente</span>;
+    }
+  };
 
   if (loading) {
     return (
-      <div className="participants-loading">
-        <div className="participants-loading-content">
-          <div className="participants-loading-spinner"></div>
-          <p className="participants-loading-text">Carregando participantes...</p>
-        </div>
+      <div className="loading-container">
+        <div className="loading-spinner"></div>
+        <p className="loading-text">Carregando participantes...</p>
       </div>
     );
   }
 
   return (
-    <div className="participants-container">
-      {/* Header */}
-      <div className="participants-header">
-        <div className="participants-title-section">
-          <div className="participants-title-icon">
-            <Users className="w-12 h-12 text-white" />
-          </div>
+    <div className="page-container">
+      {/* Page Header */}
+      <div className="page-header">
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 'var(--space-4)' }}>
           <div>
-            <h1 className="participants-title">Participantes</h1>
-            <p className="participants-subtitle">Gerencie os participantes da avaliação</p>
-          </div>
-        </div>
-        <div className="participants-actions">
-          <div className="participants-search">
-            <Search className="participants-search-icon" />
-            <input
-              type="text"
-              placeholder="Buscar participantes..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="participants-search-input"
-            />
+            <h1 className="page-title">Participantes</h1>
+            <p className="page-subtitle">Gerencie os participantes da avaliação comportamental</p>
           </div>
           <button
             onClick={() => {
@@ -154,93 +150,118 @@ const Participants: React.FC = () => {
               setFormData({ name: '', email: '' });
               setShowModal(true);
             }}
-            className="participants-add-btn"
+            className="btn btn-primary"
           >
-            <Plus className="w-5 h-5 mr-2" />
+            <Plus className="w-4 h-4" />
             Adicionar Participante
           </button>
         </div>
       </div>
 
-      {/* Stats */}
-      <div className="participants-stats">
-        <div className="participants-stat-card">
-          <div className="participants-stat-header">
-            <div className="participants-stat-icon total">
-              <Users className="w-8 h-8 text-white" />
+      {/* Stats Grid */}
+      <div className="stats-grid">
+        <div className="stat-card">
+          <div className="stat-header">
+            <div className="stat-icon">
+              <Users className="w-6 h-6" />
             </div>
-            <div className="participants-stat-number">{stats.total}</div>
+            <div className="stat-content">
+              <p className="stat-value">{stats.total}</p>
+              <p className="stat-label">Total</p>
+            </div>
           </div>
-          <h3 className="participants-stat-label">Total</h3>
-          <p className="participants-stat-description">Participantes cadastrados</p>
         </div>
 
-        <div className="participants-stat-card">
-          <div className="participants-stat-header">
-            <div className="participants-stat-icon completed">
-              <CheckCircle className="w-8 h-8 text-white" />
+        <div className="stat-card">
+          <div className="stat-header">
+            <div className="stat-icon" style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)' }}>
+              <CheckCircle className="w-6 h-6" />
             </div>
-            <div className="participants-stat-number">{stats.completed}</div>
+            <div className="stat-content">
+              <p className="stat-value">{stats.completed}</p>
+              <p className="stat-label">Completos</p>
+            </div>
           </div>
-          <h3 className="participants-stat-label">Completos</h3>
-          <p className="participants-stat-description">Autoavaliação + Avaliação entre pares</p>
         </div>
 
-        <div className="participants-stat-card">
-          <div className="participants-stat-header">
-            <div className="participants-stat-icon in-progress">
-              <AlertCircle className="w-8 h-8 text-white" />
+        <div className="stat-card">
+          <div className="stat-header">
+            <div className="stat-icon" style={{ background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)' }}>
+              <AlertCircle className="w-6 h-6" />
             </div>
-            <div className="participants-stat-number">{stats.inProgress}</div>
+            <div className="stat-content">
+              <p className="stat-value">{stats.inProgress}</p>
+              <p className="stat-label">Em Progresso</p>
+            </div>
           </div>
-          <h3 className="participants-stat-label">Em Progresso</h3>
-          <p className="participants-stat-description">Apenas autoavaliação concluída</p>
         </div>
 
-        <div className="participants-stat-card">
-          <div className="participants-stat-header">
-            <div className="participants-stat-icon pending">
-              <User className="w-8 h-8 text-white" />
+        <div className="stat-card">
+          <div className="stat-header">
+            <div className="stat-icon" style={{ background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' }}>
+              <Users className="w-6 h-6" />
             </div>
-            <div className="participants-stat-number">{stats.pending}</div>
+            <div className="stat-content">
+              <p className="stat-value">{stats.pending}</p>
+              <p className="stat-label">Pendentes</p>
+            </div>
           </div>
-          <h3 className="participants-stat-label">Pendentes</h3>
-          <p className="participants-stat-description">Aguardando início</p>
         </div>
       </div>
-
 
       {/* Messages */}
       {error && (
         <div className="alert alert-error">
-          <AlertCircle className="w-5 h-5 mr-2" />
-          {error}
+          <AlertCircle className="w-5 h-5" />
+          <span>{error}</span>
+          <button 
+            onClick={() => setError('')}
+            style={{ marginLeft: 'auto', background: 'none', border: 'none', cursor: 'pointer', color: 'inherit' }}
+          >
+            <X className="w-4 h-4" />
+          </button>
         </div>
       )}
       
       {success && (
         <div className="alert alert-success">
-          <CheckCircle className="w-5 h-5 mr-2" />
-          {success}
+          <CheckCircle className="w-5 h-5" />
+          <span>{success}</span>
+          <button 
+            onClick={() => setSuccess('')}
+            style={{ marginLeft: 'auto', background: 'none', border: 'none', cursor: 'pointer', color: 'inherit' }}
+          >
+            <X className="w-4 h-4" />
+          </button>
         </div>
       )}
 
-      {/* Participants List */}
-      <div className="participants-list-card">
-        <div className="participants-list-header">
-          <h2 className="participants-list-title">Lista de Participantes</h2>
+      {/* Search and Table */}
+      <div className="card">
+        <div className="card-header">
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', flexWrap: 'wrap', gap: 'var(--space-4)' }}>
+            <h3 className="card-title">Lista de Participantes</h3>
+            <div className="search-bar" style={{ maxWidth: '400px', width: '100%' }}>
+              <Search className="search-bar-icon" />
+              <input
+                type="text"
+                placeholder="Buscar por nome, email ou código..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="form-input"
+                style={{ paddingLeft: '2.75rem' }}
+              />
+            </div>
+          </div>
         </div>
-        
-        <div className="participants-list-content">
+        <div className="card-body" style={{ padding: 0 }}>
           {filteredParticipants.length === 0 ? (
-            <div className="participants-empty-state">
-              <div className="participants-empty-icon">
-                <Users className="w-16 h-16 text-gray-400" />
-              </div>
-              <h3 className="participants-empty-title">
+            <div className="empty-state">
+              <Users className="empty-state-icon" />
+              <h3 className="empty-state-title">
                 {searchTerm ? 'Nenhum participante encontrado' : 'Nenhum participante cadastrado'}
               </h3>
-              <p className="participants-empty-description">
+              <p className="empty-state-description">
                 {searchTerm 
                   ? 'Tente ajustar os termos de busca'
                   : 'Comece adicionando participantes ao sistema'
@@ -253,96 +274,111 @@ const Participants: React.FC = () => {
                     setFormData({ name: '', email: '' });
                     setShowModal(true);
                   }}
-                  className="participants-empty-btn"
+                  className="btn btn-primary"
+                  style={{ marginTop: 'var(--space-4)' }}
                 >
-                  <Plus className="w-5 h-5 mr-2" />
+                  <Plus className="w-4 h-4" />
                   Adicionar Primeiro Participante
                 </button>
               )}
             </div>
           ) : (
-            <ResponsiveTable
-              columns={[
-                {
-                  key: 'name',
-                  label: 'Participante',
-                  sortable: true,
-                  render: (value, participant) => (
-                    <div className="participant-info">
-                      <div className="participant-avatar">
-                        {participant.name.charAt(0).toUpperCase()}
-                      </div>
-                      <div className="participant-details">
-                        <p className="participant-name">{participant.name}</p>
-                        <p className="participant-email">{participant.email}</p>
-                      </div>
-                    </div>
-                  )
-                },
-                {
-                  key: 'email',
-                  label: 'Email',
-                  sortable: true,
-                  mobile: false
-                },
-                {
-                  key: 'code',
-                  label: 'Senha',
-                  sortable: true,
-                  render: (value) => <span className="participant-code">{value}</span>
-                },
-                {
-                  key: 'actions',
-                  label: 'Ações',
-                  mobile: false,
-                  render: (value, participant) => (
-                    <div className="participants-actions-cell">
-                      <button
-                        onClick={() => handleViewAssessment(participant)}
-                        className="participants-action-btn view"
-                        title="Visualizar autoavaliação e avaliação em pares"
-                      >
-                        <Eye className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => copyToClipboard(participant.code)}
-                        className="participants-action-btn copy"
-                        title="Copiar código"
-                      >
-                        <Copy className="w-4 h-4" />
-                      </button>
-                      <a
-                        href={`/report/${participant.code}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="participants-action-btn report"
-                        title="Visualizar relatório individual"
-                      >
-                        <FileText className="w-4 h-4" />
-                      </a>
-                      <button
-                        onClick={() => handleEdit(participant)}
-                        className="participants-action-btn edit"
-                        title="Editar usuário"
-                      >
-                        <Edit className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(participant.id)}
-                        className="participants-action-btn delete"
-                        title="Excluir participante"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  )
-                }
-              ]}
-              data={filteredParticipants}
-              className="participants-table"
-              emptyMessage="Nenhum participante encontrado"
-              loading={loading}
-            />
+            <div className="table-container">
+              <table className="table">
+                <thead>
+                  <tr>
+                    <th>Participante</th>
+                    <th>Email</th>
+                    <th>Código</th>
+                    <th>Status</th>
+                    <th>Ações</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredParticipants.map((participant) => (
+                    <tr key={participant.id}>
+                      <td>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
+                          <div style={{
+                            width: '40px',
+                            height: '40px',
+                            borderRadius: 'var(--radius-md)',
+                            background: 'linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            color: 'white',
+                            fontWeight: 600,
+                            fontSize: '0.875rem'
+                          }}>
+                            {participant.name.charAt(0).toUpperCase()}
+                          </div>
+                          <div>
+                            <div style={{ fontWeight: 500, color: 'var(--text-primary)' }}>{participant.name}</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td style={{ color: 'var(--text-secondary)' }}>{participant.email}</td>
+                      <td>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+                          <code style={{ 
+                            background: 'var(--bg-gray-100)', 
+                            padding: 'var(--space-1) var(--space-2)', 
+                            borderRadius: 'var(--radius-sm)',
+                            fontSize: '0.8125rem',
+                            fontFamily: 'monospace'
+                          }}>
+                            {participant.code}
+                          </code>
+                          <button
+                            onClick={() => copyToClipboard(participant.code)}
+                            className="action-btn"
+                            title="Copiar código"
+                          >
+                            <Copy className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </td>
+                      <td>{getStatusBadge(participant)}</td>
+                      <td>
+                        <div className="action-buttons">
+                          <button
+                            onClick={() => handleViewAssessment(participant)}
+                            className="action-btn"
+                            title="Visualizar avaliações"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </button>
+                          <a
+                            href={`/report/${participant.code}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="action-btn"
+                            title="Ver relatório"
+                          >
+                            <FileText className="w-4 h-4" />
+                          </a>
+                          <button
+                            onClick={() => handleEdit(participant)}
+                            className="action-btn"
+                            title="Editar"
+                          >
+                            <Edit className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(participant.id)}
+                            className="action-btn danger"
+                            title="Excluir"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
       </div>
@@ -350,16 +386,28 @@ const Participants: React.FC = () => {
       {/* Modal */}
       <Modal
         isOpen={showModal}
-        onClose={() => setShowModal(false)}
+        onClose={() => {
+          setShowModal(false);
+          setEditingParticipant(null);
+          setFormData({ name: '', email: '' });
+          setError('');
+        }}
         title={editingParticipant ? 'Editar Participante' : 'Novo Participante'}
         size="md"
       >
         <form onSubmit={handleSubmit}>
-          <div className="modal-form-group">
-            <label className="modal-form-label">Nome</label>
+          {error && (
+            <div className="alert alert-error" style={{ marginBottom: 'var(--space-4)' }}>
+              <AlertCircle className="w-5 h-5" />
+              <span>{error}</span>
+            </div>
+          )}
+          
+          <div className="form-group">
+            <label className="form-label">Nome</label>
             <input
               type="text"
-              className="modal-form-input"
+              className="form-input"
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               required
@@ -367,11 +415,11 @@ const Participants: React.FC = () => {
             />
           </div>
           
-          <div className="modal-form-group">
-            <label className="modal-form-label">Email</label>
+          <div className="form-group">
+            <label className="form-label">Email</label>
             <input
               type="email"
-              className="modal-form-input"
+              className="form-input"
               value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
               required
@@ -379,15 +427,20 @@ const Participants: React.FC = () => {
             />
           </div>
           
-          <div className="modal-actions">
+          <div style={{ display: 'flex', gap: 'var(--space-3)', justifyContent: 'flex-end', marginTop: 'var(--space-6)' }}>
             <button
               type="button"
-              className="modal-btn modal-btn-secondary"
-              onClick={() => setShowModal(false)}
+              className="btn btn-secondary"
+              onClick={() => {
+                setShowModal(false);
+                setEditingParticipant(null);
+                setFormData({ name: '', email: '' });
+                setError('');
+              }}
             >
               Cancelar
             </button>
-            <button type="submit" className="modal-btn modal-btn-primary">
+            <button type="submit" className="btn btn-primary">
               {editingParticipant ? 'Atualizar' : 'Criar'}
             </button>
           </div>

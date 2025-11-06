@@ -13,15 +13,13 @@ import {
   FileText,
   Share,
   Filter,
-  Target
+  Target,
+  X
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import PDFExportButton, { ComparativeReportPDFButton, ElementPDFButton } from '../components/PDFExportButton';
 import AdvancedFilters, { FilterOptions } from '../components/AdvancedFilters';
-import ResponsiveTable from '../components/ResponsiveTable';
-import '../styles/reports.css';
-import '../styles/pdf-export.css';
-import '../styles/advanced-filters.css';
+import '../styles/design-system.css';
 
 const Reports: React.FC = () => {
   const [comparativeReport, setComparativeReport] = useState<ComparativeReport | null>(null);
@@ -64,21 +62,19 @@ const Reports: React.FC = () => {
 
   const getScoreBadge = (score: number) => {
     if (score >= 80) {
-      return <span className="report-score-badge excellent">Excelente</span>;
+      return <span className="badge badge-success">Excelente</span>;
     } else if (score >= 60) {
-      return <span className="report-score-badge good">Bom</span>;
+      return <span className="badge badge-info">Bom</span>;
     } else if (score >= 40) {
-      return <span className="report-score-badge average">Regular</span>;
+      return <span className="badge badge-warning">Regular</span>;
     } else {
-      return <span className="report-score-badge poor">Baixo</span>;
+      return <span className="badge badge-error">Baixo</span>;
     }
   };
-
 
   const getFilteredParticipants = () => {
     if (!comparativeReport?.participants) return [];
     
-    // Se não há filtros aplicados, retorna todos os participantes
     const hasActiveFilters = filters.name || 
       filters.status !== 'all' || 
       filters.dateRange.start || 
@@ -94,18 +90,12 @@ const Reports: React.FC = () => {
       const score = Math.round((participant.self_awareness_score + participant.peer_perception_score) / 2);
       const isCompleted = participant.self_awareness_score > 0 && participant.peer_perception_score > 0;
       
-      // Filter by name
       const nameMatch = !filters.name || participant.name.toLowerCase().includes(filters.name.toLowerCase());
-      
-      // Filter by score range
       const scoreMatch = score >= filters.scoreRange.min && score <= filters.scoreRange.max;
-      
-      // Filter by status
       const statusMatch = filters.status === 'all' || 
         (filters.status === 'completed' && isCompleted) ||
         (filters.status === 'incomplete' && !isCompleted);
       
-      // Filter by date range
       let dateMatch = true;
       if (filters.dateRange.start || filters.dateRange.end) {
         const participantDate = new Date(participant.created_at);
@@ -117,14 +107,12 @@ const Reports: React.FC = () => {
         }
       }
       
-      // Special filters
       const highPerformerMatch = !filters.showOnlyHighPerformers || score >= 80;
       const incompleteMatch = !filters.showOnlyIncomplete || !isCompleted;
       
       return nameMatch && scoreMatch && statusMatch && dateMatch && highPerformerMatch && incompleteMatch;
     });
     
-    // Sort participants
     filtered.sort((a: any, b: any) => {
       let comparison = 0;
       
@@ -153,7 +141,6 @@ const Reports: React.FC = () => {
     return filtered;
   };
 
-  // Função separada para dados do gráfico - sem filtros restritivos
   const getChartData = () => {
     if (!comparativeReport?.participants) return [];
     
@@ -167,132 +154,6 @@ const Reports: React.FC = () => {
     }));
   };
 
-
-  const handleExportAllReports = () => {
-    if (!comparativeReport) return;
-    
-    const filteredParticipants = getFilteredParticipants();
-    
-    // Criar conteúdo HTML para o relatório geral
-    const htmlContent = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <meta charset="utf-8">
-        <title>Relatório Comparativo - Janela de Johari</title>
-        <style>
-          body { font-family: Arial, sans-serif; margin: 20px; }
-          .header { text-align: center; margin-bottom: 30px; }
-          .section { margin-bottom: 25px; }
-          .participant { border: 1px solid #ddd; padding: 15px; margin: 10px 0; }
-          .stats { display: flex; justify-content: space-around; margin: 20px 0; }
-          .stat { text-align: center; }
-          .quadrant-stats { display: flex; justify-content: space-between; margin: 10px 0; }
-          .quadrant-stat { text-align: center; padding: 10px; border: 1px solid #eee; }
-          .open { background-color: #f0f9ff; }
-          .blind { background-color: #fefce8; }
-          .hidden { background-color: #eff6ff; }
-          .unknown { background-color: #faf5ff; }
-          table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-          th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-          th { background-color: #f2f2f2; }
-        </style>
-      </head>
-      <body>
-        <div class="header">
-          <h1>Relatório Comparativo - Janela de Johari</h1>
-          <p>Gerado em ${new Date().toLocaleString('pt-BR')}</p>
-        </div>
-
-        <div class="stats">
-          <div class="stat">
-            <h3>Total de Participantes</h3>
-            <p>${comparativeReport.summary.total_participants}</p>
-          </div>
-          <div class="stat">
-            <h3>Avaliações Completas</h3>
-            <p>${comparativeReport.summary.completed_assessments}</p>
-          </div>
-          <div class="stat">
-            <h3>Taxa de Conclusão</h3>
-            <p>${Math.round((comparativeReport.summary.completed_assessments / comparativeReport.summary.total_participants) * 100)}%</p>
-          </div>
-        </div>
-
-        <div class="section">
-          <h2>Resumo por Participante</h2>
-          <table>
-            <thead>
-              <tr>
-                <th>Nome</th>
-                <th>Código</th>
-                <th>Área Aberta</th>
-                <th>Área Cega</th>
-                <th>Área Oculta</th>
-                <th>Área Desconhecida</th>
-                <th>Score Autoconsciência</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${filteredParticipants.map((participant: any) => `
-                <tr>
-                  <td>${participant.name}</td>
-                  <td>${participant.code}</td>
-                  <td>${participant.quadrants.open.count} (${participant.quadrants.open.percentage}%)</td>
-                  <td>${participant.quadrants.blind.count} (${participant.quadrants.blind.percentage}%)</td>
-                  <td>${participant.quadrants.hidden.count} (${participant.quadrants.hidden.percentage}%)</td>
-                  <td>${participant.quadrants.unknown.count} (${participant.quadrants.unknown.percentage}%)</td>
-                  <td>${participant.self_awareness_score}%</td>
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>
-        </div>
-
-        ${characteristicAnalysis ? `
-        <div class="section">
-          <h2>Análise de Características</h2>
-          <h3>Mais Selecionadas</h3>
-          <table>
-            <thead>
-              <tr>
-                <th>Característica</th>
-                <th>Autoavaliações</th>
-                <th>Avaliações entre Pares</th>
-                <th>Consenso</th>
-                <th>% Consenso</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${characteristicAnalysis.most_selected.map((char: any) => `
-                <tr>
-                  <td>${char.name}</td>
-                  <td>${char.self_selections}</td>
-                  <td>${char.peer_selections}</td>
-                  <td>${char.consensus_selections}</td>
-                  <td>${char.consensus_percentage}%</td>
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>
-        </div>
-        ` : ''}
-      </body>
-      </html>
-    `;
-
-    // Criar blob e fazer download
-    const blob = new Blob([htmlContent], { type: 'text/html' });
-    const url = window.URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `relatorio_comparativo_${new Date().toISOString().split('T')[0]}.html`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    window.URL.revokeObjectURL(url);
-  };
-
   const generateReportContent = () => {
     if (!comparativeReport) return 'Relatório não disponível';
     
@@ -300,20 +161,6 @@ const Reports: React.FC = () => {
     const totalParticipants = participants.length;
     const completedAssessments = participants.filter((p: any) => p.self_awareness_score > 0 && p.peer_perception_score > 0).length;
     const averageScore = participants.reduce((acc: number, p: any) => acc + (p.self_awareness_score + p.peer_perception_score) / 2, 0) / totalParticipants;
-    
-    // Calcular distribuição de pontuações
-    const scoreDistribution = {
-      high: participants.filter((p: any) => ((p.self_awareness_score + p.peer_perception_score) / 2) >= 80).length,
-      medium: participants.filter((p: any) => {
-        const score = (p.self_awareness_score + p.peer_perception_score) / 2;
-        return score >= 60 && score < 80;
-      }).length,
-      low: participants.filter((p: any) => {
-        const score = (p.self_awareness_score + p.peer_perception_score) / 2;
-        return score >= 40 && score < 60;
-      }).length,
-      veryLow: participants.filter((p: any) => ((p.self_awareness_score + p.peer_perception_score) / 2) < 40).length
-    };
     
     return `
       RELATÓRIO COMPARATIVO - JANELA DE JOHARI
@@ -324,19 +171,7 @@ const Reports: React.FC = () => {
       
       PONTUAÇÃO MÉDIA GERAL: ${Math.round(averageScore)}%
       
-      DISTRIBUIÇÃO DE PONTUAÇÕES:
-      - Alta Performance (80-100%): ${scoreDistribution.high} participantes
-      - Boa Performance (60-79%): ${scoreDistribution.medium} participantes
-      - Desenvolvimento (40-59%): ${scoreDistribution.low} participantes
-      - Iniciante (0-39%): ${scoreDistribution.veryLow} participantes
-      
-      INSIGHTS PRINCIPAIS:
-      • Análise de autoconsciência individual e em grupo
-      • Identificação de padrões de desenvolvimento
-      • Recomendações para crescimento pessoal e profissional
-      
       Este relatório foi gerado automaticamente pelo sistema Janela de Johari.
-      Os dados apresentados são confidenciais e destinados exclusivamente ao desenvolvimento pessoal e profissional.
     `;
   };
 
@@ -347,21 +182,19 @@ const Reports: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="reports-loading">
-        <div className="reports-loading-content">
-          <div className="reports-loading-spinner"></div>
-          <p className="reports-loading-text">Carregando relatórios...</p>
-        </div>
+      <div className="loading-container">
+        <div className="loading-spinner"></div>
+        <p className="loading-text">Carregando relatórios...</p>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="reports-container">
+      <div className="page-container">
         <div className="alert alert-error">
-          <AlertCircle className="w-5 h-5 mr-2" />
-          {error}
+          <AlertCircle className="w-5 h-5" />
+          <span>{error}</span>
         </div>
       </div>
     );
@@ -372,48 +205,36 @@ const Reports: React.FC = () => {
   
   const stats = {
     total: filteredParticipants.length,
-    completed: filteredParticipants.filter((p: any) => p.completed_at).length,
+    completed: filteredParticipants.filter((p: any) => p.self_awareness_score > 0 && p.peer_perception_score > 0).length,
     avgScore: filteredParticipants.reduce((acc: any, p: any) => acc + (p.self_awareness_score || 0), 0) / participantsLength,
     insights: characteristicAnalysis?.most_selected?.length || 0
   };
 
   return (
-    <div className="reports-container">
-      {/* Header */}
-      <div className="reports-header">
-        <div className="reports-title-section">
-          <div className="reports-title-icon">
-            <BarChart3 className="w-12 h-12 text-white" />
-          </div>
+    <div className="page-container">
+      {/* Page Header */}
+      <div className="page-header">
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 'var(--space-4)' }}>
           <div>
-            <h1 className="reports-title">Relatórios</h1>
-            <p className="reports-subtitle">Análise completa dos resultados da avaliação</p>
+            <h1 className="page-title">Relatórios</h1>
+            <p className="page-subtitle">Análise completa dos resultados da avaliação</p>
           </div>
-        </div>
-        <div className="reports-actions">
-          <button 
-            className={`reports-filter-btn ${showFilters ? 'active' : ''}`}
-            onClick={() => setShowFilters(!showFilters)}
-          >
-            <Filter className="w-5 h-5 mr-2" />
-            Filtrar
-          </button>
-          <ComparativeReportPDFButton
-            reportContent={generateReportContent()}
-            className="reports-export-pdf-btn"
-          />
-          <ElementPDFButton
-            elementId="reports-container"
-            label="Exportar Tudo"
-            className="reports-export-all-btn"
-          />
-          <button 
-            className="reports-export-btn"
-            onClick={handleExportAllReports}
-          >
-            <Download className="w-5 h-5 mr-2" />
-            HTML
-          </button>
+          <div style={{ display: 'flex', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
+            <button 
+              className={`btn ${showFilters ? 'btn-primary' : 'btn-secondary'}`}
+              onClick={() => setShowFilters(!showFilters)}
+            >
+              <Filter className="w-4 h-4" />
+              Filtrar
+            </button>
+            <ComparativeReportPDFButton
+              reportContent={generateReportContent()}
+            />
+            <ElementPDFButton
+              elementId="reports-container"
+              label="Exportar Tudo"
+            />
+          </div>
         </div>
       </div>
 
@@ -427,118 +248,117 @@ const Reports: React.FC = () => {
         filteredCount={getFilteredParticipants().length}
       />
 
-      {/* Stats */}
-      <div className="reports-stats">
-        <div className="reports-stat-card">
-          <div className="reports-stat-header">
-            <div className="reports-stat-icon total">
-              <Users className="w-8 h-8 text-white" />
+      {/* Stats Grid */}
+      <div className="stats-grid">
+        <div className="stat-card">
+          <div className="stat-header">
+            <div className="stat-icon">
+              <Users className="w-6 h-6" />
             </div>
-            <div className="reports-stat-number">{stats.total}</div>
+            <div className="stat-content">
+              <p className="stat-value">{stats.total}</p>
+              <p className="stat-label">Participantes</p>
+            </div>
           </div>
-          <h3 className="reports-stat-label">Total</h3>
-          <p className="reports-stat-description">Participantes avaliados</p>
         </div>
 
-        <div className="reports-stat-card">
-          <div className="reports-stat-header">
-            <div className="reports-stat-icon completed">
-              <CheckCircle className="w-8 h-8 text-white" />
+        <div className="stat-card">
+          <div className="stat-header">
+            <div className="stat-icon" style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)' }}>
+              <CheckCircle className="w-6 h-6" />
             </div>
-            <div className="reports-stat-number">{stats.completed}</div>
+            <div className="stat-content">
+              <p className="stat-value">{stats.completed}</p>
+              <p className="stat-label">Completos</p>
+            </div>
           </div>
-          <h3 className="reports-stat-label">Completos</h3>
-          <p className="reports-stat-description">Avaliações finalizadas</p>
         </div>
 
-        <div className="reports-stat-card">
-          <div className="reports-stat-header">
-            <div className="reports-stat-icon avg-score">
-              <TrendingUp className="w-8 h-8 text-white" />
+        <div className="stat-card">
+          <div className="stat-header">
+            <div className="stat-icon" style={{ background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)' }}>
+              <TrendingUp className="w-6 h-6" />
             </div>
-            <div className="reports-stat-number">{Math.round(stats.avgScore)}</div>
+            <div className="stat-content">
+              <p className="stat-value">{Math.round(stats.avgScore)}</p>
+              <p className="stat-label">Pontuação Média</p>
+            </div>
           </div>
-          <h3 className="reports-stat-label">Pontuação Média</h3>
-          <p className="reports-stat-description">Score geral da equipe</p>
         </div>
 
-        <div className="reports-stat-card">
-          <div className="reports-stat-header">
-            <div className="reports-stat-icon insights">
-              <Lightbulb className="w-8 h-8 text-white" />
+        <div className="stat-card">
+          <div className="stat-header">
+            <div className="stat-icon" style={{ background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)' }}>
+              <Lightbulb className="w-6 h-6" />
             </div>
-            <div className="reports-stat-number">{stats.insights}</div>
+            <div className="stat-content">
+              <p className="stat-value">{stats.insights}</p>
+              <p className="stat-label">Insights</p>
+            </div>
           </div>
-          <h3 className="reports-stat-label">Insights</h3>
-          <p className="reports-stat-description">Análises geradas</p>
         </div>
       </div>
 
-      {/* Charts */}
-      <div className="reports-chart-container">
-        <div className="reports-chart-header">
-          <h2 className="reports-chart-title">Distribuição de Pontuações</h2>
-          <div className="reports-chart-actions">
-            <button 
-              className={`reports-chart-btn ${chartType === 'bar' ? 'active' : ''}`}
-              onClick={() => setChartType('bar')}
-            >
-              Barras
-            </button>
-            <button 
-              className={`reports-chart-btn ${chartType === 'pie' ? 'active' : ''}`}
-              onClick={() => setChartType('pie')}
-            >
-              Pizza
-            </button>
+      {/* Chart Card */}
+      {comparativeReport?.participants && getChartData().length > 0 && (
+        <div className="card" style={{ marginBottom: 'var(--space-6)' }}>
+          <div className="card-header">
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', flexWrap: 'wrap', gap: 'var(--space-4)' }}>
+              <div>
+                <h3 className="card-title">Distribuição de Pontuações</h3>
+                <p className="card-subtitle">Visualização gráfica dos resultados</p>
+              </div>
+              <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
+                <button 
+                  className={`btn btn-sm ${chartType === 'bar' ? 'btn-primary' : 'btn-secondary'}`}
+                  onClick={() => setChartType('bar')}
+                >
+                  Barras
+                </button>
+                <button 
+                  className={`btn btn-sm ${chartType === 'pie' ? 'btn-primary' : 'btn-secondary'}`}
+                  onClick={() => setChartType('pie')}
+                >
+                  Pizza
+                </button>
+              </div>
+            </div>
           </div>
-        </div>
-        
-        {/* Chart Legend */}
-        <div className="reports-chart-legend">
-          <div className="reports-legend-item">
-            <div className="reports-legend-color" style={{backgroundColor: '#8b5cf6'}}></div>
-            <span className="reports-legend-text">Pontuação Combinada (Self + Peer)</span>
-          </div>
-          <div className="reports-legend-info">
-            <span className="text-sm text-gray-600">Eixo Y: 0-100 pontos | Eixo X: Participantes</span>
-          </div>
-        </div>
-        <div className="reports-chart-content">
-          {comparativeReport?.participants && (
+          <div className="card-body">
             <ResponsiveContainer width="100%" height={300}>
               {chartType === 'bar' ? (
                 <BarChart data={getChartData()}>
-                  <CartesianGrid strokeDasharray="3 3" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
                   <XAxis 
                     dataKey="name" 
-                    tick={{ fontSize: 12 }}
+                    tick={{ fontSize: 12, fill: '#64748b' }}
                     angle={-45}
                     textAnchor="end"
                     height={80}
                   />
                   <YAxis 
-                    label={{ value: 'Pontuação (0-100)', angle: -90, position: 'insideLeft' }}
+                    label={{ value: 'Pontuação (0-100)', angle: -90, position: 'insideLeft', style: { fill: '#64748b' } }}
                     domain={[0, 100]}
+                    tick={{ fontSize: 12, fill: '#64748b' }}
                   />
                   <Tooltip 
+                    contentStyle={{
+                      backgroundColor: '#1e293b',
+                      border: '1px solid #334155',
+                      borderRadius: 'var(--radius-md)',
+                      color: '#f8fafc'
+                    }}
                     formatter={(value: any, name: any, props: any) => [
-                      <div key="tooltip">
-                        <p><strong>Participante:</strong> {props.payload.fullName}</p>
-                        <p><strong>Código:</strong> {props.payload.code}</p>
-                        <p><strong>Pontuação Combinada:</strong> {value}%</p>
-                        <p><strong>Self-Awareness:</strong> {props.payload.selfScore}%</p>
-                        <p><strong>Peer Perception:</strong> {props.payload.peerScore}%</p>
+                      <div key="tooltip" style={{ padding: 'var(--space-2)' }}>
+                        <div style={{ fontWeight: 600, marginBottom: 'var(--space-2)' }}>{props.payload.fullName}</div>
+                        <div style={{ fontSize: '0.875rem' }}>Código: {props.payload.code}</div>
+                        <div style={{ fontSize: '0.875rem' }}>Pontuação: {value}%</div>
+                        <div style={{ fontSize: '0.875rem' }}>Self: {props.payload.selfScore}%</div>
+                        <div style={{ fontSize: '0.875rem' }}>Peer: {props.payload.peerScore}%</div>
                       </div>
                     ]}
-                    contentStyle={{
-                      backgroundColor: '#1f2937',
-                      border: '1px solid #374151',
-                      borderRadius: '8px',
-                      color: '#f9fafb'
-                    }}
                   />
-                  <Bar dataKey="score" fill="#8b5cf6" />
+                  <Bar dataKey="score" fill="#8b5cf6" radius={[8, 8, 0, 0]} />
                 </BarChart>
               ) : (
                 <PieChart>
@@ -557,381 +377,213 @@ const Reports: React.FC = () => {
                     ))}
                   </Pie>
                   <Tooltip 
-                    formatter={(value: any, name: any, props: any) => [
-                      <div key="tooltip">
-                        <p><strong>Participante:</strong> {props.payload.fullName}</p>
-                        <p><strong>Código:</strong> {props.payload.code}</p>
-                        <p><strong>Pontuação Combinada:</strong> {value}%</p>
-                        <p><strong>Self-Awareness:</strong> {props.payload.selfScore}%</p>
-                        <p><strong>Peer Perception:</strong> {props.payload.peerScore}%</p>
-                      </div>
-                    ]}
                     contentStyle={{
-                      backgroundColor: '#1f2937',
-                      border: '1px solid #374151',
-                      borderRadius: '8px',
-                      color: '#f9fafb'
+                      backgroundColor: '#1e293b',
+                      border: '1px solid #334155',
+                      borderRadius: 'var(--radius-md)',
+                      color: '#f8fafc'
                     }}
                   />
                 </PieChart>
               )}
             </ResponsiveContainer>
-          )}
-        </div>
-      </div>
-
-
-      {/* Reports List */}
-      <div className="reports-list-card">
-        <div className="reports-list-header">
-          <h2 className="reports-list-title">Análise de Performance</h2>
-          <div className="reports-list-info">
-            <span className="text-sm text-gray-600">
-              Insights e métricas sobre o desempenho dos participantes
-            </span>
-          </div>
-        </div>
-        
-        <div className="reports-list-content">
-          {!comparativeReport?.participants || getFilteredParticipants().length === 0 ? (
-            <div className="reports-empty-state">
-              <div className="reports-empty-icon">
-                <FileText className="w-16 h-16 text-gray-400" />
-              </div>
-              <h3 className="reports-empty-title">Nenhum relatório disponível</h3>
-              <p className="reports-empty-description">
-                Os relatórios serão gerados automaticamente quando as avaliações forem concluídas.
-              </p>
-            </div>
-          ) : (
-            <div className="reports-insights-grid">
-              {/* Insights de Performance */}
-              <div className="reports-insight-card">
-                <div className="reports-insight-header">
-                  <Target className="w-6 h-6 text-blue-500" />
-                  <h3 className="reports-insight-title">Performance Geral</h3>
-                </div>
-                <div className="reports-insight-content">
-                  <div className="reports-insight-stat">
-                    <span className="reports-insight-label">Pontuação Média</span>
-                    <span className="reports-insight-value">
-                      {Math.round(getChartData().reduce((acc, p) => acc + p.score, 0) / getChartData().length)}%
-                    </span>
-                  </div>
-                  <div className="reports-insight-stat">
-                    <span className="reports-insight-label">Participantes com Alta Performance</span>
-                    <span className="reports-insight-value">
-                      {getChartData().filter(p => p.score >= 70).length} de {getChartData().length}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Insights de Consistência */}
-              <div className="reports-insight-card">
-                <div className="reports-insight-header">
-                  <TrendingUp className="w-6 h-6 text-green-500" />
-                  <h3 className="reports-insight-title">Consistência</h3>
-                </div>
-                <div className="reports-insight-content">
-                  <div className="reports-insight-stat">
-                    <span className="reports-insight-label">Auto vs Peer Perception</span>
-                    <span className="reports-insight-value">
-                      {Math.round(getChartData().reduce((acc, p) => acc + Math.abs(p.selfScore - p.peerScore), 0) / getChartData().length)}% diferença
-                    </span>
-                  </div>
-                  <div className="reports-insight-stat">
-                    <span className="reports-insight-label">Maior Consistência</span>
-                    <span className="reports-insight-value">
-                      {getChartData().reduce((min, p) => Math.abs(p.selfScore - p.peerScore) < Math.abs(min.selfScore - min.peerScore) ? p : min, getChartData()[0])?.fullName || 'N/A'}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Insights de Características */}
-              {characteristicAnalysis && (
-                <div className="reports-insight-card">
-                  <div className="reports-insight-header">
-                    <Lightbulb className="w-6 h-6 text-yellow-500" />
-                    <h3 className="reports-insight-title">Características Populares</h3>
-                  </div>
-                  <div className="reports-insight-content">
-                    <div className="reports-insight-stat">
-                      <span className="reports-insight-label">Mais Selecionada</span>
-                      <span className="reports-insight-value">
-                        {characteristicAnalysis.most_selected[0]?.name || 'N/A'}
-                      </span>
-                    </div>
-                    <div className="reports-insight-stat">
-                      <span className="reports-insight-label">Menos Selecionada</span>
-                      <span className="reports-insight-value">
-                        {characteristicAnalysis.least_selected[0]?.name || 'N/A'}
-                      </span>
-                          </div>
-                          </div>
-                        </div>
-              )}
-
-              {/* Insights de Progresso */}
-              <div className="reports-insight-card">
-                <div className="reports-insight-header">
-                  <BarChart3 className="w-6 h-6 text-purple-500" />
-                  <h3 className="reports-insight-title">Progresso</h3>
-                </div>
-                <div className="reports-insight-content">
-                  <div className="reports-insight-stat">
-                    <span className="reports-insight-label">Avaliações Completas</span>
-                    <span className="reports-insight-value">
-                      {getChartData().filter(p => p.selfScore > 0 && p.peerScore > 0).length} de {getChartData().length}
-                    </span>
-                  </div>
-                  <div className="reports-insight-stat">
-                    <span className="reports-insight-label">Taxa de Conclusão</span>
-                    <span className="reports-insight-value">
-                      {Math.round((getChartData().filter(p => p.selfScore > 0 && p.peerScore > 0).length / getChartData().length) * 100)}%
-                    </span>
-                  </div>
-            </div>
           </div>
         </div>
       )}
 
-          {/* Tabela de Participantes */}
-          {comparativeReport?.participants && (
-            <div className="participants-table-section">
-              <div className="participants-table-header">
-                <h3 className="participants-table-title">Participantes</h3>
-                <p className="participants-table-description">
-                  Lista de todos os participantes e suas pontuações
-                </p>
-              </div>
-              
-              <ResponsiveTable
-                columns={[
-                  {
-                    key: 'name',
-                    label: 'Participante',
-                    sortable: true,
-                    render: (value, participant) => (
-                      <div className="participant-info">
-                        <div className="participant-avatar">
-                          {participant.name.charAt(0).toUpperCase()}
-                        </div>
-                        <div className="participant-details">
-                          <p className="participant-name">{participant.name}</p>
-                          <p className="participant-code">{participant.code}</p>
-                        </div>
-                      </div>
-                    )
-                  },
-                  {
-                    key: 'email',
-                    label: 'Email',
-                    sortable: true,
-                    mobile: false,
-                    render: (value) => <span className="participant-email">{value || 'N/A'}</span>
-                  },
-                  {
-                    key: 'score',
-                    label: 'Pontuação',
-                    sortable: true,
-                    render: (value, participant) => {
-                      const score = Math.round((participant.self_awareness_score + participant.peer_perception_score) / 2);
-                      return (
-                        <div className="participant-score">
-                          <span className="participant-score-value">{score}</span>
-                          {getScoreBadge(score)}
-                        </div>
-                      );
-                    }
-                  },
-                  {
-                    key: 'self_score',
-                    label: 'Auto',
-                    sortable: true,
-                    mobile: false,
-                    render: (value, participant) => (
-                      <span className="participant-self-score">
-                        {Math.round(participant.self_awareness_score)}%
-                      </span>
-                    )
-                  },
-                  {
-                    key: 'peer_score',
-                    label: 'Pares',
-                    sortable: true,
-                    mobile: false,
-                    render: (value, participant) => (
-                      <span className="participant-peer-score">
-                        {Math.round(participant.peer_perception_score)}%
-                      </span>
-                    )
-                  },
-                  {
-                    key: 'status',
-                    label: 'Status',
-                    render: (value, participant) => (
-                      <span className={`participant-status ${participant.self_awareness_score > 0 && participant.peer_perception_score > 0 ? 'completed' : 'incomplete'}`}>
-                        {participant.self_awareness_score > 0 && participant.peer_perception_score > 0 ? 'Completo' : 'Incompleto'}
-                      </span>
-                    )
-                  },
-                  {
-                    key: 'actions',
-                    label: 'Ações',
-                    mobile: false,
-                    render: (value, participant) => (
-                      <div className="participant-actions">
-                        <Link
-                          to={`/report/${participant.code}`}
-                          className="participant-action-btn report"
-                          title="Ver relatório individual"
-                        >
-                          <FileText className="w-4 h-4" />
-                        </Link>
-                        <PDFExportButton
-                          type="individual"
-                          data={{
-                            title: `Relatório Individual - ${participant.name}`,
-                            subtitle: 'Análise de Autoconsciência e Desenvolvimento',
-                            participantName: participant.name,
-                            participantCode: participant.code,
-                            generatedAt: new Date(),
-                            content: `Relatório individual de ${participant.name} (${participant.code})\n\nPontuação Geral: ${Math.round((participant.self_awareness_score + participant.peer_perception_score) / 2)}%\nAutoavaliação: ${Math.round(participant.self_awareness_score)}%\nPercepção dos Pares: ${Math.round(participant.peer_perception_score)}%\n\nStatus: ${participant.self_awareness_score > 0 && participant.peer_perception_score > 0 ? 'Completo' : 'Incompleto'}`
-                          }}
-                          className="participant-action-btn download"
-                        >
-                          <Download className="w-4 h-4" />
-                        </PDFExportButton>
-                        <button
-                          className="participant-action-btn share"
-                          title="Compartilhar relatório"
-                        >
-                          <Share className="w-4 h-4" />
-                        </button>
-                      </div>
-                    )
-                  }
-                ]}
-                data={getFilteredParticipants()}
-                className="participants-table"
-                emptyMessage="Nenhum participante encontrado"
-              />
-            </div>
-          )}
-
-      {/* Score Legend */}
-      <div className="reports-score-legend">
-        <h3 className="reports-legend-title">Legenda de Pontuações</h3>
-        <div className="reports-legend-grid">
-          <div className="reports-legend-badge">
-            <span className="report-score-badge excellent">Excelente</span>
-            <span className="reports-legend-range">80-100%</span>
-          </div>
-          <div className="reports-legend-badge">
-            <span className="report-score-badge good">Bom</span>
-            <span className="reports-legend-range">60-79%</span>
-          </div>
-          <div className="reports-legend-badge">
-            <span className="report-score-badge average">Regular</span>
-            <span className="reports-legend-range">40-59%</span>
-          </div>
-          <div className="reports-legend-badge">
-            <span className="report-score-badge poor">Baixo</span>
-            <span className="reports-legend-range">0-39%</span>
-          </div>
+      {/* Participants Table */}
+      <div className="card">
+        <div className="card-header">
+          <h3 className="card-title">Análise de Performance</h3>
+          <p className="card-subtitle">Lista detalhada de participantes e pontuações</p>
         </div>
-        <p className="reports-legend-description">
-          Pontuação baseada na Área Aberta da Janela de Johari: consenso entre autopercepção e percepção dos pares
-        </p>
-      </div>
-
-          {/* Características Mais e Menos Selecionadas */}
-          {characteristicAnalysis && (
-            <div className="characteristics-analysis-section">
-              <div className="characteristics-analysis-header">
-                <h3 className="characteristics-analysis-title">Análise de Características</h3>
-                <p className="characteristics-analysis-description">
-                  Características mais e menos selecionadas pelos participantes
-                </p>
-              </div>
-              
-              <div className="characteristics-tables-grid">
-                {/* Características Mais Selecionadas */}
-                <div className="characteristics-table-card">
-                  <div className="characteristics-table-header">
-                    <h4 className="characteristics-table-title">Mais Selecionadas</h4>
-                    <span className="characteristics-table-count">
-                      {characteristicAnalysis.most_selected.length} características
-                    </span>
+        <div className="card-body" style={{ padding: 0 }}>
+          {!comparativeReport?.participants || filteredParticipants.length === 0 ? (
+            <div className="empty-state">
+              <FileText className="empty-state-icon" />
+              <h3 className="empty-state-title">Nenhum relatório disponível</h3>
+              <p className="empty-state-description">
+                Os relatórios serão gerados automaticamente quando as avaliações forem concluídas.
+              </p>
             </div>
-                  <div className="characteristics-table-content">
-                    <table className="characteristics-table">
+          ) : (
+            <div className="table-container">
+              <table className="table">
                 <thead>
                   <tr>
-                          <th>Característica</th>
-                          <th>Auto</th>
-                          <th>Pares</th>
-                          <th>Consenso</th>
+                    <th>Participante</th>
+                    <th>Pontuação</th>
+                    <th>Auto</th>
+                    <th>Pares</th>
+                    <th>Status</th>
+                    <th>Ações</th>
                   </tr>
                 </thead>
                 <tbody>
-                        {characteristicAnalysis.most_selected.map((char, index) => (
-                          <tr key={index}>
-                            <td className="characteristic-name">{char.name}</td>
-                            <td className="characteristic-value">{char.self_selections}</td>
-                            <td className="characteristic-value">{char.peer_selections}</td>
-                            <td className="characteristic-consensus">
-                              <span className="consensus-value">{char.consensus_selections}</span>
-                              <span className="consensus-percentage">({char.consensus_percentage}%)</span>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                  {filteredParticipants.map((participant: any) => {
+                    const score = Math.round((participant.self_awareness_score + participant.peer_perception_score) / 2);
+                    const isCompleted = participant.self_awareness_score > 0 && participant.peer_perception_score > 0;
+                    
+                    return (
+                      <tr key={participant.code}>
+                        <td>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
+                            <div style={{
+                              width: '40px',
+                              height: '40px',
+                              borderRadius: 'var(--radius-md)',
+                              background: 'linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%)',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              color: 'white',
+                              fontWeight: 600,
+                              fontSize: '0.875rem'
+                            }}>
+                              {participant.name.charAt(0).toUpperCase()}
+                            </div>
+                            <div>
+                              <div style={{ fontWeight: 500, color: 'var(--text-primary)' }}>{participant.name}</div>
+                              <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{participant.code}</div>
+                            </div>
                           </div>
-                        </div>
-
-                {/* Características Menos Selecionadas */}
-                <div className="characteristics-table-card">
-                  <div className="characteristics-table-header">
-                    <h4 className="characteristics-table-title">Menos Selecionadas</h4>
-                    <span className="characteristics-table-count">
-                      {characteristicAnalysis.least_selected.length} características
-                    </span>
-                        </div>
-                  <div className="characteristics-table-content">
-                    <table className="characteristics-table">
-                      <thead>
-                        <tr>
-                          <th>Característica</th>
-                          <th>Auto</th>
-                          <th>Pares</th>
-                          <th>Consenso</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {characteristicAnalysis.least_selected.map((char, index) => (
-                          <tr key={index}>
-                            <td className="characteristic-name">{char.name}</td>
-                            <td className="characteristic-value">{char.self_selections}</td>
-                            <td className="characteristic-value">{char.peer_selections}</td>
-                            <td className="characteristic-consensus">
-                              <span className="consensus-value">{char.consensus_selections}</span>
-                              <span className="consensus-percentage">({char.consensus_percentage}%)</span>
-                      </td>
-                    </tr>
-                  ))}
+                        </td>
+                        <td>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+                            <span style={{ fontWeight: 600, fontSize: '1rem', color: 'var(--text-primary)' }}>{score}%</span>
+                            {getScoreBadge(score)}
+                          </div>
+                        </td>
+                        <td style={{ color: 'var(--text-secondary)' }}>
+                          {Math.round(participant.self_awareness_score)}%
+                        </td>
+                        <td style={{ color: 'var(--text-secondary)' }}>
+                          {Math.round(participant.peer_perception_score)}%
+                        </td>
+                        <td>
+                          {isCompleted ? (
+                            <span className="badge badge-success">Completo</span>
+                          ) : (
+                            <span className="badge badge-warning">Incompleto</span>
+                          )}
+                        </td>
+                        <td>
+                          <div className="action-buttons">
+                            <Link
+                              to={`/report/${participant.code}`}
+                              className="action-btn"
+                              title="Ver relatório individual"
+                            >
+                              <FileText className="w-4 h-4" />
+                            </Link>
+                            <PDFExportButton
+                              type="individual"
+                              data={{
+                                title: `Relatório Individual - ${participant.name}`,
+                                subtitle: 'Análise de Autoconsciência',
+                                participantName: participant.name,
+                                participantCode: participant.code,
+                                generatedAt: new Date(),
+                                content: `Relatório de ${participant.name}\n\nPontuação: ${score}%\nAuto: ${Math.round(participant.self_awareness_score)}%\nPeer: ${Math.round(participant.peer_perception_score)}%`
+                              }}
+                              className="action-btn"
+                            >
+                              <Download className="w-4 h-4" />
+                            </PDFExportButton>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
-                  </div>
-                </div>
-              </div>
             </div>
           )}
         </div>
       </div>
+
+      {/* Characteristics Analysis */}
+      {characteristicAnalysis && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: 'var(--space-6)', marginTop: 'var(--space-6)' }}>
+          {/* Most Selected */}
+          <div className="card">
+            <div className="card-header">
+              <h3 className="card-title">Mais Selecionadas</h3>
+              <p className="card-subtitle">{characteristicAnalysis.most_selected.length} características</p>
+            </div>
+            <div className="card-body" style={{ padding: 0 }}>
+              <div className="table-container">
+                <table className="table">
+                  <thead>
+                    <tr>
+                      <th>Característica</th>
+                      <th>Auto</th>
+                      <th>Pares</th>
+                      <th>Consenso</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {characteristicAnalysis.most_selected.slice(0, 5).map((char: any, index: number) => (
+                      <tr key={index}>
+                        <td style={{ fontWeight: 500 }}>{char.name}</td>
+                        <td>{char.self_selections}</td>
+                        <td>{char.peer_selections}</td>
+                        <td>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+                            <span style={{ fontWeight: 600 }}>{char.consensus_selections}</span>
+                            <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                              ({char.consensus_percentage}%)
+                            </span>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          {/* Least Selected */}
+          <div className="card">
+            <div className="card-header">
+              <h3 className="card-title">Menos Selecionadas</h3>
+              <p className="card-subtitle">{characteristicAnalysis.least_selected.length} características</p>
+            </div>
+            <div className="card-body" style={{ padding: 0 }}>
+              <div className="table-container">
+                <table className="table">
+                  <thead>
+                    <tr>
+                      <th>Característica</th>
+                      <th>Auto</th>
+                      <th>Pares</th>
+                      <th>Consenso</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {characteristicAnalysis.least_selected.slice(0, 5).map((char: any, index: number) => (
+                      <tr key={index}>
+                        <td style={{ fontWeight: 500 }}>{char.name}</td>
+                        <td>{char.self_selections}</td>
+                        <td>{char.peer_selections}</td>
+                        <td>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+                            <span style={{ fontWeight: 600 }}>{char.consensus_selections}</span>
+                            <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                              ({char.consensus_percentage}%)
+                            </span>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

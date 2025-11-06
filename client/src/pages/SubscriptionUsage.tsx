@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Users, FileText, Download, TrendingUp, AlertCircle, CheckCircle, Crown, Star } from 'lucide-react';
+import { Users, FileText, Download, TrendingUp, AlertCircle, CheckCircle, Crown, Star, Zap } from 'lucide-react';
 import { subscriptionService, UsageInfo } from '../services/subscriptionService';
-import '../styles/subscription-usage.css';
+import { Link } from 'react-router-dom';
+import '../styles/design-system.css';
 
 const SubscriptionUsage: React.FC = () => {
   const [usage, setUsage] = useState<UsageInfo | null>(null);
@@ -35,230 +36,289 @@ const SubscriptionUsage: React.FC = () => {
     return 'good';
   };
 
-  const getPlanIcon = (planType: string) => {
+  const getPlanName = (planType: string) => {
     switch (planType) {
-      case 'free':
-        return <Users className="w-6 h-6 text-gray-600" />;
-      case 'professional':
-        return <Star className="w-6 h-6 text-blue-600" />;
-      case 'enterprise':
-        return <Crown className="w-6 h-6 text-purple-600" />;
-      default:
-        return <Users className="w-6 h-6 text-gray-600" />;
+      case 'free': return 'Plano Gratuito';
+      case 'professional': return 'Plano Profissional';
+      case 'enterprise': return 'Plano Empresarial';
+      default: return 'Plano';
     }
   };
 
   if (loading) {
     return (
-      <div className="subscription-usage-loading">
+      <div className="loading-container">
         <div className="loading-spinner"></div>
-        <p>Carregando informações de uso...</p>
+        <p className="loading-text">Carregando informações de uso...</p>
       </div>
     );
   }
 
   if (!usage) {
     return (
-      <div className="subscription-usage-error">
-        <AlertCircle className="w-12 h-12 text-red-500" />
-        <h3>Erro ao carregar dados</h3>
-        <p>Não foi possível carregar as informações de uso.</p>
+      <div className="page-container">
+        <div className="empty-state">
+          <AlertCircle className="empty-state-icon" style={{ color: 'var(--color-error)' }} />
+          <h3 className="empty-state-title">Erro ao carregar dados</h3>
+          <p className="empty-state-description">Não foi possível carregar as informações de uso.</p>
+        </div>
       </div>
     );
   }
 
+  const participantsStatus = getUsageStatus(usage.current_participants, usage.limits.max_participants);
+  const assessmentsStatus = getUsageStatus(usage.usage.assessments_completed, usage.limits.max_assessments_per_month);
+
   return (
-    <div className="subscription-usage">
-      <div className="usage-header">
-        <div className="usage-title">
-          <h1>Uso da Assinatura</h1>
-          <div className="plan-badge">
-            {getPlanIcon(usage.plan_type)}
-            <span className="plan-name">
-              {usage.plan_type === 'free' && 'Plano Gratuito'}
-              {usage.plan_type === 'professional' && 'Plano Profissional'}
-              {usage.plan_type === 'enterprise' && 'Plano Empresarial'}
-            </span>
+    <div className="page-container">
+      {/* Page Header */}
+      <div className="page-header">
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 'var(--space-4)' }}>
+          <div>
+            <h1 className="page-title">Uso da Assinatura</h1>
+            <p className="page-subtitle">Monitore o uso do seu plano atual</p>
+          </div>
+          <Link to="/app/plans" className="btn btn-primary">
+            <Zap className="w-4 h-4" />
+            Gerenciar Plano
+          </Link>
+        </div>
+      </div>
+
+      {/* Plan Info Card */}
+      <div className="card" style={{ marginBottom: 'var(--space-6)' }}>
+        <div className="card-header">
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
+            <div className="stat-icon" style={{ 
+              background: usage.plan_type === 'enterprise' 
+                ? 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)'
+                : usage.plan_type === 'professional'
+                ? 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)'
+                : 'linear-gradient(135deg, #6b7280 0%, #4b5563 100%)'
+            }}>
+              {usage.plan_type === 'enterprise' ? (
+                <Crown className="w-6 h-6" />
+              ) : usage.plan_type === 'professional' ? (
+                <Star className="w-6 h-6" />
+              ) : (
+                <Users className="w-6 h-6" />
+              )}
+            </div>
+            <div>
+              <h3 className="card-title">{getPlanName(usage.plan_type)}</h3>
+              <p className="card-subtitle">Plano ativo</p>
+            </div>
           </div>
         </div>
       </div>
 
-      <div className="usage-stats">
-        <div className="stat-card participants">
+      {/* Usage Stats */}
+      <div className="stats-grid">
+        <div className="stat-card">
           <div className="stat-header">
             <div className="stat-icon">
               <Users className="w-6 h-6" />
             </div>
-            <div className="stat-title">
-              <h3>Participantes</h3>
-              <p>Criados este mês</p>
-            </div>
-          </div>
-          <div className="stat-content">
-            <div className="stat-numbers">
-              <span className="current">{usage.current_participants}</span>
-              <span className="separator">/</span>
-              <span className="limit">
-                {usage.limits.max_participants === -1 ? '∞' : usage.limits.max_participants}
-              </span>
-            </div>
-            <div className="stat-bar">
-              <div 
-                className={`stat-progress ${getUsageStatus(usage.current_participants, usage.limits.max_participants)}`}
-                style={{ 
-                  width: `${getUsagePercentage(usage.current_participants, usage.limits.max_participants)}%` 
-                }}
-              />
-            </div>
-            <div className="stat-status">
-              {usage.limits.max_participants === -1 ? (
-                <div className="status-unlimited">
-                  <CheckCircle className="w-4 h-4" />
-                  <span>Ilimitado</span>
-                </div>
-              ) : (
-                <div className={`status-${getUsageStatus(usage.current_participants, usage.limits.max_participants)}`}>
-                  {getUsageStatus(usage.current_participants, usage.limits.max_participants) === 'critical' && <AlertCircle className="w-4 h-4" />}
-                  {getUsageStatus(usage.current_participants, usage.limits.max_participants) === 'warning' && <AlertCircle className="w-4 h-4" />}
-                  {getUsageStatus(usage.current_participants, usage.limits.max_participants) === 'good' && <CheckCircle className="w-4 h-4" />}
-                  <span>
-                    {usage.limits.max_participants - usage.current_participants} restantes
-                  </span>
+            <div className="stat-content">
+              <p className="stat-value">{usage.current_participants}</p>
+              <p className="stat-label">
+                {usage.limits.max_participants === -1 
+                  ? 'Ilimitado' 
+                  : `de ${usage.limits.max_participants} participantes`
+                }
+              </p>
+              {usage.limits.max_participants !== -1 && (
+                <div className="stat-change" style={{ 
+                  color: participantsStatus === 'critical' ? 'var(--color-error)' : 
+                         participantsStatus === 'warning' ? 'var(--color-warning)' : 
+                         'var(--color-success)' 
+                }}>
+                  <TrendingUp className="w-4 h-4" />
+                  {getUsagePercentage(usage.current_participants, usage.limits.max_participants).toFixed(0)}% usado
                 </div>
               )}
             </div>
           </div>
+          <div style={{ marginTop: 'var(--space-4)' }}>
+            <div style={{ 
+              width: '100%', 
+              height: '8px', 
+              backgroundColor: 'var(--bg-gray-200)', 
+              borderRadius: 'var(--radius-full)',
+              overflow: 'hidden'
+            }}>
+              <div style={{ 
+                width: `${getUsagePercentage(usage.current_participants, usage.limits.max_participants)}%`,
+                height: '100%',
+                background: participantsStatus === 'critical' 
+                  ? 'linear-gradient(90deg, #ef4444 0%, #dc2626 100%)'
+                  : participantsStatus === 'warning'
+                  ? 'linear-gradient(90deg, #f59e0b 0%, #d97706 100%)'
+                  : 'linear-gradient(90deg, #10b981 0%, #059669 100%)',
+                transition: 'width 0.3s ease'
+              }}></div>
+            </div>
+          </div>
         </div>
 
-        <div className="stat-card assessments">
+        <div className="stat-card">
           <div className="stat-header">
-            <div className="stat-icon">
+            <div className="stat-icon" style={{ background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)' }}>
               <FileText className="w-6 h-6" />
             </div>
-            <div className="stat-title">
-              <h3>Avaliações</h3>
-              <p>Completadas este mês</p>
-            </div>
-          </div>
-          <div className="stat-content">
-            <div className="stat-numbers">
-              <span className="current">{usage.usage.assessments_completed}</span>
-              <span className="separator">/</span>
-              <span className="limit">
-                {usage.limits.max_assessments_per_month === -1 ? '∞' : usage.limits.max_assessments_per_month}
-              </span>
-            </div>
-            <div className="stat-bar">
-              <div 
-                className={`stat-progress ${getUsageStatus(usage.usage.assessments_completed, usage.limits.max_assessments_per_month)}`}
-                style={{ 
-                  width: `${getUsagePercentage(usage.usage.assessments_completed, usage.limits.max_assessments_per_month)}%` 
-                }}
-              />
-            </div>
-            <div className="stat-status">
-              {usage.limits.max_assessments_per_month === -1 ? (
-                <div className="status-unlimited">
-                  <CheckCircle className="w-4 h-4" />
-                  <span>Ilimitado</span>
-                </div>
-              ) : (
-                <div className={`status-${getUsageStatus(usage.usage.assessments_completed, usage.limits.max_assessments_per_month)}`}>
-                  {getUsageStatus(usage.usage.assessments_completed, usage.limits.max_assessments_per_month) === 'critical' && <AlertCircle className="w-4 h-4" />}
-                  {getUsageStatus(usage.usage.assessments_completed, usage.limits.max_assessments_per_month) === 'warning' && <AlertCircle className="w-4 h-4" />}
-                  {getUsageStatus(usage.usage.assessments_completed, usage.limits.max_assessments_per_month) === 'good' && <CheckCircle className="w-4 h-4" />}
-                  <span>
-                    {usage.limits.max_assessments_per_month - usage.usage.assessments_completed} restantes
-                  </span>
+            <div className="stat-content">
+              <p className="stat-value">{usage.usage.assessments_completed}</p>
+              <p className="stat-label">
+                {usage.limits.max_assessments_per_month === -1 
+                  ? 'Ilimitado' 
+                  : `de ${usage.limits.max_assessments_per_month} avaliações/mês`
+                }
+              </p>
+              {usage.limits.max_assessments_per_month !== -1 && (
+                <div className="stat-change" style={{ 
+                  color: assessmentsStatus === 'critical' ? 'var(--color-error)' : 
+                         assessmentsStatus === 'warning' ? 'var(--color-warning)' : 
+                         'var(--color-success)' 
+                }}>
+                  <TrendingUp className="w-4 h-4" />
+                  {getUsagePercentage(usage.usage.assessments_completed, usage.limits.max_assessments_per_month).toFixed(0)}% usado
                 </div>
               )}
             </div>
           </div>
-        </div>
-
-        <div className="stat-card reports">
-          <div className="stat-header">
-            <div className="stat-icon">
-              <Download className="w-6 h-6" />
-            </div>
-            <div className="stat-title">
-              <h3>Relatórios</h3>
-              <p>Gerados este mês</p>
+          <div style={{ marginTop: 'var(--space-4)' }}>
+            <div style={{ 
+              width: '100%', 
+              height: '8px', 
+              backgroundColor: 'var(--bg-gray-200)', 
+              borderRadius: 'var(--radius-full)',
+              overflow: 'hidden'
+            }}>
+              <div style={{ 
+                width: `${getUsagePercentage(usage.usage.assessments_completed, usage.limits.max_assessments_per_month)}%`,
+                height: '100%',
+                background: assessmentsStatus === 'critical' 
+                  ? 'linear-gradient(90deg, #ef4444 0%, #dc2626 100%)'
+                  : assessmentsStatus === 'warning'
+                  ? 'linear-gradient(90deg, #f59e0b 0%, #d97706 100%)'
+                  : 'linear-gradient(90deg, #8b5cf6 0%, #7c3aed 100%)',
+                transition: 'width 0.3s ease'
+              }}></div>
             </div>
           </div>
-          <div className="stat-content">
-            <div className="stat-numbers">
-              <span className="current">{usage.usage.reports_generated}</span>
-              <span className="separator">/</span>
-              <span className="limit">∞</span>
+        </div>
+
+        <div className="stat-card">
+          <div className="stat-header">
+            <div className="stat-icon" style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)' }}>
+              <Download className="w-6 h-6" />
             </div>
-            <div className="stat-bar">
-              <div className="stat-progress unlimited" style={{ width: '100%' }} />
-            </div>
-            <div className="stat-status">
-              <div className="status-unlimited">
+            <div className="stat-content">
+              <p className="stat-value">{usage.usage.reports_generated}</p>
+              <p className="stat-label">Relatórios gerados</p>
+              <div className="stat-change" style={{ color: 'var(--color-success)' }}>
                 <CheckCircle className="w-4 h-4" />
-                <span>Ilimitado</span>
+                {usage.limits.can_export ? 'Exportação habilitada' : 'Exportação desabilitada'}
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="features-overview">
-        <h2>Recursos do Seu Plano</h2>
-        <div className="features-grid">
-          <div className={`feature-item ${usage.limits.can_export ? 'enabled' : 'disabled'}`}>
-            <Download className="w-5 h-5" />
-            <span>Exportação de Relatórios</span>
-            {usage.limits.can_export ? (
-              <CheckCircle className="w-4 h-4 text-green-500" />
-            ) : (
-              <AlertCircle className="w-4 h-4 text-red-500" />
-            )}
-          </div>
-          
-          <div className={`feature-item ${usage.limits.can_use_api ? 'enabled' : 'disabled'}`}>
-            <TrendingUp className="w-5 h-5" />
-            <span>Acesso à API</span>
-            {usage.limits.can_use_api ? (
-              <CheckCircle className="w-4 h-4 text-green-500" />
-            ) : (
-              <AlertCircle className="w-4 h-4 text-red-500" />
-            )}
-          </div>
-          
-          <div className={`feature-item ${usage.limits.can_white_label ? 'enabled' : 'disabled'}`}>
-            <Crown className="w-5 h-5" />
-            <span>White-label</span>
-            {usage.limits.can_white_label ? (
-              <CheckCircle className="w-4 h-4 text-green-500" />
-            ) : (
-              <AlertCircle className="w-4 h-4 text-red-500" />
-            )}
-          </div>
-          
-          <div className={`feature-item ${usage.limits.has_priority_support ? 'enabled' : 'disabled'}`}>
-            <Users className="w-5 h-5" />
-            <span>Suporte Prioritário</span>
-            {usage.limits.has_priority_support ? (
-              <CheckCircle className="w-4 h-4 text-green-500" />
-            ) : (
-              <AlertCircle className="w-4 h-4 text-red-500" />
-            )}
+      {/* Features Card */}
+      <div className="card" style={{ marginTop: 'var(--space-6)' }}>
+        <div className="card-header">
+          <h3 className="card-title">Recursos do Plano</h3>
+          <p className="card-subtitle">Funcionalidades disponíveis no seu plano atual</p>
+        </div>
+        <div className="card-body">
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 'var(--space-4)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', padding: 'var(--space-3)', background: 'var(--bg-gray-50)', borderRadius: 'var(--radius-md)' }}>
+              <div style={{ 
+                width: '32px', 
+                height: '32px', 
+                borderRadius: 'var(--radius-md)', 
+                background: usage.limits.can_export ? 'var(--color-success-light)' : 'var(--bg-gray-200)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: usage.limits.can_export ? 'var(--color-success)' : 'var(--text-tertiary)'
+              }}>
+                {usage.limits.can_export ? <CheckCircle className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
+              </div>
+              <div>
+                <div style={{ fontWeight: 600, fontSize: '0.875rem', color: 'var(--text-primary)' }}>Exportação PDF/Excel</div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                  {usage.limits.can_export ? 'Disponível' : 'Não disponível'}
+                </div>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', padding: 'var(--space-3)', background: 'var(--bg-gray-50)', borderRadius: 'var(--radius-md)' }}>
+              <div style={{ 
+                width: '32px', 
+                height: '32px', 
+                borderRadius: 'var(--radius-md)', 
+                background: usage.limits.can_use_api ? 'var(--color-success-light)' : 'var(--bg-gray-200)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: usage.limits.can_use_api ? 'var(--color-success)' : 'var(--text-tertiary)'
+              }}>
+                {usage.limits.can_use_api ? <CheckCircle className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
+              </div>
+              <div>
+                <div style={{ fontWeight: 600, fontSize: '0.875rem', color: 'var(--text-primary)' }}>API Access</div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                  {usage.limits.can_use_api ? 'Disponível' : 'Não disponível'}
+                </div>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', padding: 'var(--space-3)', background: 'var(--bg-gray-50)', borderRadius: 'var(--radius-md)' }}>
+              <div style={{ 
+                width: '32px', 
+                height: '32px', 
+                borderRadius: 'var(--radius-md)', 
+                background: usage.limits.can_white_label ? 'var(--color-success-light)' : 'var(--bg-gray-200)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: usage.limits.can_white_label ? 'var(--color-success)' : 'var(--text-tertiary)'
+              }}>
+                {usage.limits.can_white_label ? <CheckCircle className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
+              </div>
+              <div>
+                <div style={{ fontWeight: 600, fontSize: '0.875rem', color: 'var(--text-primary)' }}>White Label</div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                  {usage.limits.can_white_label ? 'Disponível' : 'Não disponível'}
+                </div>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', padding: 'var(--space-3)', background: 'var(--bg-gray-50)', borderRadius: 'var(--radius-md)' }}>
+              <div style={{ 
+                width: '32px', 
+                height: '32px', 
+                borderRadius: 'var(--radius-md)', 
+                background: usage.limits.has_priority_support ? 'var(--color-success-light)' : 'var(--bg-gray-200)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: usage.limits.has_priority_support ? 'var(--color-success)' : 'var(--text-tertiary)'
+              }}>
+                {usage.limits.has_priority_support ? <CheckCircle className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
+              </div>
+              <div>
+                <div style={{ fontWeight: 600, fontSize: '0.875rem', color: 'var(--text-primary)' }}>Suporte Prioritário</div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                  {usage.limits.has_priority_support ? 'Disponível' : 'Não disponível'}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
-
-      {usage.plan_type === 'free' && (
-        <div className="upgrade-cta">
-          <h3>Quer mais recursos?</h3>
-          <p>Atualize para um plano superior e desbloqueie mais funcionalidades!</p>
-          <button className="upgrade-btn">
-            Ver Planos Disponíveis
-          </button>
-        </div>
-      )}
     </div>
   );
 };

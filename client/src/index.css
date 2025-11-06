@@ -1,4 +1,5 @@
-/* Import responsive design system */
+/* Import design system and responsive */
+@import './styles/design-system.css';
 @import './styles/responsive.css';
 
 * {
