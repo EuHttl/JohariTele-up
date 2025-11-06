@@ -10,9 +10,19 @@ const PaymentResult: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [subscription, setSubscription] = useState<any>(null);
 
+  const isSuccess = searchParams.get('success') === 'true';
+  const isCanceled = searchParams.get('canceled') === 'true';
+
   useEffect(() => {
     checkPaymentStatus();
   }, []);
+
+  useEffect(() => {
+    // Caso padrão - redirecionar para planos se não for success nem canceled
+    if (!loading && !isSuccess && !isCanceled) {
+      navigate('/app/plans');
+    }
+  }, [loading, isSuccess, isCanceled, navigate]);
 
   const checkPaymentStatus = async () => {
     try {
@@ -29,9 +39,6 @@ const PaymentResult: React.FC = () => {
       setLoading(false);
     }
   };
-
-  const isSuccess = searchParams.get('success') === 'true';
-  const isCanceled = searchParams.get('canceled') === 'true';
 
   if (loading) {
     return (
@@ -129,11 +136,6 @@ const PaymentResult: React.FC = () => {
       </div>
     );
   }
-
-  // Caso padrão - redirecionar para planos
-  useEffect(() => {
-    navigate('/app/plans');
-  }, [navigate]);
 
   return null;
 };

@@ -53,7 +53,7 @@ const SubscriptionPlans: React.FC = () => {
   };
 
   const handleCancel = async () => {
-    if (!confirm('Tem certeza que deseja cancelar sua assinatura? Você perderá acesso aos recursos premium.')) {
+    if (!window.confirm('Tem certeza que deseja cancelar sua assinatura? Você perderá acesso aos recursos premium.')) {
       return;
     }
 
