@@ -88,6 +88,7 @@
   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
   gap: 2rem;
   margin-bottom: 3rem;
+  align-items: stretch;
 }
 
 .plan-card {
@@ -98,6 +99,9 @@
   transition: all 0.3s ease;
   position: relative;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
 .plan-card:hover {
@@ -115,8 +119,12 @@
 }
 
 .plan-card.enterprise {
-  border-color: #8b5cf6;
-  background: linear-gradient(135deg, #faf5ff 0%, #ffffff 100%);
+  background: linear-gradient(135deg, #6b21a8 0%, #7c3aed 50%, #8b5cf6 100%);
+  border: 2px solid rgba(139, 92, 246, 0.5);
+  color: white;
+  box-shadow: 0 0 30px rgba(139, 92, 246, 0.3), 
+              0 10px 40px rgba(139, 92, 246, 0.2),
+              inset 0 0 20px rgba(255, 255, 255, 0.1);
 }
 
 .plan-card.enterprise::before {
@@ -125,14 +133,37 @@
   top: 0;
   left: 0;
   right: 0;
-  height: 4px;
-  background: linear-gradient(90deg, #8b5cf6, #a855f7, #c084fc);
+  bottom: 0;
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.1) 0%, 
+    rgba(255, 255, 255, 0.05) 50%, 
+    transparent 100%);
+  pointer-events: none;
+  border-radius: 16px;
+}
+
+.plan-card.enterprise::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+  animation: shimmer 3s infinite;
+  pointer-events: none;
+}
+
+@keyframes shimmer {
+  0% { transform: translate(-50%, -50%) rotate(0deg); }
+  100% { transform: translate(-50%, -50%) rotate(360deg); }
 }
 
 .plan-header {
   text-align: center;
   margin-bottom: 2rem;
   position: relative;
+  z-index: 1;
 }
 
 .plan-icon {
@@ -151,7 +182,12 @@
 }
 
 .plan-card.enterprise .plan-icon {
-  background: #faf5ff;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
+}
+
+.plan-card.enterprise .plan-icon svg {
+  color: rgba(255, 255, 255, 0.9) !important;
 }
 
 .plan-header h3 {
@@ -159,6 +195,10 @@
   font-weight: 700;
   color: #1f2937;
   margin-bottom: 0.5rem;
+}
+
+.plan-card.enterprise .plan-header h3 {
+  color: white;
 }
 
 .current-badge {
@@ -171,11 +211,20 @@
   padding: 0.25rem 0.75rem;
   border-radius: 12px;
   font-weight: 600;
+  z-index: 2;
+}
+
+.plan-card.enterprise .current-badge {
+  background: rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 .plan-pricing {
   text-align: center;
   margin-bottom: 2rem;
+  position: relative;
+  z-index: 1;
 }
 
 .price {
@@ -199,6 +248,12 @@
   line-height: 1;
 }
 
+.plan-card.enterprise .amount,
+.plan-card.enterprise .currency,
+.plan-card.enterprise .period {
+  color: white;
+}
+
 .period {
   font-size: 1rem;
   font-weight: 500;
@@ -211,8 +266,14 @@
   font-weight: 600;
 }
 
+.plan-card.enterprise .savings {
+  color: rgba(255, 255, 255, 0.9);
+}
+
 .plan-features {
   margin-bottom: 2rem;
+  position: relative;
+  z-index: 1;
 }
 
 .plan-features ul {
@@ -243,14 +304,28 @@
   flex-shrink: 0;
 }
 
+.plan-card.enterprise .feature-icon {
+  color: rgba(255, 255, 255, 0.9);
+}
+
 .plan-features span {
   font-size: 0.875rem;
   color: #374151;
   line-height: 1.4;
 }
 
+.plan-card.enterprise .plan-features span {
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.plan-card.enterprise .plan-features li {
+  border-bottom-color: rgba(255, 255, 255, 0.1);
+}
+
 .plan-actions {
   margin-top: auto;
+  position: relative;
+  z-index: 1;
 }
 
 .plan-btn {
@@ -265,13 +340,27 @@
 }
 
 .upgrade-btn {
-  background: #8b5cf6;
-  color: white;
+  background: transparent;
+  color: #8b5cf6;
+  border: 2px solid #8b5cf6;
 }
 
 .upgrade-btn:hover:not(:disabled) {
-  background: #7c3aed;
+  background: #8b5cf6;
+  color: white;
   transform: translateY(-1px);
+}
+
+.plan-card.enterprise .upgrade-btn {
+  border-color: rgba(255, 255, 255, 0.3);
+  color: white;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+}
+
+.plan-card.enterprise .upgrade-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.5);
 }
 
 .upgrade-btn:disabled {
@@ -284,12 +373,26 @@
   background: #f3f4f6;
   color: #6b7280;
   cursor: default;
+  border: 2px solid transparent;
+}
+
+.plan-card.enterprise .current-btn {
+  background: rgba(255, 255, 255, 0.15);
+  color: white;
+  border-color: rgba(255, 255, 255, 0.3);
 }
 
 .disabled-btn {
   background: #f9fafb;
   color: #9ca3af;
   cursor: not-allowed;
+  border: 2px solid transparent;
+}
+
+.plan-card.enterprise .disabled-btn {
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.5);
+  border-color: rgba(255, 255, 255, 0.2);
 }
 
 .current-subscription-info {

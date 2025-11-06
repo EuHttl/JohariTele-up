@@ -8,7 +8,7 @@ const SubscriptionPlans: React.FC = () => {
   const [currentSubscription, setCurrentSubscription] = useState<BillingInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
-  const [upgrading, setUpgrading] = useState<number | null>(null);
+  const [upgrading, setUpgrading] = useState<number | string | null>(null);
 
   useEffect(() => {
     loadData();
@@ -31,18 +31,19 @@ const SubscriptionPlans: React.FC = () => {
     }
   };
 
-  const handleUpgrade = async (planId: number) => {
+  const handleUpgrade = async (planId: number | string) => {
     try {
-      setUpgrading(planId);
+      setUpgrading(Number(planId));
       
       // Se for plano gratuito, fazer upgrade direto
-      if (planId === 1) {
-        await subscriptionService.upgradePlan(planId, billingCycle);
+      const plan = plans.find(p => p.id === planId || Number(p.id) === Number(planId));
+      if (plan?.type === 'free') {
+        await subscriptionService.upgradePlan(Number(planId), billingCycle);
         await loadData();
         alert('Plano atualizado com sucesso!');
       } else {
         // Para planos pagos, redirecionar para Stripe
-        await subscriptionService.upgradePlan(planId, billingCycle);
+        await subscriptionService.upgradePlan(Number(planId), billingCycle);
         // O redirecionamento acontece automaticamente no serviço
       }
     } catch (error: any) {
@@ -201,9 +202,9 @@ const SubscriptionPlans: React.FC = () => {
                   <button
                     className="plan-btn upgrade-btn"
                     onClick={() => handleUpgrade(plan.id)}
-                    disabled={upgrading === plan.id}
+                    disabled={upgrading === plan.id || Number(upgrading) === Number(plan.id)}
                   >
-                    {upgrading === plan.id ? 'Atualizando...' : 'Escolher Plano'}
+                    {(upgrading === plan.id || Number(upgrading) === Number(plan.id)) ? 'Atualizando...' : 'Escolher Plano'}
                   </button>
                 ) : (
                   <button className="plan-btn disabled-btn" disabled>
