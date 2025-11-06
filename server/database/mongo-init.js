@@ -371,25 +371,53 @@ const Subscription = mongoose.model('Subscription', SubscriptionSchema);
 const UsageTracking = mongoose.model('UsageTracking', UsageTrackingSchema);
 
 let isConnected = false;
+let connectionPromise = null;
+
+// Função para garantir conexão
+async function ensureConnection() {
+  // Se já está conectado, retornar
+  if (mongoose.connection.readyState === 1) {
+    isConnected = true;
+    return;
+  }
+  
+  // Se já existe uma promise de conexão em andamento, aguardar ela
+  if (connectionPromise) {
+    await connectionPromise;
+    return;
+  }
+  
+  // Criar nova conexão
+  const mongoUri = process.env.MONGODB_URI || process.env.DATABASE_URL;
+  if (!mongoUri) {
+    throw new Error('MONGODB_URI ou DATABASE_URL não configurado');
+  }
+  
+  connectionPromise = mongoose.connect(mongoUri, {
+    serverSelectionTimeoutMS: 30000, // 30 segundos
+    socketTimeoutMS: 45000,
+  });
+  
+  try {
+    await connectionPromise;
+    isConnected = true;
+    console.log('✅ Conectado ao MongoDB com sucesso');
+  } catch (error) {
+    connectionPromise = null;
+    throw error;
+  }
+}
 
 async function initializeDatabase() {
   console.log('🗄️  Inicializando banco MongoDB...');
   
   try {
-    // Conectar ao MongoDB
-    const mongoUri = process.env.MONGODB_URI || process.env.DATABASE_URL;
+    // Garantir conexão antes de qualquer operação
+    await ensureConnection();
     
-    if (!mongoUri) {
-      throw new Error('MONGODB_URI ou DATABASE_URL não configurado');
-    }
-    
-    if (!isConnected) {
-      await mongoose.connect(mongoUri, {
-        useNewUrlParser: true,
-        useUnifiedTopology: true
-      });
-      isConnected = true;
-      console.log('✅ Conectado ao MongoDB com sucesso');
+    // Aguardar um pouco para garantir que a conexão está estável
+    if (mongoose.connection.readyState !== 1) {
+      throw new Error('Conexão com MongoDB não estabelecida');
     }
     
     // Verificar se existe administrador
@@ -499,20 +527,6 @@ async function initializeDatabase() {
   }
 }
 
-// Função para garantir conexão
-async function ensureConnection() {
-  if (!isConnected) {
-    const mongoUri = process.env.MONGODB_URI || process.env.DATABASE_URL;
-    if (!mongoUri) {
-      throw new Error('MONGODB_URI ou DATABASE_URL não configurado');
-    }
-    await mongoose.connect(mongoUri, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true
-    });
-    isConnected = true;
-  }
-}
 
 // Wrapper para compatibilidade com código existente
 const db = {

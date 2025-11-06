@@ -6,15 +6,14 @@ const { checkSubscriptionLimits, updateUsageTracking } = require('../middleware/
 const mongoose = require('mongoose');
 
 // Detectar qual banco usar
-let mongoModels;
+let mongoModels, mongoInit;
 let useMongo = false;
 let db;
 
 if (process.env.MONGODB_URI || (process.env.DATABASE_URL && process.env.DATABASE_URL.startsWith('mongodb'))) {
   useMongo = true;
-  const mongoInit = require('../database/mongo-init');
+  mongoInit = require('../database/mongo-init');
   mongoModels = mongoInit.models;
-  mongoInit.ensureConnection();
 } else if (process.env.DATABASE_URL && process.env.DATABASE_URL.startsWith('postgres')) {
   const postgresInit = require('../database/postgres-init');
   db = postgresInit.db;
@@ -71,6 +70,7 @@ router.get('/', requireAdminAuth, async (req, res) => {
   try {
     if (useMongo && mongoModels) {
       // MongoDB
+      await mongoInit.ensureConnection();
       const adminId = new mongoose.Types.ObjectId(req.admin.id);
       const participants = await mongoModels.Participant.find({ admin_id: adminId })
         .select('name email code has_completed_self_assessment has_completed_peer_assessments created_at')
@@ -141,6 +141,7 @@ router.get('/:code', requireAdminAuth, async (req, res) => {
   try {
     if (useMongo && mongoModels) {
       // MongoDB
+      await mongoInit.ensureConnection();
       const adminId = new mongoose.Types.ObjectId(req.admin.id);
       const participant = await mongoModels.Participant.findOne({ 
         code: code, 
@@ -229,6 +230,7 @@ router.post('/',
   try {
     if (useMongo && mongoModels) {
       // MongoDB
+      await mongoInit.ensureConnection();
       const adminId = new mongoose.Types.ObjectId(req.admin.id);
       
       // Verificar se já existe participante com esse email para este admin
@@ -385,6 +387,7 @@ router.put('/:id', requireAdminAuth, async (req, res) => {
   try {
     if (useMongo && mongoModels) {
       // MongoDB
+      await mongoInit.ensureConnection();
       const adminId = new mongoose.Types.ObjectId(req.admin.id);
       const participantId = new mongoose.Types.ObjectId(id);
       
@@ -446,6 +449,7 @@ router.delete('/:id', requireAdminAuth, async (req, res) => {
   try {
     if (useMongo && mongoModels) {
       // MongoDB
+      await mongoInit.ensureConnection();
       const adminId = new mongoose.Types.ObjectId(req.admin.id);
       const participantId = new mongoose.Types.ObjectId(id);
       
@@ -516,6 +520,7 @@ router.get('/stats/overview', requireAdminAuth, async (req, res) => {
   try {
     if (useMongo && mongoModels) {
       // MongoDB
+      await mongoInit.ensureConnection();
       const adminId = new mongoose.Types.ObjectId(req.admin.id);
       
       const stats = await mongoModels.Participant.aggregate([

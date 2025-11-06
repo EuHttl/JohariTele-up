@@ -4,14 +4,13 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
 // Detectar qual banco usar
-let mongoModels;
+let mongoModels, mongoInit;
 let useMongo = false;
 
 if (process.env.MONGODB_URI || (process.env.DATABASE_URL && process.env.DATABASE_URL.startsWith('mongodb'))) {
   useMongo = true;
-  const mongoInit = require('../database/mongo-init');
+  mongoInit = require('../database/mongo-init');
   mongoModels = mongoInit.models;
-  mongoInit.ensureConnection();
 } else if (process.env.DATABASE_URL && process.env.DATABASE_URL.startsWith('postgres')) {
   // PostgreSQL - manter código original
   const postgresInit = require('../database/postgres-init');
@@ -99,6 +98,9 @@ router.post('/login', async (req, res) => {
       console.log('🔍 Usando MongoDB para login...');
       
       try {
+        // Garantir conexão antes de operações
+        await mongoInit.ensureConnection();
+        
         // Buscar admin
         const admin = await mongoModels.Admin.findOne({ email: sanitizedEmail });
         
@@ -416,6 +418,9 @@ router.post('/register', async (req, res) => {
       console.log('🔍 Usando MongoDB para registro...');
       
       try {
+        // Garantir conexão antes de operações
+        await mongoInit.ensureConnection();
+        
         // Verificar se email já existe
         const existingAdmin = await mongoModels.Admin.findOne({ email: sanitizedEmail });
         

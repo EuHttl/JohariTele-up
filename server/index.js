@@ -6,8 +6,9 @@ const rateLimit = require('express-rate-limit');
 require('dotenv').config();
 
 // Usar MongoDB se MONGODB_URI ou DATABASE_URL estiver disponível
-let db, initializeDatabase, mongoModels;
+let db, initializeDatabase, mongoModels, useMongo = false;
 if (process.env.MONGODB_URI || (process.env.DATABASE_URL && process.env.DATABASE_URL.startsWith('mongodb'))) {
+  useMongo = true;
   console.log('🗄️ Usando MongoDB');
   const mongoInit = require('./database/mongo-init');
   db = mongoInit.db;
@@ -325,14 +326,22 @@ if (process.env.NODE_ENV === 'production') {
 console.log('🗄️ Iniciando servidor...');
 try {
   if (initializeDatabase && typeof initializeDatabase === 'function') {
-    // Verificar se é uma Promise (PostgreSQL) ou função síncrona (SQLite)
+    // Verificar se é uma Promise (MongoDB/PostgreSQL) ou função síncrona (SQLite)
     const result = initializeDatabase();
     if (result && typeof result.then === 'function') {
-      // PostgreSQL - retorna Promise
+      // MongoDB ou PostgreSQL - retorna Promise
       result.then(() => {
-        console.log('✅ Banco PostgreSQL inicializado com sucesso');
+        if (useMongo) {
+          console.log('✅ Banco MongoDB inicializado com sucesso');
+        } else {
+          console.log('✅ Banco PostgreSQL inicializado com sucesso');
+        }
       }).catch(error => {
-        console.error('❌ Erro na inicialização do banco PostgreSQL:', error.message);
+        if (useMongo) {
+          console.error('❌ Erro na inicialização do banco MongoDB:', error.message);
+        } else {
+          console.error('❌ Erro na inicialização do banco PostgreSQL:', error.message);
+        }
       });
     } else {
       // SQLite - função síncrona
