@@ -94,7 +94,7 @@ router.post('/create-checkout-session', authenticateToken, async (req, res) => {
     }
     
     if (!plan) {
-      console.error(`Plano não encontrado: plan_id=${plan_id}, billing_cycle=${billing_cycle}`);
+      console.error(`Plano não encontrado: plan_id=${plan_id}, billing_cycle=${billing_cycle}, tipo=${typeof plan_id}`);
       return res.status(404).json({ error: 'Plano não encontrado' });
     }
 
@@ -108,6 +108,9 @@ router.post('/create-checkout-session', authenticateToken, async (req, res) => {
     }
     
     const priceInCents = Math.round(price * 100);
+    
+    // Usar o _id do plano encontrado (MongoDB) ou id (SQL)
+    const actualPlanId = useMongo && mongoModels ? plan._id.toString() : plan.id.toString();
 
     // Criar sessão do Stripe
     const session = await stripe.checkout.sessions.create({
@@ -129,7 +132,7 @@ router.post('/create-checkout-session', authenticateToken, async (req, res) => {
       cancel_url: `${process.env.FRONTEND_URL || 'https://johari-tele-up.vercel.app'}/app/plans?canceled=true`,
       metadata: {
         admin_id: req.admin.id.toString(),
-        plan_id: plan_id.toString(),
+        plan_id: actualPlanId,
         billing_cycle: billing_cycle
       },
       customer_email: req.admin.email

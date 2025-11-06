@@ -33,22 +33,33 @@ const SubscriptionPlans: React.FC = () => {
 
   const handleUpgrade = async (planId: number | string) => {
     try {
-      setUpgrading(Number(planId));
+      setUpgrading(planId);
+      
+      // Encontrar o plano - pode ser ObjectId string ou número
+      const plan = plans.find(p => {
+        const pId = String(p.id);
+        const searchId = String(planId);
+        return pId === searchId || Number(pId) === Number(searchId);
+      });
+      
+      if (!plan) {
+        throw new Error('Plano não encontrado');
+      }
       
       // Se for plano gratuito, fazer upgrade direto
-      const plan = plans.find(p => p.id === planId || Number(p.id) === Number(planId));
-      if (plan?.type === 'free') {
-        await subscriptionService.upgradePlan(Number(planId), billingCycle);
+      if (plan.type === 'free') {
+        await subscriptionService.upgradePlan(plan.id, billingCycle);
         await loadData();
         alert('Plano atualizado com sucesso!');
       } else {
         // Para planos pagos, redirecionar para Stripe
-        await subscriptionService.upgradePlan(Number(planId), billingCycle);
+        await subscriptionService.upgradePlan(plan.id, billingCycle);
         // O redirecionamento acontece automaticamente no serviço
       }
     } catch (error: any) {
       console.error('Erro ao atualizar plano:', error);
-      alert(error.response?.data?.message || 'Erro ao atualizar plano');
+      const errorMessage = error.response?.data?.error || error.response?.data?.message || error.message || 'Erro ao atualizar plano';
+      alert(errorMessage);
       setUpgrading(null);
     }
   };
@@ -96,19 +107,25 @@ const SubscriptionPlans: React.FC = () => {
   };
 
   const isCurrentPlan = (plan: SubscriptionPlan) => {
-    return currentSubscription?.subscription?.plan_id === plan.id;
+    if (!currentSubscription?.subscription?.plan_id) return false;
+    const currentPlanId = String(currentSubscription.subscription.plan_id);
+    const planId = String(plan.id);
+    return currentPlanId === planId || Number(currentPlanId) === Number(planId);
   };
 
   const canUpgrade = (plan: SubscriptionPlan) => {
     if (!currentSubscription?.subscription) return true;
-    const currentPlanId = currentSubscription.subscription.plan_id;
-    const currentPlan = plans.find(p => p.id === currentPlanId);
+    const currentPlanId = String(currentSubscription.subscription.plan_id);
+    const currentPlan = plans.find(p => {
+      const pId = String(p.id);
+      return pId === currentPlanId || Number(pId) === Number(currentPlanId);
+    });
     
     if (!currentPlan) return true;
     
     // Lógica de upgrade: free < professional < enterprise
-    const planOrder = { free: 0, professional: 1, enterprise: 2 };
-    return planOrder[plan.type] > planOrder[currentPlan.type];
+    const planOrder: Record<string, number> = { free: 0, professional: 1, enterprise: 2 };
+    return (planOrder[plan.type] || 0) > (planOrder[currentPlan.type] || 0);
   };
 
   if (loading) {
@@ -202,9 +219,9 @@ const SubscriptionPlans: React.FC = () => {
                   <button
                     className="plan-btn upgrade-btn"
                     onClick={() => handleUpgrade(plan.id)}
-                    disabled={upgrading === plan.id || Number(upgrading) === Number(plan.id)}
+                    disabled={String(upgrading) === String(plan.id)}
                   >
-                    {(upgrading === plan.id || Number(upgrading) === Number(plan.id)) ? 'Atualizando...' : 'Escolher Plano'}
+                    {String(upgrading) === String(plan.id) ? 'Atualizando...' : 'Escolher Plano'}
                   </button>
                 ) : (
                   <button className="plan-btn disabled-btn" disabled>

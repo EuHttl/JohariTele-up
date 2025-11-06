@@ -108,12 +108,15 @@ class SubscriptionService {
   /**
    * Atualizar plano de assinatura (com pagamento)
    */
-  async upgradePlan(planId: number, billingCycle: 'monthly' | 'yearly'): Promise<any> {
+  async upgradePlan(planId: number | string, billingCycle: 'monthly' | 'yearly'): Promise<any> {
     try {
-      // Se for plano gratuito, usar método direto
-      if (planId === 1) {
+      // Converter planId para string se necessário (pode ser ObjectId)
+      const planIdStr = String(planId);
+      
+      // Se for plano gratuito (ID 1 ou tipo 'free'), usar método direto
+      if (planId === 1 || planIdStr === '1') {
         const response = await api.post('/subscriptions/upgrade', {
-          plan_id: planId,
+          plan_id: planIdStr,
           billing_cycle: billingCycle
         });
         return response.data;
@@ -121,16 +124,23 @@ class SubscriptionService {
 
       // Para planos pagos, criar sessão de checkout
       const response = await api.post('/payments/create-checkout-session', {
-        plan_id: planId,
+        plan_id: planIdStr,
         billing_cycle: billingCycle
       });
       
-      // Redirecionar para checkout do Stripe
-      window.location.href = response.data.url;
+      // Verificar se a resposta tem URL
+      if (response.data && response.data.url) {
+        // Redirecionar para checkout do Stripe
+        window.location.href = response.data.url;
+      }
       
       return response.data;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao atualizar plano:', error);
+      // Re-throw com mensagem mais clara
+      if (error.response?.data?.error) {
+        throw new Error(error.response.data.error);
+      }
       throw error;
     }
   }
