@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Check, Crown, Star, Zap, Users, FileText, Download, Api, Headphones } from 'lucide-react';
+import { Check, Crown, Star, Zap, Users, FileText, Download, Code, Headphones } from 'lucide-react';
 import { subscriptionService, SubscriptionPlan, BillingInfo } from '../services/subscriptionService';
 import '../styles/subscription-plans.css';
 
@@ -88,7 +88,7 @@ const SubscriptionPlans: React.FC = () => {
     if (feature.includes('participantes')) return <Users className="w-4 h-4" />;
     if (feature.includes('avaliação')) return <FileText className="w-4 h-4" />;
     if (feature.includes('Exportação') || feature.includes('PDF')) return <Download className="w-4 h-4" />;
-    if (feature.includes('API')) return <Api className="w-4 h-4" />;
+    if (feature.includes('API')) return <Code className="w-4 h-4" />;
     if (feature.includes('Suporte')) return <Headphones className="w-4 h-4" />;
     if (feature.includes('White-label')) return <Zap className="w-4 h-4" />;
     return <Check className="w-4 h-4" />;
