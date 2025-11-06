@@ -30,6 +30,7 @@ app.set('trust proxy', 1);
 const allowedOrigins = [
   'https://johari.vercel.app',
   'https://johari-git-master.vercel.app',
+  'https://johari-tele-up.vercel.app',
   'http://localhost:3000', // Para desenvolvimento local
   'http://localhost:3001'  // Para desenvolvimento local alternativo
 ];
