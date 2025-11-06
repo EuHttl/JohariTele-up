@@ -393,9 +393,15 @@ async function ensureConnection() {
     throw new Error('MONGODB_URI ou DATABASE_URL não configurado');
   }
   
+  // Para MongoDB Atlas, a string de conexão já inclui SSL
+  // Não precisamos adicionar opções SSL manualmente se a URI já tiver
   connectionPromise = mongoose.connect(mongoUri, {
     serverSelectionTimeoutMS: 30000, // 30 segundos
     socketTimeoutMS: 45000,
+    retryWrites: true,
+    w: 'majority',
+    // MongoDB Atlas usa TLS por padrão, não precisamos configurar manualmente
+    // A string de conexão já deve incluir ?tls=true ou similar
   });
   
   try {
@@ -404,6 +410,17 @@ async function ensureConnection() {
     console.log('✅ Conectado ao MongoDB com sucesso');
   } catch (error) {
     connectionPromise = null;
+    console.error('❌ Erro ao conectar ao MongoDB:', error.message);
+    
+    // Mensagens de erro mais úteis
+    if (error.message.includes('IP') || error.message.includes('whitelist')) {
+      console.error('💡 DICA: Verifique se o IP do servidor está na whitelist do MongoDB Atlas');
+      console.error('   Acesse: https://www.mongodb.com/docs/atlas/security-whitelist/');
+    }
+    if (error.message.includes('SSL') || error.message.includes('TLS')) {
+      console.error('💡 DICA: Verifique se a string de conexão está correta e inclui SSL/TLS');
+    }
+    
     throw error;
   }
 }
@@ -416,9 +433,18 @@ async function initializeDatabase() {
     await ensureConnection();
     
     // Aguardar um pouco para garantir que a conexão está estável
-    if (mongoose.connection.readyState !== 1) {
-      throw new Error('Conexão com MongoDB não estabelecida');
+    // Verificar estado da conexão várias vezes
+    let retries = 0;
+    while (mongoose.connection.readyState !== 1 && retries < 10) {
+      await new Promise(resolve => setTimeout(resolve, 500));
+      retries++;
     }
+    
+    if (mongoose.connection.readyState !== 1) {
+      throw new Error('Conexão com MongoDB não estabelecida após múltiplas tentativas');
+    }
+    
+    console.log('✅ Conexão MongoDB verificada e estável');
     
     // Verificar se existe administrador
     const adminCount = await Admin.countDocuments();
