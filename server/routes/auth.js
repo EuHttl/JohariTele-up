@@ -3,17 +3,26 @@ const router = express.Router();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
-// Usar banco dinâmico (PostgreSQL ou SQLite)
-let db;
-if (process.env.DATABASE_URL) {
+// Detectar qual banco usar
+let mongoModels;
+let useMongo = false;
+
+if (process.env.MONGODB_URI || (process.env.DATABASE_URL && process.env.DATABASE_URL.startsWith('mongodb'))) {
+  useMongo = true;
+  const mongoInit = require('../database/mongo-init');
+  mongoModels = mongoInit.models;
+  mongoInit.ensureConnection();
+} else if (process.env.DATABASE_URL && process.env.DATABASE_URL.startsWith('postgres')) {
+  // PostgreSQL - manter código original
   const postgresInit = require('../database/postgres-init');
   db = postgresInit.db;
 } else {
+  // SQLite - manter código original
   const sqliteInit = require('../database/init');
   db = sqliteInit.db;
 }
 
-// Pool de conexões PostgreSQL reutilizável
+// Pool de conexões PostgreSQL reutilizável (para fallback)
 let postgresPool = null;
 
 function getPostgresPool() {
@@ -30,7 +39,7 @@ function getPostgresPool() {
   return postgresPool;
 }
 
-// Função para executar query PostgreSQL diretamente
+// Função para executar query PostgreSQL diretamente (fallback)
 async function queryPostgres(sql, params = []) {
   if (!process.env.DATABASE_URL) {
     throw new Error('PostgreSQL não configurado');
@@ -42,7 +51,7 @@ async function queryPostgres(sql, params = []) {
     const client = await pool.connect();
     const result = await client.query(sql, params);
     client.release();
-    return result; // Retorna o resultado completo com rows
+    return result;
   } catch (error) {
     console.error('Erro na query PostgreSQL:', error);
     throw error;
@@ -85,51 +94,141 @@ router.post('/login', async (req, res) => {
     const sanitizedEmail = email.toLowerCase().trim();
     const sanitizedPassword = password.trim();
     
-    // Usar PostgreSQL diretamente se disponível
-    if (process.env.DATABASE_URL) {
+    // Usar MongoDB se disponível
+    if (useMongo && mongoModels) {
+      console.log('🔍 Usando MongoDB para login...');
+      
+      try {
+        // Buscar admin
+        const admin = await mongoModels.Admin.findOne({ email: sanitizedEmail });
+        
+        if (admin) {
+          console.log('✅ Admin encontrado, verificando senha...');
+          const isMatch = bcrypt.compareSync(sanitizedPassword, admin.password);
+          
+          if (!isMatch) {
+            return res.status(401).json({ error: 'Credenciais inválidas' });
+          }
+          
+          // Gerar token JWT para admin
+          const token = jwt.sign(
+            {
+              id: admin._id.toString(),
+              username: admin.username,
+              email: admin.email,
+              name: admin.name,
+              role: 'admin'
+            },
+            JWT_SECRET,
+            { expiresIn: '24h' }
+          );
+          
+          console.log('🎉 Admin login successful!');
+          return res.json({
+            token,
+            user: {
+              id: admin._id.toString(),
+              username: admin.username,
+              email: admin.email,
+              name: admin.name,
+              role: 'admin'
+            },
+            message: 'Login realizado com sucesso'
+          });
+        }
+        
+        // Se não é admin, tenta como participante
+        console.log('🔍 Admin não encontrado, verificando participante...');
+        const participant = await mongoModels.Participant.findOne({ email: sanitizedEmail });
+        
+        if (!participant) {
+          console.log('❌ Participante não encontrado');
+          return res.status(401).json({ error: 'Credenciais inválidas' });
+        }
+        
+        const isMatch = bcrypt.compareSync(sanitizedPassword, participant.password);
+        
+        if (!isMatch) {
+          return res.status(401).json({ error: 'Credenciais inválidas' });
+        }
+        
+        // Gerar token JWT para participante
+        const token = jwt.sign(
+          {
+            id: participant._id.toString(),
+            email: participant.email,
+            name: participant.name,
+            code: participant.code,
+            role: 'participant'
+          },
+          JWT_SECRET,
+          { expiresIn: '24h' }
+        );
+        
+        console.log('🎉 Participant login successful!');
+        return res.json({
+          token,
+          user: {
+            id: participant._id.toString(),
+            email: participant.email,
+            name: participant.name,
+            code: participant.code,
+            role: 'participant'
+          },
+          message: 'Login realizado com sucesso'
+        });
+        
+      } catch (error) {
+        console.error('❌ Erro no login MongoDB:', error);
+        return res.status(500).json({ error: 'Erro interno do servidor' });
+      }
+    }
+    
+    // Fallback para PostgreSQL
+    if (process.env.DATABASE_URL && process.env.DATABASE_URL.startsWith('postgres')) {
       console.log('🔍 Usando PostgreSQL diretamente...');
       
       try {
         // Buscar admin
         const adminResult = await queryPostgres('SELECT id, username, email, password, name FROM admins WHERE email = $1', [sanitizedEmail]);
         
-      if (adminResult && adminResult.rows && adminResult.rows.length > 0) {
+        if (adminResult && adminResult.rows && adminResult.rows.length > 0) {
           const admin = adminResult.rows[0];
           console.log('✅ Admin encontrado, verificando senha...');
-        const isMatch = bcrypt.compareSync(sanitizedPassword, admin.password);
-        
-        if (!isMatch) {
-          return res.status(401).json({ error: 'Credenciais inválidas' });
+          const isMatch = bcrypt.compareSync(sanitizedPassword, admin.password);
+          
+          if (!isMatch) {
+            return res.status(401).json({ error: 'Credenciais inválidas' });
+          }
+          
+          // Gerar token JWT para admin
+          const token = jwt.sign(
+            {
+              id: admin.id,
+              username: admin.username,
+              email: admin.email,
+              name: admin.name,
+              role: 'admin'
+            },
+            JWT_SECRET,
+            { expiresIn: '24h' }
+          );
+          
+          console.log('🎉 Admin login successful!');
+          return res.json({
+            token,
+            user: {
+              id: admin.id,
+              username: admin.username,
+              email: admin.email,
+              name: admin.name,
+              role: 'admin'
+            },
+            message: 'Login realizado com sucesso'
+          });
         }
         
-        // Gerar token JWT para admin
-        const token = jwt.sign(
-          {
-            id: admin.id,
-            username: admin.username,
-            email: admin.email,
-            name: admin.name,
-            role: 'admin'
-          },
-          JWT_SECRET,
-          { expiresIn: '24h' }
-        );
-        
-        console.log('🎉 Admin login successful!');
-        return res.json({
-          token,
-          user: {
-            id: admin.id,
-            username: admin.username,
-            email: admin.email,
-            name: admin.name,
-            role: 'admin'
-          },
-          message: 'Login realizado com sucesso'
-        });
-      }
-      
-      // Se não é admin, tenta como participante
+        // Se não é admin, tenta como participante
         console.log('🔍 Admin não encontrado, verificando participante...');
         const participantResult = await queryPostgres('SELECT id, name, email, code, password FROM participants WHERE email = $1', [sanitizedEmail]);
         
@@ -179,64 +278,13 @@ router.post('/login', async (req, res) => {
     
     // Fallback para SQLite (desenvolvimento)
     console.log('🔍 Usando SQLite (desenvolvimento)...');
+    const sqliteInit = require('../database/init');
+    const db = sqliteInit.db;
     const adminSql = 'SELECT id, username, email, password, name FROM admins WHERE email = ?';
     
     db.get(adminSql, [email], (err, admin) => {
-      
       if (err) {
         console.error('❌ Erro no login (admin):', err);
-        
-        // Tratar erro específico de coluna não encontrada
-        if (err.code === '42703') {
-          console.log('🔄 Tentando login sem coluna email...');
-          const adminSqlFallback = 'SELECT id, username, password, name FROM admins WHERE username = $1';
-          db.get(adminSqlFallback, [email], (err2, admin2) => {
-            if (err2) {
-              console.error('❌ Erro no login fallback:', err2);
-              return res.status(500).json({ error: 'Erro interno do servidor' });
-            }
-            
-            if (admin2) {
-              console.log('✅ Admin encontrado via username');
-              // Continuar com o processo de login usando admin2
-              const isMatch = bcrypt.compareSync(password, admin2.password);
-              if (!isMatch) {
-                console.log('❌ Admin password mismatch');
-                return res.status(401).json({ error: 'Credenciais inválidas' });
-              }
-              
-              const token = jwt.sign(
-                {
-                  id: admin2.id,
-                  username: admin2.username,
-                  email: email, // Usar o email fornecido
-                  name: admin2.name,
-                  role: 'admin'
-                },
-                JWT_SECRET,
-                { expiresIn: '24h' }
-              );
-              
-              console.log('🎉 Admin login successful!');
-              return res.json({
-                token,
-                user: {
-                  id: admin2.id,
-                  username: admin2.username,
-                  email: email,
-                  name: admin2.name,
-                  role: 'admin'
-                },
-                message: 'Login realizado com sucesso'
-              });
-            } else {
-              // Continuar para verificar como participante
-              checkParticipant();
-            }
-          });
-          return;
-        }
-        
         return res.status(500).json({ error: 'Erro interno do servidor' });
       }
       
@@ -275,7 +323,7 @@ router.post('/login', async (req, res) => {
       }
       
       // Se não é admin, tenta como participante
-      const participantSql = 'SELECT id, name, email, code, password FROM participants WHERE email = $1';
+      const participantSql = 'SELECT id, name, email, code, password FROM participants WHERE email = ?';
       
       db.get(participantSql, [email], (err, participant) => {
         if (err) {
@@ -325,53 +373,6 @@ router.post('/login', async (req, res) => {
     console.log(`⏱️ Login falhou após ${duration}ms`);
     res.status(500).json({ error: 'Erro interno do servidor' });
   }
-  
-  // Função para verificar participante
-  function checkParticipant() {
-    const participantSql = 'SELECT id, name, email, code, password FROM participants WHERE email = $1';
-    
-    db.get(participantSql, [email], (err, participant) => {
-      if (err) {
-        console.error('Erro no login (participant):', err);
-        return res.status(500).json({ error: 'Erro interno do servidor' });
-      }
-      
-      if (!participant) {
-        return res.status(401).json({ error: 'Credenciais inválidas' });
-      }
-      
-      const isMatch = bcrypt.compareSync(password, participant.password);
-      
-      if (!isMatch) {
-        return res.status(401).json({ error: 'Credenciais inválidas' });
-      }
-      
-      // Gerar token JWT para participante
-      const token = jwt.sign(
-        {
-          id: participant.id,
-          email: participant.email,
-          name: participant.name,
-          code: participant.code,
-          role: 'participant'
-        },
-        JWT_SECRET,
-        { expiresIn: '24h' }
-      );
-      
-      res.json({
-        token,
-        user: {
-          id: participant.id,
-          email: participant.email,
-          name: participant.name,
-          code: participant.code,
-          role: 'participant'
-        },
-        message: 'Login realizado com sucesso'
-      });
-    });
-  }
 });
 
 // POST /api/auth/register - Registro de novo administrador
@@ -410,8 +411,71 @@ router.post('/register', async (req, res) => {
     const sanitizedName = name.trim();
     const sanitizedPassword = password.trim();
     
-    // Usar PostgreSQL diretamente se disponível
-    if (process.env.DATABASE_URL) {
+    // Usar MongoDB se disponível
+    if (useMongo && mongoModels) {
+      console.log('🔍 Usando MongoDB para registro...');
+      
+      try {
+        // Verificar se email já existe
+        const existingAdmin = await mongoModels.Admin.findOne({ email: sanitizedEmail });
+        
+        if (existingAdmin) {
+          console.log('❌ Register failed: email already exists');
+          return res.status(400).json({ error: 'Email já está em uso' });
+        }
+        
+        // Hash da senha
+        const hashedPassword = bcrypt.hashSync(sanitizedPassword, 10);
+        
+        // Gerar username único baseado no email
+        const username = sanitizedEmail.split('@')[0] + '_' + Date.now().toString().slice(-4);
+        
+        // Criar admin
+        const newAdmin = await mongoModels.Admin.create({
+          username,
+          email: sanitizedEmail,
+          password: hashedPassword,
+          name: sanitizedName
+        });
+        
+        console.log('✅ Admin registrado com sucesso:', { id: newAdmin._id.toString(), email: newAdmin.email });
+        
+        // Gerar token JWT para o novo admin
+        const token = jwt.sign(
+          {
+            id: newAdmin._id.toString(),
+            username: newAdmin.username,
+            email: newAdmin.email,
+            name: newAdmin.name,
+            role: 'admin'
+          },
+          JWT_SECRET,
+          { expiresIn: '24h' }
+        );
+        
+        return res.status(201).json({
+          token,
+          user: {
+            id: newAdmin._id.toString(),
+            username: newAdmin.username,
+            email: newAdmin.email,
+            name: newAdmin.name,
+            role: 'admin'
+          },
+          message: 'Administrador registrado com sucesso'
+        });
+        
+      } catch (error) {
+        console.error('❌ Erro no registro MongoDB:', error);
+        if (error.code === 11000) {
+          return res.status(400).json({ error: 'Email ou username já está em uso' });
+        }
+        return res.status(500).json({ error: 'Erro interno do servidor' });
+      }
+    }
+    
+    // Fallback para PostgreSQL
+    if (process.env.DATABASE_URL && process.env.DATABASE_URL.startsWith('postgres')) {
       console.log('🔍 Usando PostgreSQL para registro...');
       
       try {
@@ -473,6 +537,8 @@ router.post('/register', async (req, res) => {
     
     // Fallback para SQLite (desenvolvimento)
     console.log('🔍 Usando SQLite para registro...');
+    const sqliteInit = require('../database/init');
+    const db = sqliteInit.db;
     
     // Verificar se email já existe
     db.get('SELECT id FROM admins WHERE email = ?', [sanitizedEmail], (err, existingAdmin) => {

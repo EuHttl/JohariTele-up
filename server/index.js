@@ -5,9 +5,15 @@ const path = require('path');
 const rateLimit = require('express-rate-limit');
 require('dotenv').config();
 
-// Usar PostgreSQL se DATABASE_URL estiver disponível, senão SQLite
-let db, initializeDatabase;
-if (process.env.DATABASE_URL) {
+// Usar MongoDB se MONGODB_URI ou DATABASE_URL estiver disponível
+let db, initializeDatabase, mongoModels;
+if (process.env.MONGODB_URI || (process.env.DATABASE_URL && process.env.DATABASE_URL.startsWith('mongodb'))) {
+  console.log('🗄️ Usando MongoDB');
+  const mongoInit = require('./database/mongo-init');
+  db = mongoInit.db;
+  initializeDatabase = mongoInit.initializeDatabase;
+  mongoModels = mongoInit.models;
+} else if (process.env.DATABASE_URL && process.env.DATABASE_URL.startsWith('postgres')) {
   console.log('🗄️ Usando PostgreSQL (Railway)');
   const postgresInit = require('./database/postgres-init');
   db = postgresInit.db;

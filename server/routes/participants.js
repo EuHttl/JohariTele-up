@@ -3,12 +3,27 @@ const router = express.Router();
 const { v4: uuidv4 } = require('uuid');
 const { requireAdminAuth, getAdminIdFromToken } = require('../middleware/adminAuth');
 const { checkSubscriptionLimits, updateUsageTracking } = require('../middleware/subscriptionLimits');
+const mongoose = require('mongoose');
 
-// Usar apenas PostgreSQL
-const postgresInit = require('../database/postgres-init');
-const db = postgresInit.db;
+// Detectar qual banco usar
+let mongoModels;
+let useMongo = false;
+let db;
 
-// Função para executar query PostgreSQL diretamente
+if (process.env.MONGODB_URI || (process.env.DATABASE_URL && process.env.DATABASE_URL.startsWith('mongodb'))) {
+  useMongo = true;
+  const mongoInit = require('../database/mongo-init');
+  mongoModels = mongoInit.models;
+  mongoInit.ensureConnection();
+} else if (process.env.DATABASE_URL && process.env.DATABASE_URL.startsWith('postgres')) {
+  const postgresInit = require('../database/postgres-init');
+  db = postgresInit.db;
+} else {
+  const sqliteInit = require('../database/init');
+  db = sqliteInit.db;
+}
+
+// Função para executar query PostgreSQL diretamente (fallback)
 async function queryPostgres(sql, params = []) {
   if (!process.env.DATABASE_URL) {
     throw new Error('PostgreSQL não configurado');
@@ -32,13 +47,50 @@ async function queryPostgres(sql, params = []) {
   }
 }
 
+// Função auxiliar para converter ObjectId para string
+function convertToResponse(doc) {
+  if (!doc) return null;
+  if (Array.isArray(doc)) {
+    return doc.map(d => convertToResponse(d));
+  }
+  const obj = doc.toObject ? doc.toObject() : doc;
+  if (obj._id) {
+    obj.id = obj._id.toString();
+    delete obj._id;
+  }
+  if (obj.admin_id && obj.admin_id.toString) {
+    obj.admin_id = obj.admin_id.toString();
+  }
+  return obj;
+}
+
 // GET /api/participants - Listar participantes do admin logado
 router.get('/', requireAdminAuth, async (req, res) => {
   console.log('📊 GET /api/participants - Buscando participantes do admin:', req.admin.id);
   
   try {
-    if (process.env.DATABASE_URL && process.env.NODE_ENV === 'production') {
-      // Usar PostgreSQL diretamente apenas em produção
+    if (useMongo && mongoModels) {
+      // MongoDB
+      const adminId = new mongoose.Types.ObjectId(req.admin.id);
+      const participants = await mongoModels.Participant.find({ admin_id: adminId })
+        .select('name email code has_completed_self_assessment has_completed_peer_assessments created_at')
+        .sort({ name: 1 })
+        .lean();
+      
+      const formatted = participants.map(p => ({
+        id: p._id.toString(),
+        name: p.name,
+        email: p.email,
+        code: p.code,
+        has_completed_self_assessment: p.has_completed_self_assessment,
+        has_completed_peer_assessments: p.has_completed_peer_assessments,
+        created_at: p.created_at
+      }));
+      
+      console.log('📊 Participantes encontrados:', formatted.length);
+      res.json(formatted);
+    } else if (process.env.DATABASE_URL && process.env.DATABASE_URL.startsWith('postgres')) {
+      // PostgreSQL
       const result = await queryPostgres(`
         SELECT 
           id, name, email, code, 
@@ -51,10 +103,9 @@ router.get('/', requireAdminAuth, async (req, res) => {
       `, [req.admin.id]);
       
       console.log('📊 Participantes encontrados:', result.rows?.length || 0);
-      console.log('📊 Primeiro participante:', result.rows?.[0] || 'Nenhum');
       res.json(result.rows || []);
     } else {
-      // Fallback para SQLite
+      // SQLite
       const query = `
         SELECT 
           id, name, email, code, 
@@ -72,7 +123,6 @@ router.get('/', requireAdminAuth, async (req, res) => {
           return res.status(500).json({ error: 'Erro interno do servidor' });
         }
         console.log('📊 Participantes encontrados:', rows?.length || 0);
-        console.log('📊 Primeiro participante:', rows?.[0] || 'Nenhum');
         res.json(rows || []);
       });
     }
@@ -89,8 +139,30 @@ router.get('/:code', requireAdminAuth, async (req, res) => {
   console.log('🔍 GET /api/participants/:code - Buscando participante por código:', code, 'para admin:', req.admin.id);
   
   try {
-    if (process.env.DATABASE_URL && process.env.NODE_ENV === 'production') {
-      // Usar PostgreSQL diretamente apenas em produção
+    if (useMongo && mongoModels) {
+      // MongoDB
+      const adminId = new mongoose.Types.ObjectId(req.admin.id);
+      const participant = await mongoModels.Participant.findOne({ 
+        code: code, 
+        admin_id: adminId 
+      }).lean();
+      
+      if (!participant) {
+        console.log('❌ Participante não encontrado no MongoDB para este admin');
+        return res.status(404).json({ error: 'Participante não encontrado' });
+      }
+      
+      console.log('✅ Participante encontrado no MongoDB:', participant);
+      res.json({
+        id: participant._id.toString(),
+        name: participant.name,
+        email: participant.email,
+        code: participant.code,
+        has_completed_self_assessment: participant.has_completed_self_assessment,
+        has_completed_peer_assessments: participant.has_completed_peer_assessments
+      });
+    } else if (process.env.DATABASE_URL && process.env.DATABASE_URL.startsWith('postgres')) {
+      // PostgreSQL
       const result = await queryPostgres(`
         SELECT 
           id, name, email, code,
@@ -100,8 +172,6 @@ router.get('/:code', requireAdminAuth, async (req, res) => {
         WHERE code = $1 AND admin_id = $2
       `, [code, req.admin.id]);
       
-      console.log('🔍 Resultado da busca PostgreSQL:', result.rows?.length || 0, 'participantes encontrados');
-      
       if (!result.rows || result.rows.length === 0) {
         console.log('❌ Participante não encontrado no PostgreSQL para este admin');
         return res.status(404).json({ error: 'Participante não encontrado' });
@@ -110,7 +180,7 @@ router.get('/:code', requireAdminAuth, async (req, res) => {
       console.log('✅ Participante encontrado no PostgreSQL:', result.rows[0]);
       res.json(result.rows[0]);
     } else {
-      // Fallback para SQLite
+      // SQLite
       const query = `
         SELECT 
           id, name, email, code,
@@ -125,8 +195,6 @@ router.get('/:code', requireAdminAuth, async (req, res) => {
           console.error('Erro ao buscar participante:', err);
           return res.status(500).json({ error: 'Erro interno do servidor' });
         }
-        
-        console.log('🔍 Resultado da busca SQLite:', row ? 'encontrado' : 'não encontrado');
         
         if (!row) {
           console.log('❌ Participante não encontrado no SQLite para este admin');
@@ -159,17 +227,69 @@ router.post('/',
   }
 
   try {
-    if (process.env.DATABASE_URL && process.env.NODE_ENV === 'production') {
-      // Usar PostgreSQL diretamente apenas em produção
+    if (useMongo && mongoModels) {
+      // MongoDB
+      const adminId = new mongoose.Types.ObjectId(req.admin.id);
       
+      // Verificar se já existe participante com esse email para este admin
+      const existingUser = await mongoModels.Participant.findOne({ 
+        email: email, 
+        admin_id: adminId 
+      });
+      
+      if (existingUser) {
+        return res.status(400).json({ error: 'Email já cadastrado para sua organização' });
+      }
+
+      // Gerar código único
+      const code = uuidv4().substring(0, 8).toUpperCase();
+      const password = code; // Senha igual ao código em maiúsculo
+      
+      // Hash da senha
+      const bcrypt = require('bcryptjs');
+      const hashedPassword = bcrypt.hashSync(password, 10);
+      
+      // Criar participante
+      const newParticipant = await mongoModels.Participant.create({
+        admin_id: adminId,
+        name,
+        email,
+        code,
+        password: hashedPassword,
+        has_completed_self_assessment: false,
+        has_completed_peer_assessments: false
+      });
+      
+      console.log('✅ Participante criado com sucesso:', { 
+        id: newParticipant._id.toString(), 
+        name, 
+        email, 
+        code 
+      });
+      
+      // Atualizar tracking de uso
+      const updateUsage = updateUsageTracking('participant_created');
+      updateUsage(req, res, () => {
+        res.status(201).json({
+          id: newParticipant._id.toString(),
+          name,
+          email,
+          code,
+          password: code, // Senha igual ao código em maiúsculo
+          has_completed_self_assessment: false,
+          has_completed_peer_assessments: false,
+          created_at: newParticipant.created_at,
+          message: 'Participante criado com sucesso'
+        });
+      });
+    } else if (process.env.DATABASE_URL && process.env.DATABASE_URL.startsWith('postgres')) {
+      // PostgreSQL
       // Verificar se já existe participante com esse email para este admin
       const existingUser = await queryPostgres('SELECT id FROM participants WHERE email = $1 AND admin_id = $2', [email, req.admin.id]);
       
       if (existingUser.rows.length > 0) {
         return res.status(400).json({ error: 'Email já cadastrado para sua organização' });
       }
-
-      // Limite de participantes removido - sem restrições
 
       // Gerar código único
       const code = uuidv4().substring(0, 8).toUpperCase();
@@ -206,19 +326,17 @@ router.post('/',
         });
       });
     } else {
-      // Fallback para SQLite
-      db.get('SELECT id FROM participants WHERE email = ?', [email], (err, row) => {
+      // SQLite
+      db.get('SELECT id FROM participants WHERE email = ? AND admin_id = ?', [email, req.admin.id], (err, row) => {
         if (err) {
           console.error('Erro ao verificar email:', err);
           return res.status(500).json({ error: 'Erro interno do servidor' });
         }
         
         if (row) {
-          return res.status(400).json({ error: 'Email já cadastrado' });
+          return res.status(400).json({ error: 'Email já cadastrado para sua organização' });
         }
 
-        // Limite de participantes removido - sem restrições
-        
         // Gerar código único
         const code = uuidv4().substring(0, 8).toUpperCase();
         const password = code; // Senha igual ao código em maiúsculo
@@ -265,8 +383,24 @@ router.put('/:id', requireAdminAuth, async (req, res) => {
   }
 
   try {
-    if (process.env.DATABASE_URL && process.env.NODE_ENV === 'production') {
-      // Usar PostgreSQL diretamente apenas em produção
+    if (useMongo && mongoModels) {
+      // MongoDB
+      const adminId = new mongoose.Types.ObjectId(req.admin.id);
+      const participantId = new mongoose.Types.ObjectId(id);
+      
+      const participant = await mongoModels.Participant.findOneAndUpdate(
+        { _id: participantId, admin_id: adminId },
+        { name, email },
+        { new: true }
+      );
+      
+      if (!participant) {
+        return res.status(404).json({ error: 'Participante não encontrado' });
+      }
+      
+      res.json({ message: 'Participante atualizado com sucesso' });
+    } else if (process.env.DATABASE_URL && process.env.DATABASE_URL.startsWith('postgres')) {
+      // PostgreSQL
       const result = await queryPostgres(`
         UPDATE participants 
         SET name = $1, email = $2
@@ -279,7 +413,7 @@ router.put('/:id', requireAdminAuth, async (req, res) => {
       
       res.json({ message: 'Participante atualizado com sucesso' });
     } else {
-      // Fallback para SQLite
+      // SQLite
       const query = `
         UPDATE participants 
         SET name = ?, email = ?
@@ -306,37 +440,73 @@ router.put('/:id', requireAdminAuth, async (req, res) => {
 });
 
 // DELETE /api/participants/:id - Deletar participante (apenas para admin logado)
-router.delete('/:id', requireAdminAuth, (req, res) => {
+router.delete('/:id', requireAdminAuth, async (req, res) => {
   const { id } = req.params;
   
-  // Primeiro, deletar todas as avaliações relacionadas
-  const deleteAssessments = `
-    DELETE FROM self_assessments WHERE participant_id = ?;
-    DELETE FROM peer_assessments WHERE assessor_id = ? OR assessed_id = ?;
-  `;
-  
-  db.exec(deleteAssessments, [id, id, id], (err) => {
-    if (err) {
-      console.error('Erro ao deletar avaliações:', err);
-      return res.status(500).json({ error: 'Erro interno do servidor' });
-    }
-    
-    // Depois, deletar o participante (apenas se pertencer ao admin)
-    const deleteParticipant = 'DELETE FROM participants WHERE id = ? AND admin_id = ?';
-    
-    db.run(deleteParticipant, [id, req.admin.id], function(err) {
-      if (err) {
-        console.error('Erro ao deletar participante:', err);
-        return res.status(500).json({ error: 'Erro interno do servidor' });
-      }
+  try {
+    if (useMongo && mongoModels) {
+      // MongoDB
+      const adminId = new mongoose.Types.ObjectId(req.admin.id);
+      const participantId = new mongoose.Types.ObjectId(id);
       
-      if (this.changes === 0) {
+      // Verificar se o participante pertence ao admin
+      const participant = await mongoModels.Participant.findOne({ 
+        _id: participantId, 
+        admin_id: adminId 
+      });
+      
+      if (!participant) {
         return res.status(404).json({ error: 'Participante não encontrado' });
       }
       
+      // Deletar todas as avaliações relacionadas
+      await mongoModels.SelfAssessment.deleteMany({ participant_id: participantId });
+      await mongoModels.PeerAssessment.deleteMany({ 
+        $or: [
+          { assessor_id: participantId },
+          { assessed_id: participantId }
+        ]
+      });
+      
+      // Deletar o participante
+      await mongoModels.Participant.deleteOne({ _id: participantId, admin_id: adminId });
+      
       res.json({ message: 'Participante e todas as avaliações deletados com sucesso' });
-    });
-  });
+    } else {
+      // SQLite/PostgreSQL
+      // Primeiro, deletar todas as avaliações relacionadas
+      const deleteAssessments = `
+        DELETE FROM self_assessments WHERE participant_id = ?;
+        DELETE FROM peer_assessments WHERE assessor_id = ? OR assessed_id = ?;
+      `;
+      
+      db.exec(deleteAssessments, [id, id, id], (err) => {
+        if (err) {
+          console.error('Erro ao deletar avaliações:', err);
+          return res.status(500).json({ error: 'Erro interno do servidor' });
+        }
+        
+        // Depois, deletar o participante (apenas se pertencer ao admin)
+        const deleteParticipant = 'DELETE FROM participants WHERE id = ? AND admin_id = ?';
+        
+        db.run(deleteParticipant, [id, req.admin.id], function(err) {
+          if (err) {
+            console.error('Erro ao deletar participante:', err);
+            return res.status(500).json({ error: 'Erro interno do servidor' });
+          }
+          
+          if (this.changes === 0) {
+            return res.status(404).json({ error: 'Participante não encontrado' });
+          }
+          
+          res.json({ message: 'Participante e todas as avaliações deletados com sucesso' });
+        });
+      });
+    }
+  } catch (error) {
+    console.error('Erro ao deletar participante:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
 });
 
 // GET /api/participants/stats/overview - Estatísticas do admin logado
@@ -344,8 +514,36 @@ router.get('/stats/overview', requireAdminAuth, async (req, res) => {
   console.log('📊 GET /api/participants/stats/overview - Buscando estatísticas para admin:', req.admin.id);
   
   try {
-    if (process.env.DATABASE_URL && process.env.NODE_ENV === 'production') {
-      // Usar PostgreSQL diretamente apenas em produção
+    if (useMongo && mongoModels) {
+      // MongoDB
+      const adminId = new mongoose.Types.ObjectId(req.admin.id);
+      
+      const stats = await mongoModels.Participant.aggregate([
+        { $match: { admin_id: adminId } },
+        {
+          $group: {
+            _id: null,
+            total_participants: { $sum: 1 },
+            completed_self: {
+              $sum: { $cond: ['$has_completed_self_assessment', 1, 0] }
+            },
+            completed_peer: {
+              $sum: { $cond: ['$has_completed_peer_assessments', 1, 0] }
+            }
+          }
+        }
+      ]);
+      
+      const result = stats[0] || {
+        total_participants: 0,
+        completed_self: 0,
+        completed_peer: 0
+      };
+      
+      console.log('📊 Estatísticas encontradas para admin', req.admin.id, ':', result);
+      res.json(result);
+    } else if (process.env.DATABASE_URL && process.env.DATABASE_URL.startsWith('postgres')) {
+      // PostgreSQL
       const result = await queryPostgres(`
         SELECT 
           COUNT(*) as total_participants,
@@ -358,7 +556,7 @@ router.get('/stats/overview', requireAdminAuth, async (req, res) => {
       console.log('📊 Estatísticas encontradas para admin', req.admin.id, ':', result.rows[0]);
       res.json(result.rows[0]);
     } else {
-      // Fallback para SQLite
+      // SQLite
       const query = `
         SELECT 
           COUNT(*) as total_participants,
