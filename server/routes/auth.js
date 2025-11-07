@@ -445,6 +445,42 @@ router.post('/register', async (req, res) => {
         
         console.log('✅ Admin registrado com sucesso:', { id: newAdmin._id.toString(), email: newAdmin.email });
         
+        // Criar assinatura gratuita automaticamente para o novo admin
+        try {
+          const freePlan = await mongoModels.SubscriptionPlan.findOne({ type: 'free' }).lean();
+          
+          if (freePlan) {
+            const startDate = new Date();
+            const currentMonth = new Date().toISOString().substring(0, 7);
+            
+            const newSubscription = await mongoModels.Subscription.create({
+              admin_id: newAdmin._id,
+              plan_id: freePlan._id,
+              status: 'active',
+              billing_cycle: 'monthly',
+              started_at: startDate
+            });
+
+            // Criar tracking de uso inicial
+            await mongoModels.UsageTracking.create({
+              admin_id: newAdmin._id,
+              subscription_id: newSubscription._id,
+              month_year: currentMonth,
+              participants_created: 0,
+              assessments_completed: 0,
+              reports_generated: 0
+            });
+
+            console.log('✅ Assinatura gratuita criada automaticamente para o novo admin');
+          } else {
+            console.warn('⚠️ Plano gratuito não encontrado - assinatura não criada automaticamente');
+          }
+        } catch (subscriptionError) {
+          console.error('❌ Erro ao criar assinatura gratuita:', subscriptionError);
+          // Não falhar o registro se houver erro ao criar assinatura
+          // O middleware criará a assinatura quando necessário
+        }
+        
         // Gerar token JWT para o novo admin
         const token = jwt.sign(
           {
@@ -508,6 +544,42 @@ router.post('/register', async (req, res) => {
         const newAdmin = insertResult.rows[0];
         
         console.log('✅ Admin registrado com sucesso:', { id: newAdmin.id, email: newAdmin.email });
+        
+        // Criar assinatura gratuita automaticamente para o novo admin
+        try {
+          const freePlanResult = await queryPostgres(
+            'SELECT id FROM subscription_plans WHERE type = $1 LIMIT 1',
+            ['free']
+          );
+          
+          if (freePlanResult.rows && freePlanResult.rows.length > 0) {
+            const freePlan = freePlanResult.rows[0];
+            const startDate = new Date().toISOString();
+            const currentMonth = new Date().toISOString().substring(0, 7);
+            
+            const subscriptionResult = await queryPostgres(`
+              INSERT INTO subscriptions (admin_id, plan_id, status, billing_cycle, started_at)
+              VALUES ($1, $2, 'active', 'monthly', $3)
+              RETURNING id
+            `, [newAdmin.id, freePlan.id, startDate]);
+            
+            const subscriptionId = subscriptionResult.rows[0].id;
+            
+            // Criar tracking de uso inicial
+            await queryPostgres(`
+              INSERT INTO usage_tracking (admin_id, subscription_id, month_year, participants_created, assessments_completed, reports_generated)
+              VALUES ($1, $2, $3, 0, 0, 0)
+            `, [newAdmin.id, subscriptionId, currentMonth]);
+            
+            console.log('✅ Assinatura gratuita criada automaticamente para o novo admin');
+          } else {
+            console.warn('⚠️ Plano gratuito não encontrado - assinatura não criada automaticamente');
+          }
+        } catch (subscriptionError) {
+          console.error('❌ Erro ao criar assinatura gratuita:', subscriptionError);
+          // Não falhar o registro se houver erro ao criar assinatura
+          // O middleware criará a assinatura quando necessário
+        }
         
         // Gerar token JWT para o novo admin
         const token = jwt.sign(
@@ -578,6 +650,41 @@ router.post('/register', async (req, res) => {
         const newAdminId = this.lastID;
         
         console.log('✅ Admin registrado com sucesso:', { id: newAdminId, email: sanitizedEmail });
+        
+        // Criar assinatura gratuita automaticamente para o novo admin
+        db.get('SELECT id FROM subscription_plans WHERE type = ? LIMIT 1', ['free'], (err, freePlan) => {
+          if (err) {
+            console.error('❌ Erro ao buscar plano gratuito:', err);
+          } else if (freePlan) {
+            const startDate = new Date().toISOString();
+            const currentMonth = new Date().toISOString().substring(0, 7);
+            
+            db.run(`
+              INSERT INTO subscriptions (admin_id, plan_id, status, billing_cycle, started_at)
+              VALUES (?, ?, 'active', 'monthly', ?)
+            `, [newAdminId, freePlan.id, startDate], function(subErr) {
+              if (subErr) {
+                console.error('❌ Erro ao criar assinatura gratuita:', subErr);
+              } else {
+                const subscriptionId = this.lastID;
+                
+                // Criar tracking de uso inicial
+                db.run(`
+                  INSERT INTO usage_tracking (admin_id, subscription_id, month_year, participants_created, assessments_completed, reports_generated)
+                  VALUES (?, ?, ?, 0, 0, 0)
+                `, [newAdminId, subscriptionId, currentMonth], (trackErr) => {
+                  if (trackErr) {
+                    console.error('❌ Erro ao criar tracking de uso:', trackErr);
+                  } else {
+                    console.log('✅ Assinatura gratuita criada automaticamente para o novo admin');
+                  }
+                });
+              }
+            });
+          } else {
+            console.warn('⚠️ Plano gratuito não encontrado - assinatura não criada automaticamente');
+          }
+        });
         
         // Gerar token JWT para o novo admin
         const token = jwt.sign(
