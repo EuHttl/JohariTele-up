@@ -9,6 +9,7 @@ import {
   ShieldCheck,
   MessageCircle,
 } from 'lucide-react';
+import heroIllustration from '../assets/illustrations/auth-hero.svg';
 import '../styles/auth.css';
 
 const Login: React.FC = () => {
@@ -80,7 +81,7 @@ const Login: React.FC = () => {
           <div className="auth-visual-figure">
             <img
               className="auth-visual-image"
-              src="/images/illustrations/auth-hero.svg"
+              src={heroIllustration}
               alt="Ilustração de avaliação comportamental"
             />
           </div>

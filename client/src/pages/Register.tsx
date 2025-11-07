@@ -11,6 +11,7 @@ import {
   Layers,
   Target,
 } from 'lucide-react';
+import heroIllustration from '../assets/illustrations/auth-hero.svg';
 import '../styles/auth.css';
 
 const Register: React.FC = () => {
@@ -105,7 +106,7 @@ const Register: React.FC = () => {
           <div className="auth-visual-figure">
             <img
               className="auth-visual-image"
-              src="/images/illustrations/auth-hero.svg"
+              src={heroIllustration}
               alt="Ilustração de cadastro administrativo"
             />
           </div>
