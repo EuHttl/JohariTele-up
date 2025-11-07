@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const { checkSubscriptionLimits } = require('../middleware/subscriptionLimits');
 
 // Usar banco dinâmico (PostgreSQL ou SQLite)
 let db;
@@ -240,7 +241,11 @@ async function processReportData(row, res, code) {
 }
 
 // GET /api/reports/comparative - Relatório comparativo entre participantes do admin logado
-router.get('/comparative', require('../middleware/adminAuth').requireAdminAuth, async (req, res) => {
+// Bloqueado para plano gratuito
+router.get('/comparative', 
+  require('../middleware/adminAuth').requireAdminAuth, 
+  checkSubscriptionLimits('export_report'),
+  async (req, res) => {
   console.log('🔍 GET /api/reports/comparative - Iniciando relatório comparativo...');
   
   if (!process.env.DATABASE_URL) {
@@ -389,7 +394,11 @@ router.get('/comparative', require('../middleware/adminAuth').requireAdminAuth, 
 });
 
 // GET /api/reports/characteristics - Análise das características mais/menos selecionadas
-router.get('/characteristics', async (req, res) => {
+// Bloqueado para plano gratuito
+router.get('/characteristics', 
+  require('../middleware/adminAuth').requireAdminAuth,
+  checkSubscriptionLimits('export_report'),
+  async (req, res) => {
   console.log('🔍 GET /api/reports/characteristics - Iniciando análise de características...');
   
   if (!process.env.DATABASE_URL) {

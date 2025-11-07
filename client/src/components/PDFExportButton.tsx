@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
-import { Download, FileText, Loader2 } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Download, FileText, Loader2, Lock } from 'lucide-react';
 import { usePDFExport, ReportData, PDFExportOptions } from '../services/pdfExport';
+import { subscriptionService } from '../services/subscriptionService';
 
 interface PDFExportButtonProps {
   type: 'individual' | 'comparative' | 'element';
@@ -23,10 +24,36 @@ const PDFExportButton: React.FC<PDFExportButtonProps> = ({
 }) => {
   const [isExporting, setIsExporting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [canExport, setCanExport] = useState<boolean | null>(null);
+  const [loadingPlan, setLoadingPlan] = useState(true);
   const { exportElement, exportIndividualReport, exportComparativeReport } = usePDFExport();
 
+  // Verificar se o plano permite exportação
+  useEffect(() => {
+    const checkExportPermission = async () => {
+      try {
+        const usage = await subscriptionService.getUsage();
+        // Exportação só disponível para planos pagos (não gratuito)
+        setCanExport(usage.limits.can_export);
+      } catch (error) {
+        console.error('Erro ao verificar permissão de exportação:', error);
+        // Em caso de erro, permitir tentar (o backend vai bloquear)
+        setCanExport(true);
+      } finally {
+        setLoadingPlan(false);
+      }
+    };
+
+    checkExportPermission();
+  }, []);
+
   const handleExport = async () => {
-    if (disabled || isExporting) return;
+    if (disabled || isExporting || !canExport) {
+      if (!canExport) {
+        setError('Exportação de relatórios não disponível no plano gratuito. Atualize para o plano Profissional ou Empresarial.');
+      }
+      return;
+    }
 
     setIsExporting(true);
     setError(null);
@@ -51,8 +78,13 @@ const PDFExportButton: React.FC<PDFExportButtonProps> = ({
         default:
           throw new Error('Tipo de exportação não suportado');
       }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erro desconhecido');
+    } catch (err: any) {
+      // Verificar se é erro de plano bloqueado
+      if (err.response?.status === 403 && err.response?.data?.message) {
+        setError(err.response.data.message);
+      } else {
+        setError(err instanceof Error ? err.message : 'Erro desconhecido');
+      }
       console.error('Erro na exportação PDF:', err);
     } finally {
       setIsExporting(false);
@@ -83,6 +115,7 @@ const PDFExportButton: React.FC<PDFExportButtonProps> = ({
 
   const getButtonTitle = () => {
     if (isExporting) return 'Gerando PDF...';
+    if (!canExport) return 'Exportação disponível apenas em planos pagos. Atualize seu plano para exportar relatórios.';
     if (disabled) return 'Exportação indisponível';
     
     switch (type) {
@@ -97,14 +130,31 @@ const PDFExportButton: React.FC<PDFExportButtonProps> = ({
     }
   };
 
+  const isDisabled = disabled || !canExport || loadingPlan;
+
+  if (loadingPlan) {
+    return (
+      <button
+        disabled
+        className={`pdf-export-btn ${className} disabled`}
+      >
+        <Loader2 className="w-4 h-4 animate-spin" />
+        <span>Verificando...</span>
+      </button>
+    );
+  }
+
   return (
     <div className="pdf-export-container">
       <button
         onClick={handleExport}
-        disabled={disabled || isExporting}
-        className={`pdf-export-btn ${className} ${isExporting ? 'exporting' : ''} ${disabled ? 'disabled' : ''}`}
+        disabled={isDisabled || isExporting}
+        className={`pdf-export-btn ${className} ${isExporting ? 'exporting' : ''} ${isDisabled ? 'disabled' : ''}`}
         title={getButtonTitle()}
       >
+        {!canExport && (
+          <Lock className="w-4 h-4" />
+        )}
         {getButtonContent()}
       </button>
       

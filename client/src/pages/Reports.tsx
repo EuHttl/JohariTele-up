@@ -50,17 +50,35 @@ const Reports: React.FC = () => {
       setError('');
       setLoading(true);
       const [comparative, characteristics] = await Promise.all([
-        reportsAPI.getComparativeReport(),
-        reportsAPI.getCharacteristicAnalysis()
+        reportsAPI.getComparativeReport().catch(err => {
+          // Se for erro 403 (bloqueado por plano), retornar null e tratar depois
+          if (err.response?.status === 403) {
+            return null;
+          }
+          throw err;
+        }),
+        reportsAPI.getCharacteristicAnalysis().catch(err => {
+          if (err.response?.status === 403) {
+            return null;
+          }
+          throw err;
+        })
       ]);
       
       setComparativeReport(comparative);
       setCharacteristicAnalysis(characteristics);
+      
+      // Se ambos retornaram null por 403, mostrar erro específico
+      if (comparative === null && characteristics === null) {
+        setError('REQUIRES_PLAN');
+      }
     } catch (error: any) {
       console.error('Erro ao carregar relatórios:', error);
       // Se for erro de conexão, mostrar erro. Se for 404 ou vazio, apenas não há dados
       if (error.response?.status >= 500 || error.code === 'NETWORK_ERROR') {
         setError('Não foi possível conectar ao servidor. Verifique sua conexão e tente novamente.');
+      } else if (error.response?.status === 403) {
+        setError('REQUIRES_PLAN');
       } else {
         // Pode ser que simplesmente não há relatórios ainda
         setComparativeReport(null);
@@ -200,8 +218,46 @@ const Reports: React.FC = () => {
     );
   }
 
-  // Se houver erro de conexão, mostrar erro
+  // Se houver erro de conexão ou bloqueio por plano, mostrar erro
   if (error) {
+    if (error === 'REQUIRES_PLAN') {
+      return (
+        <div className="page-container">
+          <div className="card" style={{ maxWidth: '600px', margin: '0 auto', marginTop: 'var(--space-8)' }}>
+            <div className="card-header" style={{ textAlign: 'center' }}>
+              <AlertCircle className="w-12 h-12" style={{ color: 'var(--color-warning)', margin: '0 auto var(--space-4)' }} />
+              <h3 className="card-title">Funcionalidade Premium</h3>
+              <p className="card-subtitle">
+                Relatórios comparativos e análises avançadas estão disponíveis apenas em planos pagos.
+              </p>
+            </div>
+            <div className="card-body" style={{ textAlign: 'center' }}>
+              <p style={{ marginBottom: 'var(--space-4)', color: 'var(--text-secondary)' }}>
+                Atualize para o plano Profissional ou Empresarial para ter acesso a:
+              </p>
+              <ul style={{ textAlign: 'left', marginBottom: 'var(--space-6)', listStyle: 'none', padding: 0 }}>
+                <li style={{ padding: 'var(--space-2)', display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+                  <CheckCircle className="w-5 h-5" style={{ color: 'var(--color-success)' }} />
+                  Relatórios comparativos entre participantes
+                </li>
+                <li style={{ padding: 'var(--space-2)', display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+                  <CheckCircle className="w-5 h-5" style={{ color: 'var(--color-success)' }} />
+                  Análise avançada de características
+                </li>
+                <li style={{ padding: 'var(--space-2)', display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+                  <CheckCircle className="w-5 h-5" style={{ color: 'var(--color-success)' }} />
+                  Exportação de relatórios em PDF/Excel
+                </li>
+              </ul>
+              <Link to="/app/plans" className="btn btn-primary" style={{ width: '100%' }}>
+                Ver Planos Disponíveis
+              </Link>
+            </div>
+          </div>
+        </div>
+      );
+    }
+    
     return (
       <div className="page-container">
         <ErrorState
